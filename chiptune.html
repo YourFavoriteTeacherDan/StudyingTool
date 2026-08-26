@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Middlanders 8-Bit Chiptune & Sound Effect Studio</title>
+    <style>
+        :root {
+            --bg: #0d1117; --panel: #161b22; --panel-light: #21262d; --border: #30363d;
+            --accent: #58a6ff; --accent-hover: #3182ce;
+            --success: #2ea043; --danger: #da3633; --warn: #d29922; --text: #c9d1d9;
+            --font-code: 'Consolas', 'Courier New', monospace;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; user-select: none; }
+
+        .header { background: var(--panel); padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .header h2 { margin: 0; color: var(--accent); font-size: 18px; letter-spacing: 1px; }
+
+        .workspace { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 25px; overflow-y: auto; max-width: 1250px; margin: 0 auto; width: 100%; }
+
+        .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 25px; display: flex; flex-direction: column; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+        .card h3 { margin-top: 0; color: #fff; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 20px; font-size: 15px; text-transform: uppercase; }
+
+        .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .control-group { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: bold; color: #8b949e; }
+        .control-group select, .control-group input { width: 100%; padding: 10px; background: #010409; border: 1px solid var(--border); color: #fff; border-radius: 6px; outline: none; }
+
+        .preset-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+        .preset-btn { padding: 12px; background: var(--panel-light); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px; transition: 0.2s; text-align: center; }
+        .preset-btn:hover { border-color: var(--accent); filter: brightness(1.2); }
+
+        .keyboard-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin-top: 15px; }
+        .key-pad { background: #010409; border: 1px solid var(--border); border-radius: 6px; height: 110px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 12px; cursor: pointer; transition: 0.1s; }
+        .key-pad:hover { border-color: var(--accent); background: var(--panel-light); }
+        .key-pad.active { background: var(--accent); color: #000; border-color: var(--accent); }
+        .key-label { font-size: 11px; color: #8b949e; font-family: var(--font-code); }
+        .key-note { font-size: 13px; font-weight: bold; color: #fff; margin-top: 4px; }
+
+        .btn { padding: 10px 16px; background: var(--panel-light); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px; transition: 0.2s; width: 100%; text-align: center; margin-top: 10px; }
+        .btn.primary { background: var(--success); color: #fff; border: none; }
+        .btn.accent { background: var(--accent); color: #000; border: none; }
+        .btn:hover { border-color: var(--accent); filter: brightness(1.2); }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>🕹️ Middlanders 8-Bit Chiptune & SFX Studio</h2>
+        <div style="font-size: 12px; color: #8b949e;">Web Audio API Synthesizer</div>
+    </div>
+
+    <div class="workspace">
+        
+        <!-- CARD 1: PRESETS & SOUND GENERATOR -->
+        <div class="card">
+            <h3>Retro Sound FX Presets</h3>
+            <div class="preset-grid">
+                <button class="preset-btn" onclick="playPreset('jump')">🚀 Jump</button>
+                <button class="preset-btn" onclick="playPreset('coin')">🪙 Coin</button>
+                <button class="preset-btn" onclick="playPreset('laser')">🔫 Laser</button>
+                <button class="preset-btn" onclick="playPreset('explosion')">💥 Explosion</button>
+                <button class="preset-btn" onclick="playPreset('powerup')">⭐ Power-Up</button>
+                <button class="preset-btn" onclick="playPreset('powerdown')">💀 Damage</button>
+            </div>
+
+            <h3>Synth Parameters</h3>
+            <div class="controls-grid">
+                <div class="control-group">
+                    <label>Waveform Type:</label>
+                    <select id="synth-wave">
+                        <option value="square">Square (Classic 8-Bit)</option>
+                        <option value="sawtooth">Sawtooth (Sharp & Brash)</option>
+                        <option value="triangle">Triangle (Mellow Chiptune)</option>
+                        <option value="sine">Sine (Pure Tone)</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Base Frequency (Hz): <span id="freq-val">440</span></label>
+                    <input type="range" id="synth-freq" min="60" max="1200" value="440" oninput="document.getElementById('freq-val').innerText=this.value">
+                </div>
+                <div class="control-group">
+                    <label>Attack Time (s):</label>
+                    <input type="range" id="synth-attack" min="0.001" max="0.2" step="0.005" value="0.01">
+                </div>
+                <div class="control-group">
+                    <label>Release Decay (s):</label>
+                    <input type="range" id="synth-release" min="0.05" max="1.5" step="0.05" value="0.3">
+                </div>
+            </div>
+
+            <button class="btn primary" onclick="triggerCustomTone()">🔊 Trigger Custom Synth Tone</button>
+        </div>
+
+        <!-- CARD 2: LIVE ARPEGGIATOR KEYBOARD -->
+        <div class="card">
+            <h3>Live Chiptune Keyboard</h3>
+            <p style="font-size: 12px; color: #8b949e; margin-top: 0;">Click pads below or play using keys <strong>1 through 8</strong> on your keyboard.</p>
+
+            <div class="keyboard-grid" id="keyboard-grid">
+                <!-- Injected via JS -->
+            </div>
+
+            <button class="btn accent" style="margin-top: 25px;" onclick="exportPresetJSON()">📥 Export Synth Configuration (JSON)</button>
+        </div>
+
+    </div>
+
+    <script>
+        let audioCtx = null;
+
+        function getAudioContext() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            return audioCtx;
+        }
+
+        // --- PRESET SFX GENERATOR ---
+        function playPreset(type) {
+            const ctx = getAudioContext();
+            const now = ctx.currentTime;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            if (type === 'jump') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(600, now + 0.15);
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } else if (type === 'coin') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(987.77, now); // B5
+                osc.frequency.setValueAtTime(1318.51, now + 0.08); // E6
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            } else if (type === 'laser') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.2);
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            } else if (type === 'explosion') {
+                // Noise buffer explosion
+                const bufferSize = ctx.sampleRate * 0.4;
+                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+                const noise = ctx.createBufferSource();
+                noise.buffer = buffer;
+                const filter = ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(300, now);
+                filter.frequency.linearRampToValueAtTime(50, now + 0.4);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+                noise.start(now);
+                noise.stop(now + 0.4);
+            } else if (type === 'powerup') {
+                osc.type = 'triangle';
+                const notes = [261.63, 329.63, 392.00, 523.25];
+                notes.forEach((freq, idx) => {
+                    osc.frequency.setValueAtTime(freq, now + (idx * 0.06));
+                });
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'powerdown') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.linearRampToValueAtTime(80, now + 0.35);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            }
+        }
+
+        // --- CUSTOM SYNTH TONE ---
+        function triggerCustomTone() {
+            const ctx = getAudioContext();
+            const now = ctx.currentTime;
+            const wave = document.getElementById('synth-wave').value;
+            const freq = parseFloat(document.getElementById('synth-freq').value);
+            const attack = parseFloat(document.getElementById('synth-attack').value);
+            const release = parseFloat(document.getElementById('synth-release').value);
+
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc.type = wave;
+            osc.frequency.setValueAtTime(freq, now);
+
+            gain.gain.setValueAtTime(0.001, now);
+            gain.gain.linearRampToValueAtTime(0.15, now + attack);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + attack + release);
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.start(now);
+            osc.stop(now + attack + release);
+        }
+
+        // --- KEYBOARD SETUP ---
+        const scaleNotes = [
+            { note: 'C4', freq: 261.63, key: '1' },
+            { note: 'D4', freq: 293.66, key: '2' },
+            { note: 'E4', freq: 329.63, key: '3' },
+            { note: 'F4', freq: 349.23, key: '4' },
+            { note: 'G4', freq: 392.00, key: '5' },
+            { note: 'A4', freq: 440.00, key: '6' },
+            { note: 'B4', freq: 493.88, key: '7' },
+            { note: 'C5', freq: 523.25, key: '8' }
+        ];
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const grid = document.getElementById('keyboard-grid');
+            scaleNotes.forEach((item, idx) => {
+                grid.innerHTML += `
+                    <div class="key-pad" id="pad-${idx}" onmousedown="playPad(${idx})">
+                        <span class="key-label">[${item.key}]</span>
+                        <span class="key-note">${item.note}</span>
+                    </div>
+                `;
+            });
+        });
+
+        window.addEventListener('keydown', (e) => {
+            const matchIdx = scaleNotes.findIndex(n => n.key === e.key);
+            if (matchIdx !== -1) playPad(matchIdx);
+        });
+
+        function playPad(idx) {
+            const item = scaleNotes[idx];
+            const ctx = getAudioContext();
+            const now = ctx.currentTime;
+
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(item.freq, now);
+
+            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.start(now);
+            osc.stop(now + 0.25);
+
+            // Visual feedback
+            const pad = document.getElementById(`pad-${idx}`);
+            if (pad) {
+                pad.classList.add('active');
+                setTimeout(() => pad.classList.remove('active'), 150);
+            }
+        }
+
+        function exportPresetJSON() {
+            const config = {
+                wave: document.getElementById('synth-wave').value,
+                freq: document.getElementById('synth-freq').value,
+                attack: document.getElementById('synth-attack').value,
+                release: document.getElementById('synth-release').value,
+                created: new Date().toISOString()
+            };
+            const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = "chiptune_synth_config.json";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Tools</title>
+    <style>
+        :root {
+            --bg: #121212; --surface: #1e1e24; --primary: #00d2ff; --danger: #ff4a4a;
+            --text: #e0e0e0; --border: #333;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; }
+        
+        /* Navigation */
+        nav { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); }
+        nav button { flex: 1; padding: 15px; background: none; border: none; color: var(--text); font-size: 16px; cursor: pointer; transition: 0.2s; }
+        nav button.active { background: var(--border); border-bottom: 2px solid var(--primary); color: var(--primary); font-weight: bold; }
+        
+        /* Screens */
+        .screen { display: none; flex-direction: column; height: calc(100vh - 50px); overflow-y: auto; padding: 20px; }
+        .screen.active { display: flex; }
+        
+        /* UI Elements */
+        button { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 5px; cursor: pointer; }
+        button:hover { border-color: var(--primary); }
+        button.btn-primary { background: var(--primary); color: #000; border: none; font-weight: bold; }
+        button.btn-danger { background: var(--danger); color: #fff; border: none; font-weight: bold; }
+        input[type="text"], input[type="number"], input[type="password"] { width: 100%; padding: 10px; background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 5px; margin-bottom: 10px; }
+        textarea { flex: 1; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 5px; padding: 15px; resize: none; font-size: 16px; margin-bottom: 10px; }
+        
+        /* Notes Library */
+        .note-item { display: flex; justify-content: space-between; align-items: center; background: var(--surface); padding: 15px; margin-bottom: 10px; border-radius: 5px; border: 1px solid var(--border); cursor: pointer; }
+        .note-item:hover { border-color: var(--primary); }
+        .toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+        
+        /* Sales Calc */
+        .receipt { flex: 1; background: var(--surface); border-radius: 5px; border: 1px solid var(--border); padding: 15px; overflow-y: auto; margin-bottom: 10px; }
+        .receipt-item { display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border); padding: 5px 0; }
+        .totals-box { background: var(--surface); padding: 15px; border-radius: 5px; border: 1px solid var(--primary); text-align: right; }
+        .totals-box h3 { margin: 5px 0; color: var(--primary); }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <button id="nav-library" class="active" onclick="switchScreen('library')">Notes Library</button>
+        <button id="nav-editor" onclick="switchScreen('editor')" style="display:none;">Editor</button>
+        <button id="nav-calc" onclick="switchScreen('calc')">Sales Register</button>
+    </nav>
+
+    <!-- Screen 1: Notes Library -->
+    <div id="screen-library" class="screen active">
+        <div class="toolbar">
+            <button class="btn-primary" onclick="createNewNote()">+ New Note</button>
+            <button onclick="document.getElementById('import-file').click()">Import Note</button>
+            <input type="file" id="import-file" style="display:none" accept=".json,.txt" onchange="importNote(event)">
+        </div>
+        <div id="notes-list"></div>
+    </div>
+
+    <!-- Screen 2: Active Note Editor -->
+    <div id="screen-editor" class="screen">
+        <div class="toolbar">
+            <button onclick="saveAndClose()">← Back</button>
+            <button onclick="renameNote()">Rename</button>
+            <button onclick="duplicateNote()">Duplicate</button>
+            <button onclick="toggleLock()" id="btn-lock">Lock</button>
+            <button onclick="exportNote()">Export</button>
+            <button class="btn-danger" onclick="deleteNote()">Delete</button>
+        </div>
+        <h3 id="note-title" style="margin: 0 0 10px 0;">Untitled Note</h3>
+        <textarea id="note-content" placeholder="Start typing..."></textarea>
+    </div>
+
+    <!-- Screen 3: Sales Register -->
+    <div id="screen-calc" class="screen">
+        <div style="display: flex; gap: 10px;">
+            <div style="flex: 2;">
+                <label>Item Price ($)</label>
+                <input type="number" id="item-price" placeholder="0.00">
+            </div>
+            <div style="flex: 1;">
+                <label>Tax Rate (%)</label>
+                <input type="number" id="tax-rate" value="10.6" step="0.1">
+            </div>
+        </div>
+        <button class="btn-primary" onclick="addItem()" style="margin-bottom: 15px;">Add to Register</button>
+
+        <div class="receipt" id="receipt">
+            <div style="color: #888;">Cart is empty...</div>
+        </div>
+
+        <div class="totals-box">
+            <div>Subtotal: $<span id="subtotal-disp">0.00</span></div>
+            <div>Total Tax: $<span id="tax-disp">0.00</span></div>
+            <h3>Grand Total: $<span id="grand-total-disp">0.00</span></h3>
+            <button onclick="clearRegister()" style="margin-top: 10px;">Clear Register</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Navigation Logic ---
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+            document.getElementById('screen-' + screenId).classList.add('active');
+            document.getElementById('nav-' + screenId).classList.add('active');
+            if (screenId !== 'editor') {
+                document.getElementById('nav-editor').style.display = 'none';
+            }
+        }
+
+        // --- Notes Logic ---
+        let notes = JSON.parse(localStorage.getItem('hub_notes')) || [];
+        let activeNoteId = null;
+
+        function saveToStorage() {
+            localStorage.setItem('hub_notes', JSON.stringify(notes));
+            renderNotesList();
+        }
+
+        function renderNotesList() {
+            const list = document.getElementById('notes-list');
+            list.innerHTML = '';
+            if (notes.length === 0) {
+                list.innerHTML = '<p style="color:#888;">No notes saved.</p>';
+                return;
+            }
+            
+            notes.forEach(note => {
+                const div = document.createElement('div');
+                div.className = 'note-item';
+                div.innerHTML = `<span>${note.isLocked ? '🔒 ' : ''}${note.title}</span>`;
+                div.onclick = () => openNote(note.id);
+                list.appendChild(div);
+            });
+        }
+
+        function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2); }
+
+        function createNewNote() {
+            const newNote = { id: generateId(), title: 'Untitled Note', content: '', isLocked: false, password: '' };
+            notes.push(newNote);
+            saveToStorage();
+            openNote(newNote.id);
+        }
+
+        function openNote(id) {
+            const note = notes.find(n => n.id === id);
+            if (!note) return;
+
+            if (note.isLocked) {
+                const pwd = prompt("This note is locked. Enter password:");
+                if (pwd !== note.password) {
+                    alert("Incorrect password.");
+                    return;
+                }
+            }
+
+            activeNoteId = id;
+            document.getElementById('note-title').innerText = note.title;
+            document.getElementById('note-content').value = note.content;
+            document.getElementById('btn-lock').innerText = note.isLocked ? "Remove Lock" : "Lock";
+            
+            document.getElementById('nav-editor').style.display = 'block';
+            switchScreen('editor');
+        }
+
+        function saveAndClose() {
+            if (!activeNoteId) return;
+            const note = notes.find(n => n.id === activeNoteId);
+            if (note) {
+                note.content = document.getElementById('note-content').value;
+                saveToStorage();
+            }
+            activeNoteId = null;
+            switchScreen('library');
+        }
+
+        document.getElementById('note-content').addEventListener('input', () => {
+            if (!activeNoteId) return;
+            const note = notes.find(n => n.id === activeNoteId);
+            if (note) {
+                note.content = document.getElementById('note-content').value;
+                localStorage.setItem('hub_notes', JSON.stringify(notes));
+            }
+        });
+
+        function renameNote() {
+            if (!activeNoteId) return;
+            const note = notes.find(n => n.id === activeNoteId);
+            const newTitle = prompt("Enter new title:", note.title);
+            if (newTitle && newTitle.trim() !== "") {
+                note.title = newTitle.trim();
+                document.getElementById('note-title').innerText = note.title;
+                saveToStorage();
+            }
+        }
+
+        function deleteNote() {
+            if (!activeNoteId) return;
+            if (confirm("Are you sure you want to delete this note?")) {
+                notes = notes.filter(n => n.id !== activeNoteId);
+                activeNoteId = null; 
+                document.getElementById('note-content').value = '';
+                saveToStorage();
+                switchScreen('library');
+            }
+        }
+
+        function duplicateNote() {
+            if (!activeNoteId) return;
+            const note = notes.find(n => n.id === activeNoteId);
+            const copy = JSON.parse(JSON.stringify(note));
+            copy.id = generateId();
+            copy.title = copy.title + " (Copy)";
+            notes.push(copy);
+            saveToStorage();
+            alert("Note duplicated!");
+        }
+
+        function toggleLock() {
+            if (!activeNoteId) return;
+            const note = notes.find(n => n.id === activeNoteId);
+            if (note.isLocked) {
+                note.isLocked = false;
+                note.password = '';
+                document.getElementById('btn-lock').innerText = "Lock";
+                alert("Lock removed.");
+            } else {
+                const pwd = prompt("Set a password to lock this note:");
+                if (pwd && pwd.trim() !== "") {
+                    note.isLocked = true;
+                    note.password = pwd.trim();
+                    document.getElementById('btn-lock').innerText = "Remove Lock";
+                    alert("Note locked.");
+                }
+            }
+            saveToStorage();
+        }
+
+        function exportNote() {
+            if (!activeNoteId) return;
+            const note = notes.find(n => n.id === activeNoteId);
+            const blob = new Blob([JSON.stringify(note, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${note.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.json`;
+            a.click();
+        }
+
+        function importNote(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    imported.id = generateId(); 
+                    notes.push(imported);
+                    saveToStorage();
+                    alert("Note imported successfully!");
+                } catch (err) {
+                    alert("Failed to read file. Make sure it's a valid JSON export.");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; 
+        }
+
+        // --- Sales Register Logic ---
+        let registerItems = [];
+
+        function addItem() {
+            const priceInput = document.getElementById('item-price');
+            const taxInput = document.getElementById('tax-rate');
+            
+            const price = parseFloat(priceInput.value);
+            const rate = parseFloat(taxInput.value) || 0;
+
+            if (isNaN(price) || price <= 0) return alert("Enter a valid price.");
+
+            const tax = price * (rate / 100);
+            const total = price + tax;
+
+            registerItems.push({ price, tax, total, rate });
+            priceInput.value = ''; 
+            updateRegister();
+        }
+
+        function updateRegister() {
+            const receipt = document.getElementById('receipt');
+            receipt.innerHTML = '';
+
+            let sumPrice = 0, sumTax = 0, grandTotal = 0;
+
+            if (registerItems.length === 0) {
+                receipt.innerHTML = '<div style="color: #888;">Cart is empty...</div>';
+            } else {
+                registerItems.forEach((item, index) => {
+                    sumPrice += item.price;
+                    sumTax += item.tax;
+                    grandTotal += item.total;
+
+                    receipt.innerHTML += `
+                        <div class="receipt-item">
+                            <span>Item ${index + 1} (@${item.rate}% tax)</span>
+                            <span>$${item.price.toFixed(2)} + $${item.tax.toFixed(2)} tax</span>
+                        </div>
+                    `;
+                });
+            }
+
+            document.getElementById('subtotal-disp').innerText = sumPrice.toFixed(2);
+            document.getElementById('tax-disp').innerText = sumTax.toFixed(2);
+            document.getElementById('grand-total-disp').innerText = grandTotal.toFixed(2);
+        }
+
+        function clearRegister() {
+            registerItems = [];
+            updateRegister();
+        }
+
+        // Initialize
+        renderNotesList();
+    </script>
+</body>
+</html>

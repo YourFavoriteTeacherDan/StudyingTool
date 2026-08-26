@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Middlanders General Electrical & Electronics Workbench</title>
+    <style>
+        :root {
+            --bg: #0d1117; --panel: #161b22; --panel-light: #21262d; --border: #30363d;
+            --accent: #58a6ff; --accent-hover: #3182ce;
+            --success: #2ea043; --danger: #da3633; --warn: #d29922; --text: #c9d1d9;
+            --font-code: 'Consolas', 'Courier New', monospace;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+        .header { background: var(--panel); padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .header h2 { margin: 0; color: var(--accent); font-size: 18px; letter-spacing: 1px; }
+
+        .workspace { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; overflow-y: auto; max-width: 1400px; margin: 0 auto; width: 100%; }
+
+        .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+        .card h3 { margin-top: 0; color: #fff; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 15px; font-size: 14px; text-transform: uppercase; }
+
+        .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .control-group { display: flex; flex-direction: column; gap: 5px; font-size: 11px; font-weight: bold; color: #8b949e; }
+        .control-group select, .control-group input { width: 100%; padding: 8px; background: #010409; border: 1px solid var(--border); color: #fff; border-radius: 6px; outline: none; font-family: var(--font-code); }
+
+        .stats-box { width: 100%; background: #010409; border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-size: 12px; display: flex; flex-direction: column; gap: 8px; margin-top: 15px; }
+        .stat-row { display: flex; justify-content: space-between; border-bottom: 1px solid #161b22; padding-bottom: 4px; }
+        .stat-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .stat-val { font-family: var(--font-code); font-weight: bold; color: var(--success); }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>⚡ Middlanders General Electrical & Electronics Workbench</h2>
+        <div style="font-size: 12px; color: #8b949e;">Universal Circuit & Power Suite</div>
+    </div>
+
+    <div class="workspace">
+        
+        <!-- CARD 1: OHM'S LAW & POWER -->
+        <div class="card">
+            <h3>1. Ohm's Law & Power Calculator</h3>
+            <p style="font-size: 11px; color: #8b949e; margin-top: 0;">Enter any <strong>two</strong> values to calculate the others.</p>
+            <div class="controls-grid">
+                <div class="control-group">
+                    <label>Voltage (V):</label>
+                    <input type="number" id="ohm-v" value="12" step="0.1" oninput="calculateOhmsLaw('v')">
+                </div>
+                <div class="control-group">
+                    <label>Current (A):</label>
+                    <input type="number" id="ohm-i" value="1" step="0.1" oninput="calculateOhmsLaw('i')">
+                </div>
+                <div class="control-group">
+                    <label>Resistance (Ω):</label>
+                    <input type="number" id="ohm-r" value="12" step="0.1" oninput="calculateOhmsLaw('r')">
+                </div>
+                <div class="control-group">
+                    <label>Power (W):</label>
+                    <input type="number" id="ohm-p" value="12" step="0.1" oninput="calculateOhmsLaw('p')">
+                </div>
+            </div>
+
+            <div class="stats-box">
+                <div class="stat-row"><span>Formula Status:</span> <span class="stat-val" style="color: var(--accent);" id="ohm-status">Balanced ($V = I \times R$)</span></div>
+            </div>
+        </div>
+
+        <!-- CARD 2: LED RESISTOR CALCULATOR -->
+        <div class="card">
+            <h3>2. LED Series Resistor Calculator</h3>
+            <div class="controls-grid">
+                <div class="control-group">
+                    <label>Supply Voltage (V):</label>
+                    <input type="number" id="led-vs" value="5" step="0.1" oninput="calculateLED()">
+                </div>
+                <div class="control-group">
+                    <label>LED Forward Voltage (Vf):</label>
+                    <input type="number" id="led-vf" value="2.0" step="0.1" oninput="calculateLED()">
+                </div>
+                <div class="control-group">
+                    <label>LED Current (mA):</label>
+                    <input type="number" id="led-ma" value="20" step="1" oninput="calculateLED()">
+                </div>
+                <div class="control-group">
+                    <label>Number of LEDs in Series:</label>
+                    <input type="number" id="led-count" value="1" min="1" oninput="calculateLED()">
+                </div>
+            </div>
+
+            <div class="stats-box">
+                <div class="stat-row"><span>Required Resistance:</span> <span class="stat-val" id="res-led-ohms">0 Ω</span></div>
+                <div class="stat-row"><span>Nearest Standard Resistor:</span> <span class="stat-val" id="res-led-std">0 Ω</span></div>
+                <div class="stat-row"><span>Resistor Power Dissipation:</span> <span class="stat-val" id="res-led-power">0 W</span></div>
+            </div>
+        </div>
+
+        <!-- CARD 3: BATTERY PACK & RUNTIME -->
+        <div class="card">
+            <h3>3. Battery Pack & Runtime Calculator</h3>
+            <div class="controls-grid">
+                <div class="control-group">
+                    <label>Series Count (S) / Parallel (P):</label>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px;">
+                        <input type="number" id="bat-s" value="3" min="1" oninput="calculateBattery()">
+                        <input type="number" id="bat-p" value="1" min="1" oninput="calculateBattery()">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>Cell Voltage (V) & Capacity (Ah):</label>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px;">
+                        <input type="number" id="bat-v" value="3.7" step="0.1" oninput="calculateBattery()">
+                        <input type="number" id="bat-ah" value="2.5" step="0.1" oninput="calculateBattery()">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>Current Draw Load (Amps):</label>
+                    <input type="number" id="bat-load" value="0.5" step="0.1" oninput="calculateBattery()">
+                </div>
+                <div class="control-group">
+                    <label>Discharge Safety Buffer (%):</label>
+                    <input type="number" id="bat-buffer" value="80" max="100" min="10" oninput="calculateBattery()">
+                </div>
+            </div>
+
+            <div class="stats-box">
+                <div class="stat-row"><span>Total Voltage / Capacity:</span> <span class="stat-val" id="res-bat-v-ah">0 V / 0 Ah</span></div>
+                <div class="stat-row"><span>Total Energy (Watt-Hours):</span> <span class="stat-val" id="res-bat-wh">0 Wh</span></div>
+                <div class="stat-row"><span>Estimated Runtime:</span> <span class="stat-val" id="res-bat-time">0 Hours</span></div>
+            </div>
+        </div>
+
+        <!-- CARD 4: WIRE GAUGE (AWG) & VOLTAGE DROP -->
+        <div class="card">
+            <h3>4. Wire Gauge & Voltage Drop Estimator</h3>
+            <div class="controls-grid">
+                <div class="control-group">
+                    <label>Wire Gauge (AWG):</label>
+                    <select id="wire-awg" onchange="calculateWire()">
+                        <option value="12">12 AWG (Heavy Duty)</option>
+                        <option value="14" selected>14 AWG (Standard)</option>
+                        <option value="16">16 AWG</option>
+                        <option value="18">18 AWG</option>
+                        <option value="20">20 AWG (Low Power)</option>
+                        <option value="22">22 AWG (Signal / Breadboard)</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Current Draw (Amps):</label>
+                    <input type="number" id="wire-amps" value="5" step="0.5" oninput="calculateWire()">
+                </div>
+                <div class="control-group">
+                    <label>One-Way Length (Feet):</label>
+                    <input type="number" id="wire-feet" value="10" step="1" oninput="calculateWire()">
+                </div>
+                <div class="control-group">
+                    <label>System Voltage (V):</label>
+                    <input type="number" id="wire-v" value="12" step="0.5" oninput="calculateWire()">
+                </div>
+            </div>
+
+            <div class="stats-box">
+                <div class="stat-row"><span>Total Voltage Drop:</span> <span class="stat-val" id="res-wire-drop">0 V</span></div>
+                <div class="stat-row"><span>Percentage Drop:</span> <span class="stat-val" id="res-wire-pct">0 %</span></div>
+                <div class="stat-row"><span>Max Safe Ampacity (Rough):</span> <span class="stat-val" id="res-wire-safe">0 A</span></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            calculateOhmsLaw('v');
+            calculateLED();
+            calculateBattery();
+            calculateWire();
+        });
+
+        // --- 1. OHM'S LAW SOLVER ---
+        function calculateOhmsLaw(changed) {
+            let v = parseFloat(document.getElementById('ohm-v').value);
+            let i = parseFloat(document.getElementById('ohm-i').value);
+            let r = parseFloat(document.getElementById('ohm-r').value);
+            let p = parseFloat(document.getElementById('ohm-p').value);
+
+            try {
+                if (changed === 'v' || changed === 'r') {
+                    if (!isNaN(v) && !isNaN(r) && r > 0) {
+                        i = v / r;
+                        p = v * i;
+                        document.getElementById('ohm-i').value = i.toFixed(2);
+                        document.getElementById('ohm-p').value = p.toFixed(2);
+                    }
+                } else if (changed === 'i' || changed === 'r') {
+                    if (!isNaN(i) && !isNaN(r)) {
+                        v = i * r;
+                        p = v * i;
+                        document.getElementById('ohm-v').value = v.toFixed(2);
+                        document.getElementById('ohm-p').value = p.toFixed(2);
+                    }
+                } else if (changed === 'v' || changed === 'i') {
+                    if (!isNaN(v) && !isNaN(i) && i > 0) {
+                        r = v / i;
+                        p = v * i;
+                        document.getElementById('ohm-r').value = r.toFixed(2);
+                        document.getElementById('ohm-p').value = p.toFixed(2);
+                    }
+                } else if (changed === 'p') {
+                    if (!isNaN(p) && !isNaN(v) && v > 0) {
+                        i = p / v;
+                        r = v / i;
+                        document.getElementById('ohm-i').value = i.toFixed(2);
+                        document.getElementById('ohm-r').value = r.toFixed(2);
+                    }
+                }
+                document.getElementById('ohm-status').innerText = "Balanced ($V = I \\times R$, $P = V \\times I$)";
+            } catch(e) {}
+        }
+
+        // --- 2. LED RESISTOR CALCULATOR ---
+        function calculateLED() {
+            const vs = parseFloat(document.getElementById('led-vs').value) || 0;
+            const vf = parseFloat(document.getElementById('led-vf').value) || 0;
+            const ma = parseFloat(document.getElementById('led-ma').value) || 0;
+            const count = parseInt(document.getElementById('led-count').value) || 1;
+
+            const totalVf = vf * count;
+            const amps = ma / 1000;
+
+            if (vs <= totalVf || amps <= 0) {
+                document.getElementById('res-led-ohms').innerText = "Supply too low for LEDs!";
+                document.getElementById('res-led-std').innerText = "N/A";
+                document.getElementById('res-led-power').innerText = "N/A";
+                return;
+            }
+
+            const ohms = (vs - totalVf) / amps;
+            const powerWatts = (vs - totalVf) * amps;
+
+            // Nearest standard resistor lookup approximation
+            const standardValues = [10, 22, 47, 100, 150, 220, 330, 470, 680, 1000, 1500, 2200, 3300, 4700, 10000];
+            let nearest = standardValues.reduce((prev, curr) => Math.abs(curr - ohms) < Math.abs(prev - ohms) ? curr : prev);
+
+            document.getElementById('res-led-ohms').innerText = ohms.toFixed(1) + " Ω";
+            document.getElementById('res-led-std').innerText = nearest + " Ω (Standard)";
+            document.getElementById('res-led-power').innerText = powerWatts.toFixed(2) + " W";
+        }
+
+        // --- 3. BATTERY PACK & RUNTIME ---
+        function calculateBattery() {
+            const s = parseInt(document.getElementById('bat-s').value) || 1;
+            const p = parseInt(document.getElementById('bat-p').value) || 1;
+            const cellV = parseFloat(document.getElementById('bat-v').value) || 0;
+            const cellAh = parseFloat(document.getElementById('bat-ah').value) || 0;
+            const loadAmps = parseFloat(document.getElementById('bat-load').value) || 0.1;
+            const buffer = (parseFloat(document.getElementById('bat-buffer').value) || 80) / 100;
+
+            const totalV = cellV * s;
+            const totalAh = cellAh * p;
+            const totalWh = totalV * totalAh;
+            const usableWh = totalWh * buffer;
+
+            let runtimeHours = loadAmps > 0 ? (usableWh / (totalV * loadAmps)) : 0;
+
+            document.getElementById('res-bat-v-ah').innerText = totalV.toFixed(1) + " V / " + totalAh.toFixed(1) + " Ah";
+            document.getElementById('res-bat-wh').innerText = totalWh.toFixed(1) + " Wh";
+            document.getElementById('res-bat-time').innerText = runtimeHours.toFixed(2) + " Hours (" + (runtimeHours * 60).toFixed(0) + " mins)";
+        }
+
+        // --- 4. WIRE GAUGE & VOLTAGE DROP ---
+        const awgResistancePer1000Ft = {
+            '12': 1.588,
+            '14': 2.525,
+            '16': 4.016,
+            '18': 6.385,
+            '20': 10.15,
+            '22': 16.14
+        };
+
+        const awgSafeAmps = {
+            '12': 20,
+            '14': 15,
+            '16': 10,
+            '18': 7,
+            '20': 5,
+            '22': 3
+        };
+
+        function calculateWire() {
+            const awg = document.getElementById('wire-awg').value;
+            const amps = parseFloat(document.getElementById('wire-amps').value) || 0;
+            const feet = parseFloat(document.getElementById('wire-feet').value) || 0;
+            const sysV = parseFloat(document.getElementById('wire-v').value) || 12;
+
+            // Total resistance for 2-way path (round trip)
+            const ohmsPer1000Ft = awgResistancePer1000Ft[awg] || 2.525;
+            const totalResistance = (ohmsPer1000Ft * (feet * 2)) / 1000;
+            const dropV = amps * totalResistance;
+            const dropPct = (dropV / sysV) * 100;
+            const safeA = awgSafeAmps[awg] || 10;
+
+            document.getElementById('res-wire-drop').innerText = dropV.toFixed(3) + " V";
+            document.getElementById('res-wire-pct').innerText = dropPct.toFixed(2) + " %";
+            document.getElementById('res-wire-safe').innerText = safeA + " A max";
+        }
+    </script>
+</body>
+</html>

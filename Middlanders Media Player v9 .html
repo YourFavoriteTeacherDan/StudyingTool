@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Middlanders Advanced Media Center v9</title>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f0f13;
+            --panel-bg: #1c1c24;
+            --accent: #ff2a5f;
+            --text: #ffffff;
+            --text-dim: #a0a0b0;
+            --watched: #4caf50;
+            --brightness: 100%;
+            --contrast: 100%;
+            --saturate: 100%;
+            --backlight: 1;
+            --video-scale: 1;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar & Navigation */
+        .sidebar {
+            width: 350px;
+            background-color: var(--panel-bg);
+            border-right: 1px solid #2a2a35;
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+            transition: width 0.3s ease;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar.hidden {
+            width: 0;
+            overflow: hidden;
+            border-right: none;
+        }
+
+        .tab-container {
+            display: flex;
+            flex-wrap: wrap;
+            border-bottom: 1px solid #2a2a35;
+            background: #15151b;
+        }
+
+        .tab {
+            flex: 1 1 25%;
+            padding: 8px 4px;
+            text-align: center;
+            background: transparent;
+            color: var(--text-dim);
+            border: none;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: bold;
+            transition: 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .tab.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Multi-Select Bar */
+        #bulk-bar {
+            background: var(--accent);
+            color: white;
+            padding: 10px;
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        #bulk-bar select, #bulk-bar button {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 5px;
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        #bulk-bar select option {
+            background: var(--panel-bg);
+            color: white;
+        }
+
+        /* Playlist Header */
+        #playlist-header {
+            padding: 10px 15px;
+            border-bottom: 1px solid #2a2a35;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 0.85rem;
+            background: #1a1a20;
+        }
+
+        #playlist-header input[type="checkbox"] {
+            accent-color: var(--accent);
+            transform: scale(1.4);
+            cursor: pointer;
+        }
+
+        /* Playlist Items */
+        #playlist {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .media-item {
+            padding: 10px 15px;
+            border-bottom: 1px solid #2a2a35;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+
+        .media-item.active {
+            border-left: 3px solid var(--accent);
+            background: #23232e;
+        }
+
+        .media-item:hover {
+            background: #2a2a35;
+        }
+
+        .media-item input[type="checkbox"] {
+            accent-color: var(--accent);
+            transform: scale(1.6);
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--accent);
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+            border-radius: 2px;
+            margin: 5px;
+        }
+
+        .item-main {
+            flex: 1;
+            cursor: pointer;
+            word-break: break-all;
+        }
+
+        .watched-badge {
+            font-size: 0.7rem;
+            color: var(--watched);
+            display: none;
+            font-weight: bold;
+            margin-top: 2px;
+        }
+
+        .is-watched .watched-badge {
+            display: block;
+        }
+
+        .btn-action {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            padding: 5px;
+            transition: 0.2s;
+            font-size: 1rem;
+        }
+
+        .btn-action:hover {
+            color: var(--accent);
+        }
+
+        /* Main Display Area */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            position: relative;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        /* Media Wrapper */
+        .media-wrapper {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            background: #000;
+            display: none;
+            position: relative;
+        }
+
+        .media-viewer {
+            width: 100%;
+            height: 100%;
+            display: block;
+            filter: brightness(var(--brightness)) contrast(var(--contrast)) saturate(var(--saturate));
+            opacity: var(--backlight);
+            transform: scale(var(--video-scale));
+            transition: transform 0.2s ease;
+        }
+
+        #player {
+            position: relative;
+            z-index: 2;
+            background: transparent;
+        }
+
+        iframe {
+            height: 75vh;
+            background: #fff;
+        }
+
+        img.viewer-img {
+            object-fit: contain;
+            max-height: 80vh;
+        }
+
+        /* 3D Viewer Specifics */
+        model-viewer {
+            height: 75vh;
+            background-color: #1c1c24;
+            --poster-color: transparent;
+        }
+
+        #spectrogram {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Audio Controls */
+        #audio-controls {
+            display: none;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
+            max-width: 1000px;
+            margin: 0 auto 20px auto;
+            background: #15151b;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #2a2a35;
+        }
+
+        .music-btn {
+            background: none;
+            border: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            padding: 5px 15px;
+            border-radius: 8px;
+        }
+
+        .music-btn:hover {
+            background: rgba(255, 42, 95, 0.2);
+            color: var(--accent);
+        }
+
+        .music-btn.active {
+            color: var(--accent);
+            filter: drop-shadow(0 0 5px var(--accent));
+        }
+
+        #btn-play-pause {
+            color: var(--accent);
+        }
+
+        /* Controls Row */
+        .controls-row {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 15px;
+            max-width: 1000px;
+            margin-left: auto;
+            margin-right: auto;
+            display: none;
+        }
+
+        /* Settings Panel */
+        #settings-panel {
+            position: fixed;
+            right: 20px;
+            top: 70px;
+            width: 300px;
+            background: var(--panel-bg);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 20px;
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 1000;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.9);
+        }
+
+        .setting-row {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-bottom: 5px;
+        }
+
+        .setting-row label {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .setting-row.inline {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        input[type="range"] {
+            accent-color: var(--accent);
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .tool-btn {
+            background: #2a2a35;
+            color: white;
+            border: 1px solid #444;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .tool-btn:hover {
+            border-color: var(--accent);
+            background: #32323e;
+            color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar" id="sidebar">
+        <div class="tab-container">
+            <button class="tab active" data-tab="unsorted" onclick="switchTab('unsorted')">Unsorted</button>
+            <button class="tab" data-tab="anime" onclick="switchTab('anime')">Anime</button>
+            <button class="tab" data-tab="movie" onclick="switchTab('movie')">Movies</button>
+            <button class="tab" data-tab="episode" onclick="switchTab('episode')">TV</button>
+            <button class="tab" data-tab="music" onclick="switchTab('music')">Music</button>
+            <button class="tab" data-tab="audiobook" onclick="switchTab('audiobook')">Audiobooks</button>
+            <button class="tab" data-tab="document" onclick="switchTab('document')">Docs</button>
+            <button class="tab" data-tab="personal_video" onclick="switchTab('personal_video')">Home Vids</button>
+            <button class="tab" data-tab="photo" onclick="switchTab('photo')">Photos</button>
+            <button class="tab" data-tab="audio" onclick="switchTab('audio')">Raw Audio</button>
+            <button class="tab" data-tab="trash" onclick="switchTab('trash')">🗑️ Trash</button>
+        </div>
+
+        <div id="bulk-bar">
+            <span id="select-count">0 Selected</span>
+            <div style="display: flex; gap: 5px;">
+                <select id="bulk-move-to" onchange="bulkMove(this.value)">
+                    <option value="">Move to...</option>
+                    <option value="anime">Anime</option>
+                    <option value="movie">Movies</option>
+                    <option value="episode">TV Shows</option>
+                    <option value="music">Music</option>
+                    <option value="audiobook">Audiobooks</option>
+                    <option value="document">Documents</option>
+                    <option value="personal_video">Home Videos</option>
+                    <option value="photo">Photos</option>
+                    <option value="audio">Raw Audio</option>
+                    <option value="unsorted">Unsorted</option>
+                    <option value="trash">Trash</option>
+                </select>
+                <button onclick="exportToFolder()" title="Export selected to an external folder">💾 Export Files</button>
+            </div>
+        </div>
+
+        <div id="playlist-header">
+            <input type="checkbox" id="select-all" onchange="toggleSelectAll()">
+            <span style="color: var(--text-dim);">Select All in <span id="current-tab-label" style="color:#fff; font-weight:bold;">Unsorted</span></span>
+        </div>
+
+        <ul id="playlist"></ul>
+    </div>
+
+    <div class="main-content">
+        <div style="display:flex; justify-content: space-between; margin-bottom: 15px; align-items: center;">
+            <div class="btn-group" style="margin-top:0;">
+                <button class="tool-btn" onclick="handleImport()">📄 Add Files</button>
+                <button class="tool-btn" onclick="handleFolderImport()">📁 Add Folder</button>
+                <button class="tool-btn" id="sidebar-toggle">◧ Sidebar</button>
+            </div>
+            <button class="tool-btn" onclick="toggleSettings()" id="btn-settings">⚙️ Settings & EQ</button>
+        </div>
+
+        <div id="audio-controls">
+            <button class="music-btn" id="btn-shuffle" onclick="toggleShuffle()" title="Shuffle">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+            </button>
+            <button class="music-btn" onclick="playPrev()" title="Previous Track">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2"></line></svg>
+            </button>
+            <button class="music-btn" id="btn-play-pause" onclick="togglePlayPause()" title="Play/Pause">
+                <svg id="icon-pause" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" style="display:none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                <svg id="icon-play" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            </button>
+            <button class="music-btn" onclick="playNext()" title="Next Track">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2"></line></svg>
+            </button>
+            <button class="music-btn" id="btn-loop" onclick="toggleLoop()" title="Loop Playlist">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+            </button>
+            <button class="music-btn" id="btn-deck-autoplay" onclick="toggleDeckAutoplay()" title="Toggle Auto-Play">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            </button>
+        </div>
+
+        <div class="media-wrapper" id="media-wrapper">
+            <canvas id="spectrogram"></canvas>
+            <video id="player" class="media-viewer" controls></video>
+            <img id="img-viewer" class="media-viewer viewer-img">
+            <iframe id="doc-viewer" class="media-viewer"></iframe>
+            <model-viewer id="3d-viewer" class="media-viewer" camera-controls auto-rotate shadow-intensity="1"></model-viewer>
+        </div>
+
+        <div class="controls-row" id="media-controls">
+            <button class="tool-btn" onclick="adjustScale(-0.1)">🔍 Downscale</button>
+            <button class="tool-btn" onclick="adjustScale(0.1)">🔎 Upscale</button>
+            <button class="tool-btn" onclick="adjustScale('reset')">🔄 Reset Scale</button>
+            <button class="tool-btn" onclick="seek(-10)">⏪ 10s</button>
+            <button class="tool-btn" onclick="seek(10)">⏩ 10s</button>
+            <button class="tool-btn" id="btn-pip">🔲 PiP</button>
+        </div>
+
+        <div id="settings-panel">
+            <h3 style="margin:0 0 10px 0; border-bottom: 1px solid #333; padding-bottom: 5px;">Core Settings</h3>
+            <div class="setting-row inline">
+                <label>Theme Color</label>
+                <input type="color" id="setting-color" value="#ff2a5f" style="width:50px; height:25px; padding:0; border:none;">
+            </div>
+            <div class="setting-row">
+                <label>Playback Speed <span id="speed-val">1.0x</span></label>
+                <input type="range" id="setting-speed" min="0.25" max="3" step="0.25" value="1">
+            </div>
+            <div class="setting-row inline">
+                <label>Global Auto-play</label>
+                <input type="checkbox" id="setting-autoplay" checked style="width:auto; transform:scale(1.2);">
+            </div>
+
+            <h3 style="margin:15px 0 10px 0; border-bottom: 1px solid #333; padding-bottom: 5px;">TV Picture Settings</h3>
+            <div class="setting-row">
+                <label>Backlight <span id="val-bl">100%</span></label>
+                <input type="range" min="0.1" max="1" step="0.05" value="1" oninput="updateStyle('--backlight', this.value, 'val-bl', true)">
+            </div>
+            <div class="setting-row">
+                <label>Brightness <span id="val-br">100%</span></label>
+                <input type="range" min="0" max="200" value="100" oninput="updateStyle('--brightness', this.value + '%', 'val-br')">
+            </div>
+            <div class="setting-row">
+                <label>Contrast <span id="val-ct">100%</span></label>
+                <input type="range" min="0" max="200" value="100" oninput="updateStyle('--contrast', this.value + '%', 'val-ct')">
+            </div>
+            <div class="setting-row">
+                <label>Saturation <span id="val-st">100%</span></label>
+                <input type="range" min="0" max="200" value="100" oninput="updateStyle('--saturate', this.value + '%', 'val-st')">
+            </div>
+
+            <h3 style="margin:15px 0 10px 0; border-bottom: 1px solid #333; padding-bottom: 5px;">Audio & EQ Settings</h3>
+            <div class="setting-row">
+                <label style="color:var(--accent); font-weight:bold;">Master Volume <span id="val-vol">100%</span></label>
+                <input type="range" id="setting-vol" min="0" max="1" step="0.05" value="1">
+            </div>
+            <div class="setting-row" style="margin-top:10px;"><label>60Hz (Bass)</label><input type="range" min="-12" max="12" value="0" oninput="updateEQ(0, this.value)"></div>
+            <div class="setting-row"><label>310Hz</label><input type="range" min="-12" max="12" value="0" oninput="updateEQ(1, this.value)"></div>
+            <div class="setting-row"><label>1kHz (Mid)</label><input type="range" min="-12" max="12" value="0" oninput="updateEQ(2, this.value)"></div>
+            <div class="setting-row"><label>6kHz</label><input type="range" min="-12" max="12" value="0" oninput="updateEQ(3, this.value)"></div>
+            <div class="setting-row"><label>14kHz (Treble)</label><input type="range" min="-12" max="12" value="0" oninput="updateEQ(4, this.value)"></div>
+
+            <button class="tool-btn" style="width:100%; color:#ff4444; border-color:#ff4444; margin-top: 15px;" onclick="wipeDatabase()">🗑️ Wipe All Data</button>
+        </div> 
+    </div>
+
+    <script>
+        let db;
+        let currentTab = 'unsorted';
+        let dbRecords = [];
+        let selectedItems = new Set();
+        let currentMediaName = "";
+        let currentScale = 1;
+        let currentObjectUrl = null;
+        let isPreviewMode = false;
+        const mediaURLCache = new Map();
+
+        let isShuffle = false;
+        let isLoop = false;
+        let playedInShuffle = new Set();
+
+        let audioCtx, analyser, source, filters = [];
+        let visualizerAnimation;
+
+        const player = document.getElementById('player');
+
+        // Play/Pause State Listeners
+        player.addEventListener('play', () => {
+            document.getElementById('icon-play').style.display = 'none';
+            document.getElementById('icon-pause').style.display = 'block';
+        });
+
+        player.addEventListener('pause', () => {
+            document.getElementById('icon-play').style.display = 'block';
+            document.getElementById('icon-pause').style.display = 'none';
+
+            // Only track progress if not in preview mode
+            if (currentMediaName && !isPreviewMode) {
+                const isAudioOnly = ['music', 'audiobook', 'audio'].includes(
+                    dbRecords.find(r => r.name === currentMediaName)?.type
+                );
+                if (isAudioOnly) {
+                    localStorage.setItem(`progress_${currentMediaName}`, player.currentTime);
+                }
+            }
+        });
+
+        // --- Core Init & Settings Restore ---
+        function loadCoreSettings() {
+            const savedColor = localStorage.getItem('themeColor') || '#ff2a5f';
+            document.documentElement.style.setProperty('--accent', savedColor);
+            document.getElementById('setting-color').value = savedColor;
+
+            const savedSpeed = localStorage.getItem('playbackSpeed') || '1';
+            document.getElementById('setting-speed').value = savedSpeed;
+            document.getElementById('speed-val').innerText = savedSpeed + 'x';
+
+            const savedVol = localStorage.getItem('volume') || '1';
+            document.getElementById('setting-vol').value = savedVol;
+            document.getElementById('val-vol').innerText = Math.round(savedVol * 100) + '%';
+            player.volume = savedVol;
+
+            const isAutoplay = (localStorage.getItem('autoplay') !== 'false');
+            document.getElementById('setting-autoplay').checked = isAutoplay;
+            const deckAutoplay = document.getElementById('btn-deck-autoplay');
+            if (deckAutoplay) deckAutoplay.classList.toggle('active', isAutoplay);
+
+            if (localStorage.getItem('sidebarHidden') === 'true') document.getElementById('sidebar').classList.add('hidden');
+        }
+
+        const request = indexedDB.open("MiddlandersMediaDB", 6);
+
+        request.onupgradeneeded = (e) => {
+            db = e.target.result;
+            if(!db.objectStoreNames.contains("media")) db.createObjectStore("media", { keyPath: "name" });
+        };
+
+        request.onsuccess = (e) => {
+            db = e.target.result;
+            loadCoreSettings();
+            loadPlaylist();
+            migrateOldRecords();
+        };
+
+        function migrateOldRecords() {
+            const tx = db.transaction("media", "readwrite");
+            const store = tx.objectStore("media");
+
+            dbRecords.forEach(record => {
+                if (!record.handle && record.file) {
+                    console.log("Old record found:", record.name);
+                }
+            });
+        }
+
+        // --- UI Interactions ---
+        function switchTab(tab) {
+            currentTab = tab;
+            selectedItems.clear();
+
+            document.querySelectorAll('.tab').forEach(t => {
+                t.classList.toggle('active', t.getAttribute('data-tab') === tab);
+            });
+
+            const tabName = tab.charAt(0).toUpperCase() + tab.slice(1);
+            document.getElementById('current-tab-label').innerText = tab === 'personal_video' ? 'Home Vids' : tabName;
+
+            renderPlaylist();
+        }
+
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        async function handleImport() {
+            try {
+                const handles = await window.showOpenFilePicker({ multiple: true });
+
+                for (const handle of handles) {
+                    const file = await handle.getFile();
+                    const sizeStr = formatBytes(file.size);
+
+                    const proceed = confirm(`Upload "${file.name}" (${sizeStr})?\n\nLarge files may freeze or lag your computer during the save process.`);
+                    if (!proceed) continue;
+
+                    try {
+                        const tx = db.transaction("media", "readwrite");
+                        const store = tx.objectStore("media");
+                        
+                        await store.put({
+                            name: handle.name,
+                            type: 'unsorted',
+                            file: file,
+                            mimeType: file.type,
+                            size: file.size,
+                            lastModified: file.lastModified
+                        });
+
+                        console.log(`Saved: ${handle.name}`);
+                    } catch (err) {
+                        console.error("Error saving file:", err);
+                    }
+                }
+                
+                loadPlaylist();
+                if(currentTab !== 'unsorted') switchTab('unsorted');
+
+            } catch (err) {
+                if (err.name !== 'AbortError') alert("Import failed: " + err.message);
+            }
+        }
+
+        async function handleFolderImport() {
+            try {
+                const dirHandle = await window.showDirectoryPicker();
+                const proceed = confirm("Importing a folder will store all files locally. This may take a moment for large folders. Continue?");
+                if (!proceed) return;
+
+                let fileCount = 0;
+                async function processDirectory(dir) {
+                    for await (const entry of dir.values()) {
+                        if (entry.kind === 'file') {
+                            const file = await entry.getFile();
+                            const tx = db.transaction("media", "readwrite");
+                            const store = tx.objectStore("media");
+                            
+                            await store.put({
+                                name: entry.name,
+                                type: 'unsorted',
+                                file: file,
+                                mimeType: file.type,
+                                size: file.size,
+                                lastModified: file.lastModified
+                            });
+
+                            fileCount++;
+                        } else if (entry.kind === 'directory') {
+                            await processDirectory(entry);
+                        }
+                    }
+                }
+
+                await processDirectory(dirHandle);
+                loadPlaylist();
+                alert(`Successfully imported ${fileCount} files.`);
+            } catch (err) {
+                if (err.name !== 'AbortError') alert("Folder import failed: " + err.message);
+            }
+        }
+
+        function loadPlaylist() {
+            if(!db) return;
+            db.transaction("media").objectStore("media").getAll().onsuccess = (e) => {
+                dbRecords = e.target.result;
+                renderPlaylist();
+            };
+        }
+
+        function renderPlaylist() {
+            const list = document.getElementById('playlist');
+            list.innerHTML = '';
+            const filtered = dbRecords.filter(r => r.type === currentTab);
+
+            filtered.forEach(record => {
+                const li = document.createElement('li');
+                li.className = `media-item ${currentMediaName === record.name ? 'active' : ''}`;
+                if (localStorage.getItem(`watched_${record.name}`) === 'true') li.classList.add('is-watched');
+
+                const deleteBtn = currentTab === 'trash'
+                    ? `<button class="btn-action" onclick="permanentlyDelete('${record.name}', event)" title="Delete Permanently">🗑️</button>`
+                    : `<button class="btn-action" onclick="deleteItem('${record.name}', event)" title="Move to Trash">🗑️</button>`;
+
+                // Added a Preview Button to explicitly prevent moving or tracking data
+                const previewBtn = `<button class="btn-action" onclick="playMedia('${record.name}', true, event)" title="Preview (No Progress Save)">👁️</button>`;
+
+                li.innerHTML = `
+                    <input type="checkbox" ${selectedItems.has(record.name) ? 'checked' : ''} onchange="toggleSelect('${record.name}')" onclick="event.stopPropagation()">
+                    <div class="item-main" onclick="playMedia('${record.name}')">
+                        ${record.name}
+                        <div class="watched-badge">✓ Viewed</div>
+                    </div>
+                    ${previewBtn}
+                    <button class="btn-action" onclick="renameItem('${record.name}', event)" title="Rename">✏️</button>
+                    ${deleteBtn}
+                `;
+                list.appendChild(li);
+            });
+
+            updateBulkBar();
+        }
+
+        function toggleSelectAll() {
+            const isChecked = document.getElementById('select-all').checked;
+            const filtered = dbRecords.filter(r => r.type === currentTab);
+
+            if (isChecked) {
+                filtered.forEach(r => selectedItems.add(r.name));
+            } else {
+                selectedItems.clear();
+            }
+
+            renderPlaylist();
+        }
+
+        function renameItem(oldName, event) {
+            event.stopPropagation();
+            const newName = prompt("Enter new name for this file:", oldName);
+
+            if (!newName || newName === oldName) return;
+            if (dbRecords.some(r => r.name === newName)) {
+                alert("A file with this name already exists.");
+                return;
+            }
+
+            const tx = db.transaction("media", "readwrite");
+            const store = tx.objectStore("media");
+
+            store.get(oldName).onsuccess = (e) => {
+                const record = e.target.result;
+                if (!record) return;
+
+                record.name = newName;
+                store.put(record);
+                store.delete(oldName);
+
+                const prog = localStorage.getItem(`progress_${oldName}`);
+                const watched = localStorage.getItem(`watched_${oldName}`);
+
+                if (prog) {
+                    localStorage.setItem(`progress_${newName}`, prog);
+                    localStorage.removeItem(`progress_${oldName}`);
+                }
+                if (watched) {
+                    localStorage.setItem(`watched_${newName}`, watched);
+                    localStorage.removeItem(`watched_${oldName}`);
+                }
+
+                if (currentMediaName === oldName) currentMediaName = newName;
+                tx.oncomplete = () => loadPlaylist();
+            };
+        }
+
+        function deleteItem(name, event) {
+            event.stopPropagation();
+            const tx = db.transaction("media", "readwrite");
+            const store = tx.objectStore("media");
+
+            store.get(name).onsuccess = (e) => {
+                const record = e.target.result;
+                if (record) {
+                    record.type = 'trash';
+                    store.put(record);
+
+                    tx.oncomplete = () => {
+                        if (currentMediaName === name) {
+                            currentMediaName = "";
+                            document.getElementById('media-wrapper').style.display = 'none';
+                        }
+                        loadPlaylist();
+                    };
+                }
+            };
+        }
+
+        function permanentlyDelete(name, event) {
+            event.stopPropagation();
+            if (!confirm(`Permanently delete "${name}"? Cannot be undone.`)) return;
+
+            const tx = db.transaction("media", "readwrite");
+            const store = tx.objectStore("media");
+            store.delete(name);
+
+            localStorage.removeItem(`progress_${name}`);
+            localStorage.removeItem(`watched_${name}`);
+            tx.oncomplete = () => loadPlaylist();
+        }
+
+        function toggleSelect(name) {
+            selectedItems.has(name) ? selectedItems.delete(name) : selectedItems.add(name);
+            updateBulkBar();
+        }
+
+        function updateBulkBar() {
+            const bar = document.getElementById('bulk-bar');
+            bar.style.display = selectedItems.size > 0 ? 'flex' : 'none';
+            document.getElementById('select-count').innerText = `${selectedItems.size} Selected`;
+
+            const filteredLength = dbRecords.filter(r => r.type === currentTab).length;
+            const selectAllCb = document.getElementById('select-all');
+            if (selectAllCb) {
+                selectAllCb.checked = (selectedItems.size === filteredLength && filteredLength > 0);
+            }
+        }
+
+        function bulkMove(targetType) {
+            if (!targetType) return;
+            const tx = db.transaction("media", "readwrite");
+            const store = tx.objectStore("media");
+
+            selectedItems.forEach(name => {
+                const record = dbRecords.find(r => r.name === name);
+                if (record) {
+                    record.type = targetType;
+                    store.put(record);
+                }
+            });
+
+            tx.oncomplete = () => {
+                selectedItems.clear();
+                document.getElementById('bulk-move-to').value = "";
+                loadPlaylist();
+            };
+        }
+
+        // --- NEW PLAYLIST EXPORT LOGIC ---
+        async function exportToFolder() {
+            if (selectedItems.size === 0) {
+                alert("Please select files to export first.");
+                return;
+            }
+
+            try {
+                // Request a directory from the user
+                const dirHandle = await window.showDirectoryPicker({
+                    mode: "readwrite"
+                });
+
+                for (const name of selectedItems) {
+                    const record = dbRecords.find(r => r.name === name);
+                    if (record && record.file) {
+                        try {
+                            const fileHandle = await dirHandle.getFileHandle(record.name, { create: true });
+                            const writable = await fileHandle.createWritable();
+                            await writable.write(record.file);
+                            await writable.close();
+                        } catch (e) {
+                            console.error(`Failed to write ${record.name}`, e);
+                        }
+                    }
+                }
+                
+                alert("Playlist successfully exported to the selected folder! You can now use these files on any device.");
+                selectedItems.clear();
+                loadPlaylist();
+
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    alert("Export failed. Make sure you grant folder edit permissions.");
+                    console.error(err);
+                }
+            }
+        }
+
+        // --- Media Player Engine ---
+        let lastSaveTime = 0;
+
+        player.addEventListener('timeupdate', () => {
+            if (currentMediaName && !isPreviewMode) {
+                const isAudioOnly = ['music', 'audiobook', 'audio'].includes(
+                    dbRecords.find(r => r.name === currentMediaName)?.type
+                );
+
+                if (player.duration && (player.currentTime / player.duration) > 0.90) {
+                    localStorage.setItem(`watched_${currentMediaName}`, 'true');
+                }
+
+                if (!isAudioOnly) {
+                    const now = Date.now();
+                    if (now - lastSaveTime > 2000) {
+                        localStorage.setItem(`progress_${currentMediaName}`, player.currentTime);
+                        lastSaveTime = now;
+                    }
+                }
+            }
+        });
+
+        player.onended = () => {
+            if (document.getElementById('setting-autoplay').checked && !isPreviewMode) {
+                playNext();
+            }
+        };
+
+        // Added 'preview' parameter
+        async function playMedia(name, preview = false, event = null) {
+            if(event) event.stopPropagation();
+            
+            const record = dbRecords.find(r => r.name === name);
+            if (!record) return;
+
+            currentMediaName = name;
+            isPreviewMode = preview;
+            renderPlaylist();
+
+            let url = null;
+            if (mediaURLCache.has(name)) {
+                url = mediaURLCache.get(name);
+            } else {
+                if (record.file) {
+                    url = URL.createObjectURL(record.file);
+                    mediaURLCache.set(name, url);
+                } 
+                else if (record.fileData) {
+                    const blob = new Blob([record.fileData], { type: record.mimeType });
+                    url = URL.createObjectURL(blob);
+                    mediaURLCache.set(name, url);
+                } else {
+                    alert(`No file data found for "${name}". It may have been imported incorrectly.`);
+                    return;
+                }
+            }
+
+            if (currentObjectUrl && currentObjectUrl !== url) {
+                // Future cleanup logic here if needed
+            }
+            currentObjectUrl = url;
+
+            const wrapper = document.getElementById('media-wrapper');
+            const img = document.getElementById('img-viewer');
+            const doc = document.getElementById('doc-viewer');
+            const viewer3d = document.getElementById('3d-viewer');
+            const viz = document.getElementById('spectrogram');
+            const controls = document.getElementById('media-controls');
+            const audioDeck = document.getElementById('audio-controls');
+
+            if (visualizerAnimation) {
+                cancelAnimationFrame(visualizerAnimation);
+                visualizerAnimation = null;
+            }
+
+            wrapper.style.display = 'block';
+            player.style.display = 'none';
+            img.style.display = 'none';
+            doc.style.display = 'none';
+            viewer3d.style.display = 'none';
+            viz.style.display = 'none';
+            controls.style.display = 'none';
+            audioDeck.style.display = 'none';
+            
+            player.pause();
+            player.src = "";
+            adjustScale('reset');
+
+            const isAudioOnly = ['music', 'audiobook', 'audio'].includes(record.type);
+            const isVideo = ['personal_video', 'movie', 'episode', 'anime'].includes(record.type);
+            const isImage = record.type === 'photo';
+            const isDoc = record.type === 'document';
+            const is3DFile = name.toLowerCase().endsWith('.glb') || name.toLowerCase().endsWith('.gltf') || name.toLowerCase().endsWith('.obj');
+
+            if (is3DFile) {
+                viewer3d.style.display = 'block';
+                viewer3d.src = url;
+                controls.style.display = 'flex'; // Allow scaling if they want to zoom the canvas frame
+            }
+            else if (isAudioOnly || isVideo || record.mimeType.startsWith('video/') || record.mimeType.startsWith('audio/')) {
+                if (typeof initAudio === "function") {
+                    initAudio();
+                    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+                }
+
+                player.style.display = 'block';
+                player.src = url;
+                player.playbackRate = document.getElementById('setting-speed').value || 1;
+
+                if (isAudioOnly) {
+                    audioDeck.style.display = 'flex';
+                    viz.style.display = 'block';
+                } else {
+                    controls.style.display = 'flex';
+                }
+
+                const isFinished = localStorage.getItem(`watched_${name}`) === 'true';
+                const savedTime = localStorage.getItem(`progress_${name}`);
+
+                if (!isPreviewMode) {
+                    if (isFinished) {
+                        player.currentTime = 0;
+                    } else if (savedTime) {
+                        player.currentTime = parseFloat(savedTime);
+                    }
+                }
+
+                if (document.getElementById('setting-autoplay').checked || isPreviewMode) {
+                    player.play().catch(err => console.log("Autoplay blocked by browser."));
+                }
+                
+                if (isAudioOnly) {
+                    drawVisualizer();
+                }
+
+            } else if (isImage || record.mimeType.startsWith('image/')) {
+                img.style.display = 'block';
+                controls.style.display = 'flex';
+                img.src = url;
+                if (!isPreviewMode) localStorage.setItem(`watched_${name}`, 'true'); 
+
+            } else { // Fallback to doc iframe
+                doc.style.display = 'block';
+                doc.src = url;
+                if (!isPreviewMode) localStorage.setItem(`watched_${name}`, 'true');
+            }
+        }
+
+        // --- Music Deck Controls ---
+        function toggleShuffle() {
+            isShuffle = !isShuffle;
+            playedInShuffle.clear();
+            document.getElementById('btn-shuffle').classList.toggle('active', isShuffle);
+        }
+
+        function toggleLoop() {
+            isLoop = !isLoop;
+            document.getElementById('btn-loop').classList.toggle('active', isLoop);
+        }
+
+        function toggleDeckAutoplay() {
+            const cb = document.getElementById('setting-autoplay');
+            cb.checked = !cb.checked;
+            localStorage.setItem('autoplay', cb.checked);
+            document.getElementById('btn-deck-autoplay').classList.toggle('active', cb.checked);
+        }
+
+        function togglePlayPause() {
+            if (player.paused) {
+                player.play();
+            } else {
+                player.pause();
+            }
+        }
+
+        function playNext() {
+            const list = dbRecords.filter(r => r.type === currentTab);
+
+            if (list.length === 0) return;
+
+            if (isShuffle) {
+                playedInShuffle.add(currentMediaName);
+                const unplayed = list.filter(r => !playedInShuffle.has(r.name));
+
+                if (unplayed.length > 0) {
+                    const randomIdx = Math.floor(Math.random() * unplayed.length);
+                    playMedia(unplayed[randomIdx].name);
+                } else {
+                    playedInShuffle.clear();
+                    const randomIdx = Math.floor(Math.random() * list.length);
+                    playMedia(list[randomIdx].name);
+                }
+                return;
+            }
+
+            const idx = list.findIndex(r => r.name === currentMediaName);
+
+            if (idx !== -1 && idx + 1 < list.length) {
+                playMedia(list[idx + 1].name);
+            } else if (idx !== -1 && isLoop) {
+                playMedia(list[0].name);
+            }
+        }
+
+        function playPrev() {
+            const list = dbRecords.filter(r => r.type === currentTab);
+            if (list.length === 0) return;
+
+            const idx = list.findIndex(r => r.name === currentMediaName);
+            if (idx > 0) {
+                playMedia(list[idx - 1].name);
+            } else if (idx === 0 && isLoop) {
+                playMedia(list[list.length - 1].name);
+            }
+        }
+
+        // --- Video Controls ---
+        function adjustScale(amount) {
+            if (amount === 'reset') currentScale = 1;
+            else {
+                currentScale += amount;
+                if (currentScale < 0.2) currentScale = 0.2;
+                if (currentScale > 5) currentScale = 5;
+            }
+            document.documentElement.style.setProperty('--video-scale', currentScale);
+        }
+
+        function seek(seconds) {
+            player.currentTime += seconds;
+        }
+
+        document.getElementById('btn-pip').onclick = () => {
+            if (document.pictureInPictureElement) document.exitPictureInPicture();
+            else player.requestPictureInPicture().catch(console.error);
+        };
+
+        // --- Audio Engine (EQ & Visualizer) ---
+        function initAudio() {
+            if (audioCtx && audioCtx.state !== 'closed') {
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume().catch(e => console.error("Resume failed:", e));
+                }
+                return;
+            }
+
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioCtx.createAnalyser();
+            analyser.fftSize = 256;
+
+            const freqs = [60, 310, 1000, 6000, 14000];
+            filters = freqs.map(f => {
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'peaking';
+                filter.frequency.value = f;
+                filter.gain.value = 0;
+                return filter;
+            });
+
+            if(!player.dataset.routed) {
+                source = audioCtx.createMediaElementSource(player);
+                let chain = source;
+
+                filters.forEach(f => {
+                    chain.connect(f);
+                    chain = f;
+                });
+                chain.connect(analyser);
+                analyser.connect(audioCtx.destination);
+                player.dataset.routed = "true";
+            }
+        }
+
+        function updateEQ(index, val) {
+            if(filters[index]) filters[index].gain.value = val;
+        }
+
+        function drawVisualizer() {
+            const canvas = document.getElementById('spectrogram');
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+
+            function render() {
+                visualizerAnimation = requestAnimationFrame(render);
+                analyser.getByteFrequencyData(dataArray);
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                const barWidth = (canvas.width / bufferLength) * 2.5;
+                let x = 0;
+
+                for(let i = 0; i < bufferLength; i++) {
+                    const barHeight = dataArray[i] / 1.5;
+                    const gradient = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - barHeight);
+                    const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+
+                    gradient.addColorStop(0, accent);
+                    gradient.addColorStop(1, '#ffffff');
+
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(x, canvas.height - barHeight, barWidth - 1, barHeight);
+                    x += barWidth;
+                }
+            }
+            render();
+        }
+
+        window.addEventListener('resize', () => {
+            const canvas = document.getElementById('spectrogram');
+            if (canvas && canvas.offsetParent !== null) {
+                canvas.width = canvas.parentElement.clientWidth;
+                canvas.height = canvas.parentElement.clientHeight;
+            }
+        });
+
+        // --- Settings Panel Logic ---
+        document.getElementById('setting-color').oninput = (e) => {
+            document.documentElement.style.setProperty('--accent', e.target.value);
+            localStorage.setItem('themeColor', e.target.value);
+        };
+
+        document.getElementById('setting-speed').oninput = (e) => {
+            player.playbackRate = e.target.value;
+            document.getElementById('speed-val').innerText = e.target.value + 'x';
+            localStorage.setItem('playbackSpeed', e.target.value);
+        };
+
+        document.getElementById('setting-vol').oninput = (e) => {
+            player.volume = e.target.value;
+            document.getElementById('val-vol').innerText = Math.round(e.target.value * 100) + '%';
+            localStorage.setItem('volume', e.target.value);
+        };
+
+        document.getElementById('setting-autoplay').onchange = (e) => {
+            localStorage.setItem('autoplay', e.target.checked);
+            const deckAutoplay = document.getElementById('btn-deck-autoplay');
+            if (deckAutoplay) deckAutoplay.classList.toggle('active', e.target.checked);
+        };
+
+        function toggleSettings() {
+            const p = document.getElementById('settings-panel');
+            p.style.display = p.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function closeAllMenus(e) {
+            const p = document.getElementById('settings-panel');
+            const btn = document.getElementById('btn-settings');
+
+            if (p.style.display === 'flex' && !p.contains(e.target) && !btn.contains(e.target)) {
+                p.style.display = 'none';
+            }
+        }
+
+        function updateStyle(prop, val, labelId, isDecimal = false) {
+            document.documentElement.style.setProperty(prop, val);
+            if(labelId) {
+                const displayVal = isDecimal ? Math.round(val * 100) + '%' : val;
+                document.getElementById(labelId).innerText = displayVal;
+            }
+        }
+
+        document.getElementById('sidebar-toggle').onclick = () => {
+            const sb = document.getElementById('sidebar');
+            sb.classList.toggle('hidden');
+            localStorage.setItem('sidebarHidden', sb.classList.contains('hidden'));
+        };
+
+        function wipeDatabase() {
+            if(confirm("Wipe everything? This deletes all records and saved progress.")) {
+                indexedDB.deleteDatabase("MiddlandersMediaDB");
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        // Close settings when clicking outside
+        document.addEventListener('click', closeAllMenus);
+    </script>
+</body>
+</html>

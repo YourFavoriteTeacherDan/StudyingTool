@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Skin Maker Pro</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <style>
+        :root { --bg: #202124; --panel: #292a2d; --accent: #8ab4f8; --text: #e8eaed; }
+        body { 
+            margin: 0; overflow: hidden; background: var(--bg); 
+            color: var(--text); font-family: 'Segoe UI', sans-serif;
+            display: flex; flex-direction: column; height: 100vh;
+        }
+        
+        /* Toolbar */
+        .toolbar { 
+            display: flex; gap: 15px; padding: 15px; background: var(--panel); 
+            border-bottom: 1px solid #3c4043; align-items: center; z-index: 10; flex-wrap: wrap;
+        }
+        button { 
+            background: #3c4043; color: white; border: none; padding: 8px 12px; 
+            border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s;
+        }
+        button:hover, button.active { background: var(--accent); color: #000; }
+        input[type="color"] { background: none; border: none; cursor: pointer; width: 40px; height: 40px; }
+        
+        .tool-group { display: flex; align-items: center; gap: 10px; border-right: 1px solid #5f6368; padding-right: 15px; }
+        .slider-container { display: flex; flex-direction: column; font-size: 11px; color: #9aa0a6; }
+        
+        /* Layout */
+        #main-area { flex: 1; position: relative; }
+        #canvas-3d { width: 100%; height: 100%; outline: none; cursor: crosshair; }
+        
+        /* 2D Unwrapped Preview overlay */
+        .preview-container {
+            position: absolute; bottom: 20px; left: 20px; background: rgba(32, 33, 36, 0.8);
+            padding: 10px; border-radius: 8px; border: 1px solid #5f6368;
+            display: flex; flex-direction: column; align-items: center; pointer-events: none;
+        }
+        .preview-container span { font-size: 12px; margin-bottom: 5px; color: #9aa0a6; }
+        #texture-canvas {
+            width: 128px; height: 128px; background: transparent;
+            image-rendering: pixelated; border: 1px solid #3c4043;
+        }
+
+        /* Interactive 3D View Cube in Corner */
+        #view-cube-wrapper {
+            position: absolute; bottom: 40px; right: 40px; width: 60px; height: 60px;
+            perspective: 400px; cursor: pointer; 
+        }
+        #view-cube {
+            width: 100%; height: 100%; position: relative; transform-style: preserve-3d;
+            transition: transform 0.1s ease-out;
+        }
+        .cube-face {
+            position: absolute; width: 60px; height: 60px; background: rgba(138, 180, 248, 0.2);
+            border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center;
+            font-size: 16px; font-weight: bold; color: var(--accent); user-select: none; transition: 0.2s;
+        }
+        .cube-face:hover { background: rgba(138, 180, 248, 0.6); color: #fff; }
+        .face-front  { transform: rotateY(  0deg) translateZ(30px); }
+        .face-back   { transform: rotateY(180deg) translateZ(30px); }
+        .face-right  { transform: rotateY( 90deg) translateZ(30px); }
+        .face-left   { transform: rotateY(-90deg) translateZ(30px); }
+        .face-top    { transform: rotateX( 90deg) translateZ(30px); }
+        .face-bottom { transform: rotateX(-90deg) translateZ(30px); }
+        
+        .hints {
+            position: absolute; top: 15px; right: 15px; color: #9aa0a6; font-size: 12px;
+            background: rgba(32, 33, 36, 0.8); padding: 8px 12px; border-radius: 4px; pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="toolbar">
+        <div class="tool-group">
+            <input type="color" id="color-picker" value="#ff0000" title="Pick Color">
+        </div>
+        
+        <div class="tool-group">
+            <button id="btn-brush" class="active" onclick="setMode('brush')">🖌️ Brush</button>
+            <button id="btn-bucket" onclick="setMode('bucket')">🪣 Bucket</button>
+            <button id="btn-eraser" onclick="setMode('eraser')">🧼 Eraser</button>
+        </div>
+
+        <div class="tool-group">
+            <div class="slider-container">
+                <label for="size-slider">Thickness: <span id="size-label">1px</span></label>
+                <input type="range" id="size-slider" min="1" max="5" value="1" oninput="document.getElementById('size-label').innerText = this.value + 'px'">
+            </div>
+        </div>
+        
+        <div style="flex: 1;"></div>
+        
+        <button onclick="clearSkin()" style="background: #ff4a4a; color: white;">🗑️ Clear</button>
+        <button onclick="exportSkin()" style="background: #87c095; color: black;">💾 Export PNG</button>
+    </div>
+
+    <div id="main-area">
+        <canvas id="canvas-3d"></canvas>
+        
+        <div class="hints">💡 Left-Click Background or Right-Click to Rotate</div>
+        
+        <div class="preview-container">
+            <span>2D Texture Map</span>
+            <canvas id="texture-canvas" width="64" height="64"></canvas>
+        </div>
+
+        <div id="view-cube-wrapper">
+            <div id="view-cube">
+                <div class="cube-face face-front" title="Front View" onclick="snapCamera(0, 0, 40)">F</div>
+                <div class="cube-face face-back" title="Back View" onclick="snapCamera(0, 0, -40)">B</div>
+                <div class="cube-face face-right" title="Right View" onclick="snapCamera(40, 0, 0)">R</div>
+                <div class="cube-face face-left" title="Left View" onclick="snapCamera(-40, 0, 0)">L</div>
+                <div class="cube-face face-top" title="Top View" onclick="snapCamera(0, 40, 0)">T</div>
+                <div class="cube-face face-bottom" title="Bottom View" onclick="snapCamera(0, -40, 0)">D</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- State ---
+        let currentMode = 'brush'; 
+        let isPointerDown = false;
+
+        // --- 2D Canvas (64x64 Texture) ---
+        const canvas2d = document.getElementById('texture-canvas');
+        const ctx = canvas2d.getContext('2d', { willReadFrequently: true });
+        
+        function initBaseSkin() {
+            ctx.clearRect(0, 0, 64, 64);
+            ctx.fillStyle = '#f9ccb1'; 
+            ctx.fillRect(0, 0, 32, 16); // Head 
+            ctx.fillRect(40, 16, 16, 16); // Right Arm
+            ctx.fillRect(32, 48, 16, 16); // Left Arm 
+            
+            ctx.fillStyle = '#00aaff'; 
+            ctx.fillRect(16, 16, 24, 16); // Body
+            
+            ctx.fillStyle = '#333399'; 
+            ctx.fillRect(0, 16, 16, 16); // Right Leg
+            ctx.fillRect(16, 48, 16, 16); // Left Leg
+        }
+        initBaseSkin();
+
+        // --- Three.js Engine ---
+        const canvas3d = document.getElementById('canvas-3d');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / (window.innerHeight - 70), 0.1, 1000);
+        camera.position.set(0, 0, 40);
+
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas3d, antialias: false, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight - 70);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.1;
+        controls.enablePan = false; // Prevents the model from sliding off screen
+        
+        scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        dirLight.position.set(10, 20, 20);
+        scene.add(dirLight);
+
+        // --- Texture Mapping ---
+        const activeTextures = [];
+        const uvMaps = {
+            Head: [[16, 8, 8, 8], [0, 8, 8, 8], [8, 0, 8, 8], [16, 0, 8, 8], [8, 8, 8, 8], [24, 8, 8, 8]],
+            Body: [[28, 20, 4, 12], [16, 20, 4, 12], [20, 16, 8, 4], [28, 16, 8, 4], [20, 20, 8, 12], [32, 20, 8, 12]],
+            ArmR: [[48, 20, 4, 12], [40, 20, 4, 12], [44, 16, 4, 4], [48, 16, 4, 4], [44, 20, 4, 12], [52, 20, 4, 12]],
+            ArmL: [[32, 52, 4, 12], [40, 52, 4, 12], [36, 48, 4, 4], [40, 48, 4, 4], [36, 52, 4, 12], [44, 52, 4, 12]],
+            LegR: [[8, 20, 4, 12], [0, 20, 4, 12], [4, 16, 4, 4], [8, 16, 4, 4], [4, 20, 4, 12], [12, 20, 4, 12]],
+            LegL: [[16, 52, 4, 12], [24, 52, 4, 12], [20, 48, 4, 4], [24, 48, 4, 4], [20, 52, 4, 12], [28, 52, 4, 12]]
+        };
+
+        function createFaceMaterial(mapArray) {
+            const [tx, ty, tw, th] = mapArray;
+            const tex = new THREE.CanvasTexture(canvas2d);
+            tex.magFilter = THREE.NearestFilter;
+            tex.minFilter = THREE.NearestFilter;
+            tex.repeat.set(tw / 64, th / 64);
+            tex.offset.set(tx / 64, 1 - (ty + th) / 64);
+            activeTextures.push(tex);
+            return new THREE.MeshLambertMaterial({ map: tex });
+        }
+
+        function createPart(w, h, d, x, y, z, mapKey) {
+            const geo = new THREE.BoxGeometry(w, h, d);
+            const materials = uvMaps[mapKey].map(mapArray => createFaceMaterial(mapArray));
+            const mesh = new THREE.Mesh(geo, materials);
+            mesh.position.set(x, y, z);
+            mesh.userData.mapKey = mapKey;
+            scene.add(mesh);
+        }
+
+        createPart(8, 8, 8, 0, 10, 0, 'Head');
+        createPart(8, 12, 4, 0, 0, 0, 'Body');
+        createPart(4, 12, 4, -6, 0, 0, 'ArmR');
+        createPart(4, 12, 4, 6, 0, 0, 'ArmL');
+        createPart(4, 12, 4, -2, -12, 0, 'LegR');
+        createPart(4, 12, 4, 2, -12, 0, 'LegL');
+
+        // --- Painting & Raycasting ---
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        function hexToRgba(hex) {
+            const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+            return [r, g, b, 255];
+        }
+
+        function floodFill(startX, startY, fillHex) {
+            const imgData = ctx.getImageData(0, 0, 64, 64);
+            const data = imgData.data;
+            const startPos = (startY * 64 + startX) * 4;
+            const targetColor = [data[startPos], data[startPos+1], data[startPos+2], data[startPos+3]];
+            const fillColor = hexToRgba(fillHex);
+
+            if (targetColor.every((val, i) => val === fillColor[i])) return;
+
+            const stack = [[startX, startY]];
+            while (stack.length) {
+                const [x, y] = stack.pop();
+                const pos = (y * 64 + x) * 4;
+                if (x < 0 || x >= 64 || y < 0 || y >= 64) continue;
+
+                if (data[pos] === targetColor[0] && data[pos+1] === targetColor[1] && data[pos+2] === targetColor[2] && data[pos+3] === targetColor[3]) {
+                    data[pos] = fillColor[0]; data[pos+1] = fillColor[1]; data[pos+2] = fillColor[2]; data[pos+3] = fillColor[3];
+                    stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+                }
+            }
+            ctx.putImageData(imgData, 0, 0);
+        }
+
+        function paintOnIntersection(hit) {
+            const mapKey = hit.object.userData.mapKey;
+            const faceIndex = Math.floor(hit.faceIndex / 2);
+            
+            const [tx, ty, tw, th] = uvMaps[mapKey][faceIndex];
+            const pixelX = Math.floor(tx + hit.uv.x * tw);
+            const pixelY = Math.floor(ty + (1 - hit.uv.y) * th);
+
+            const size = parseInt(document.getElementById('size-slider').value);
+            const offset = Math.floor(size / 2);
+            const color = document.getElementById('color-picker').value;
+
+            if (currentMode === 'brush') {
+                ctx.fillStyle = color;
+                ctx.fillRect(pixelX - offset, pixelY - offset, size, size);
+            } else if (currentMode === 'eraser') {
+                ctx.clearRect(pixelX - offset, pixelY - offset, size, size);
+            } else if (currentMode === 'bucket') {
+                floodFill(pixelX, pixelY, color);
+                isPointerDown = false; // Auto-stop bucket drag
+            }
+
+            activeTextures.forEach(t => t.needsUpdate = true);
+        }
+
+        // CAPTURE PHASE EVENT: Intercepts click before OrbitControls handles it
+        canvas3d.addEventListener('pointerdown', (e) => {
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(scene.children);
+
+            // Left click directly on the model -> Paint Mode
+            if (intersects.length > 0 && e.button === 0) {
+                controls.enabled = false;
+                isPointerDown = true;
+                paintOnIntersection(intersects[0]);
+            } else {
+                // Background click or Right click -> Let OrbitControls handle rotation
+                controls.enabled = true;
+                isPointerDown = false;
+            }
+        }, true); // The "true" argument is critical for the capture phase bypass
+
+        canvas3d.addEventListener('pointermove', (e) => {
+            if (isPointerDown) {
+                const rect = renderer.domElement.getBoundingClientRect();
+                mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(scene.children);
+                if (intersects.length > 0) paintOnIntersection(intersects[0]);
+            }
+        });
+
+        window.addEventListener('pointerup', () => { isPointerDown = false; });
+        canvas3d.addEventListener('contextmenu', e => e.preventDefault()); // Allow right click
+
+        // --- Camera Snapping ---
+        window.snapCamera = function(x, y, z) {
+            camera.position.set(x, y, z);
+            controls.target.set(0, 0, 0); // Re-center
+            controls.update();
+        };
+
+        // --- UI & Lifecycle ---
+        window.setMode = function(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.toolbar button').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-' + mode).classList.add('active');
+        };
+
+        window.clearSkin = function() {
+            if(confirm("Wipe the canvas entirely?")) {
+                ctx.clearRect(0, 0, 64, 64);
+                activeTextures.forEach(t => t.needsUpdate = true);
+            }
+        };
+
+        window.exportSkin = function() {
+            const link = document.createElement('a');
+            link.download = 'custom_3d_skin.png';
+            link.href = canvas2d.toDataURL('image/png');
+            link.click();
+        };
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / (window.innerHeight - 70);
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight - 70);
+        });
+
+        const viewCube = document.getElementById('view-cube');
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (controls.enabled) controls.update();
+            
+            // Sync CSS Cube with Three.js Camera rotation natively
+            const rot = camera.rotation;
+            viewCube.style.transform = `rotateX(${rot.x}rad) rotateY(${rot.y}rad) rotateZ(${rot.z}rad)`;
+
+            renderer.render(scene, camera);
+        }
+        animate();
+    </script>
+</body>
+</html>

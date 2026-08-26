@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Middlanders Enhanced Music Player</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #181818; color: #eee; margin: 0; }
+    h1 { background: #1db954; padding: 15px; margin: 0; color: #fff; text-align:center; }
+    #container { display: flex; }
+    #main { flex: 3; padding:16px; }
+    #sidebar { flex: 1; background:#222; padding:16px; border-left:2px solid #1db954; }
+    #dropzone {
+      border: 2px dashed #1db954;
+      padding: 60px;
+      margin: 10px auto 0;
+      width: 100%;
+      border-radius: 10px;
+      color: #1db954;
+      cursor: pointer;
+      text-align:center;
+      font-size:18px;
+    }
+    button {
+      margin: 8px;
+      padding: 12px 22px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      background: #1db954;
+      color: #000;
+      cursor: pointer;
+    }
+    button:hover { filter: brightness(1.1); }
+    .playlist { max-height: 220px; overflow-y: auto; margin: 10px 0; text-align: left; }
+    .playlist li { list-style: none; padding: 6px; cursor: pointer; border-bottom: 1px solid #333; }
+    .playlist li.active { color: #1db954; font-weight: bold; }
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 150px;
+      height: 6px;
+      background: #1db954;
+      border-radius: 3px;
+      outline: none;
+      margin: 0 8px;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px; height: 20px;
+      border-radius: 50%; background: #fff;
+      cursor: pointer; border: 2px solid #1db954;
+    }
+    input[type=range]::-moz-range-thumb {
+      width: 20px; height: 20px;
+      border-radius: 50%; background: #fff;
+      cursor: pointer; border: 2px solid #1db954;
+    }
+    #timeDisplay { margin-top: 5px; font-size: 14px; color: #ccc; text-align:center; }
+    canvas {
+      background: #000;
+      display: block;
+      margin: 16px auto;
+      border-radius: 5px;
+      width: 100%;
+      height: 300px;
+    }
+    #trackInfo { margin-top: 10px; font-size: 15px; color: #1db954; text-align:center; }
+    #sidebar h2 { color:#1db954; margin-top:0; }
+    label { display:block; margin:8px 0; }
+    #bottomDock { background:#111; padding:20px; border-top:2px solid #1db954; text-align:center; }
+    .bigBtn { font-size: 28px; padding: 25px 35px; margin: 10px; }
+    #stats { margin-top:10px; color:#ccc; }
+    #seek { width: 80%; margin: 10px auto; display:block; }
+    #customEQ { display:none; margin-top:15px; padding:10px; background:#222; border-radius:8px; }
+  </style>
+</head>
+<body>
+  <h1>🎶 Middlanders Enhanced Music Player</h1>
+  <div id="container">
+    <div id="main">
+      <div id="dropzone">Drag & drop your MP3 files here or click to select</div>
+      <input type="file" id="fileInput" accept="audio/mpeg" multiple style="display:none;">
+      <audio id="audio" preload="auto"></audio>
+      <div id="trackInfo">No track loaded</div>
+      <ul class="playlist" id="playlist"></ul>
+      <canvas id="visualizer" width="800" height="300"></canvas>
+      <input type="range" id="seek" min="0" max="100" value="0" step="0.1">
+      <div id="timeDisplay">0:00 / 0:00</div>
+    </div>
+    <div id="sidebar">
+      <h2>Controls</h2>
+      <label>Autoplay <input type="checkbox" id="autoplay" checked></label>
+      <label>Shuffle <input type="checkbox" id="shuffle"></label>
+      <label>Loop Track <input type="checkbox" id="loop"></label>
+      <label>Crossfade <input type="checkbox" id="crossfade"></label>
+      <h2>Customization</h2>
+      <label>Theme 
+        <select id="theme">
+          <option value="dark" selected>Dark</option>
+          <option value="light">Light</option>
+          <option value="blue">Blue</option>
+        </select>
+      </label>
+    </div>
+  </div>
+  <div id="bottomDock">
+    <div class="dockControls">
+      <button onclick="prevTrack()" class="bigBtn">⏮️</button>
+      <button onclick="togglePlay()" class="bigBtn">▶️/⏸️</button>
+      <button onclick="nextTrack()" class="bigBtn">⏭️</button>
+    </div>
+    <label>EQ Preset 
+      <select id="eqPreset">
+        <option value="flat">Flat</option>
+        <option value="bass">Bass Boost</option>
+        <option value="classical">Classical</option>
+        <option value="podcast">Podcast</option>
+        <option value="custom">Custom</option>
+      </select>
+    </label>
+    <div id="customEQ">
+      <div class="eq" id="eq"></div>
+    </div>
+    <label>Volume <input type="range" id="volume" min="0" max="1" step="0.01" value="1"></label>
+    <label>Boost <input type="range" id="boost" min="1" max="5" step="0.1" value="1"></label>
+    <label>Speed <input type="range" id="speed" min="0.5" max="2" step="0.1" value="1"></label>
+    <label>Pitch <input type="range" id="pitch" min="0.5" max="2" step="0.1" value="1"></label>
+    <div id="stats">Plays: 0 | Avg Volume: 1.0 | Preset: Flat</div>
+    <button onclick="saveProfile()">💾 Save Profile</button>
+    <input type="file" id="loadFile" accept="application/json" style="display:none;">
+    <button onclick="document.getElementById('loadFile').click()">📂 Load Profile</button>
+  </div>
+
+  <script>
+    const audio=document.getElementById("audio");
+    const volume=document.getElementById("volume");
+    const boost=document.getElementById("boost");
+    const speed=document.getElementById("speed");
+    const pitch=document.getElementById("pitch");
+    const autoplaySwitch=document.getElementById("autoplay");
+    const shuffleSwitch=document.getElementById("shuffle");
+    const loopSwitch=document.getElementById("loop");
+    const crossfadeSwitch=document.getElementById("crossfade");
+    const playlistEl=document.getElementById("playlist");
+    const seek=document.getElementById("seek");
+    const timeDisplay=document.getElementById("timeDisplay");
+    const trackInfo=document.getElementById("trackInfo");
+    const themeSelect=document.getElementById("theme");
+    const eqPreset=document.getElementById("eqPreset");
+    const customEQ=document.getElementById("customEQ");
+    const stats=document.getElementById("stats");
+
+    let playlist=[]; let current=0; let shuffle=false; let autoplayEnabled=true; let loop=false;
+    let playCount=0; let avgVolume=1.0;
+
+    autoplaySwitch.addEventListener("change",()=>autoplayEnabled=autoplaySwitch.checked);
+    shuffleSwitch.addEventListener("change",()=>shuffle=shuffleSwitch.checked);
+    loopSwitch.addEventListener("change",()=>{loop=loopSwitch.checked; audio.loop=loop;});
+
+        // File handling
+    dropzone.addEventListener("click",()=>fileInput.click());
+    fileInput.addEventListener("change",e=>addFiles(Array.from(e.target.files)));
+    dropzone.addEventListener("dragover",e=>{e.preventDefault();dropzone.style.background="#222";});
+    dropzone.addEventListener("dragleave",e=>{e.preventDefault();dropzone.style.background="";});
+    dropzone.addEventListener("drop",e=>{e.preventDefault();dropzone.style.background="";addFiles(Array.from(e.dataTransfer.files));});
+
+    function addFiles(files){
+      const newTracks=[];
+      files.forEach(file=>{
+        if(file.type==="audio/mpeg"){
+          const url=URL.createObjectURL(file);
+          newTracks.push({src:url,title:file.name});
+        }
+      });
+      if(newTracks.length){
+        playlist=playlist.concat(newTracks);
+        buildPlaylist();
+        if(playlist.length===newTracks.length){
+          loadTrack(0);
+          audio.addEventListener("canplay",()=>audio.play(),{once:true});
+        }
+      }
+    }
+
+    function buildPlaylist(){
+      const frag=document.createDocumentFragment();
+      playlist.forEach((track,i)=>{
+        const li=document.createElement("li");
+        li.textContent=track.title;
+        li.onclick=()=>loadTrack(i);
+        frag.appendChild(li);
+      });
+      playlistEl.innerHTML="";
+      playlistEl.appendChild(frag);
+      highlightCurrent();
+    }
+    function highlightCurrent(){document.querySelectorAll("#playlist li").forEach((li,idx)=>li.classList.toggle("active",idx===current));}
+    function loadTrack(i){
+      current=i; audio.src=playlist[i].src; trackInfo.textContent="▶️ "+playlist[i].title; highlightCurrent();
+      if(autoplayEnabled){audio.addEventListener("canplay",()=>audio.play(),{once:true});}
+    }
+
+    function togglePlay(){ if (ctx.state==="suspended") ctx.resume(); if(audio.src){ audio.paused?audio.play():audio.pause(); } }
+    function nextTrack(){ if(!playlist.length)return; current=(current+1)%playlist.length; loadTrack(current); }
+    function prevTrack(){ if(!playlist.length)return; current=(current-1+playlist.length)%playlist.length; loadTrack(current); }
+
+    audio.addEventListener("ended",()=>{ if(autoplayEnabled && !loop) nextTrack(); playCount++; updateStats(); });
+
+    volume.addEventListener("input",()=>audio.volume=volume.value);
+    speed.addEventListener("input",()=>audio.playbackRate=parseFloat(speed.value));
+    pitch.addEventListener("input",()=>audio.playbackRate=parseFloat(pitch.value));
+
+    // Seek bar
+    audio.addEventListener("timeupdate",()=>{
+      if(!isNaN(audio.duration)){
+        seek.max=audio.duration; seek.value=audio.currentTime;
+        const elapsed=formatTime(audio.currentTime);
+        const remaining=formatTime(audio.duration-audio.currentTime);
+        timeDisplay.textContent=`${elapsed} / ${formatTime(audio.duration)} (Remaining: ${remaining})`;
+      }
+    });
+    seek.addEventListener("change",()=>{audio.currentTime=seek.value;});
+    function formatTime(sec){const m=Math.floor(sec/60);const s=Math.floor(sec%60);return `${m}:${s.toString().padStart(2,"0")}`;}
+
+    // EQ Presets
+    eqPreset.addEventListener("change",()=>{
+      const preset=eqPreset.value;
+      filters.forEach(f=>f.gain.value=0);
+      customEQ.style.display = (preset==="custom") ? "block" : "none";
+      if(preset==="bass"){filters[0].gain.value=6;filters[1].gain.value=4;}
+      if(preset==="classical"){filters[4].gain.value=2;filters[5].gain.value=2;}
+      if(preset==="podcast"){filters[2].gain.value=-2;filters[3].gain.value=-2;}
+      updateStats();
+    });
+
+    // Stats
+    function updateStats(){
+      avgVolume=(avgVolume+audio.volume)/2;
+      stats.textContent=`Plays: ${playCount} | Avg Volume: ${avgVolume.toFixed(2)} | Preset: ${eqPreset.value}`;
+    }
+
+    // Save/Load Profile
+    function saveProfile(){
+      const profile={volume:audio.volume,speed:audio.playbackRate,pitch:pitch.value,preset:eqPreset.value,theme:themeSelect.value};
+      const blob=new Blob([JSON.stringify(profile)],{type:"application/json"});
+      const a=document.createElement("a");
+      a.href=URL.createObjectURL(blob);
+      a.download="musicProfile.json";
+      a.click();
+    }
+    document.getElementById("loadFile").addEventListener("change",function(){
+      const file=this.files[0];
+      if(file){
+        const reader=new FileReader();
+        reader.onload=function(e){
+          const profile=JSON.parse(e.target.result);
+          audio.volume=profile.volume; volume.value=profile.volume;
+          audio.playbackRate=profile.speed; speed.value=profile.speed;
+          pitch.value=profile.pitch; audio.playbackRate=parseFloat(profile.pitch);
+          eqPreset.value=profile.preset; themeSelect.value=profile.theme;
+          customEQ.style.display = (profile.preset==="custom") ? "block" : "none";
+        };
+        reader.readAsText(file);
+      }
+    });
+
+    // Theme switcher
+    themeSelect.addEventListener("change",()=>{
+      const theme=themeSelect.value;
+      if(theme==="light"){document.body.style.background="#f0f0f0";document.body.style.color="#000";}
+      else if(theme==="blue"){document.body.style.background="#001f3f";document.body.style.color="#eee";}
+      else {document.body.style.background="#181818";document.body.style.color="#eee";}
+    });
+
+    // Web Audio API setup
+    const ctx=new (window.AudioContext||window.webkitAudioContext)();
+    const source=ctx.createMediaElementSource(audio);
+    const preGain=ctx.createGain(); preGain.gain.value=1;
+    const freqs=[31,62,125,250,500,1000,2000,4000,8000,16000];
+    const filters=freqs.map(f=>{const filter=ctx.createBiquadFilter();filter.type="peaking";filter.frequency.value=f;filter.Q.value=1;filter.gain.value=0;return filter;});
+    const postGain=ctx.createGain(); postGain.gain.value=parseFloat(boost.value);
+    const analyser=ctx.createAnalyser(); analyser.fftSize=256;
+    source.connect(preGain); let node=preGain; filters.forEach(f=>{node.connect(f);node=f;}); node.connect(postGain); postGain.connect(analyser); analyser.connect(ctx.destination);
+    boost.addEventListener("input",e=>postGain.gain.value=parseFloat(e.target.value));
+
+    const eqDiv=document.getElementById("eq");
+    filters.forEach((filter,i)=>{
+      const wrapper=document.createElement("div");
+      const label=document.createElement("label"); label.textContent=freqs[i]+" Hz";
+      const slider=document.createElement("input"); slider.type="range"; slider.min=-12; slider.max=12; slider.value=0; slider.step=0.5;
+      const readout=document.createElement("span"); readout.textContent="0 dB";
+      slider.oninput=e=>{filter.gain.value=parseFloat(e.target.value);readout.textContent=(e.target.value>0?"+":"")+e.target.value+" dB";};
+      wrapper.appendChild(label);wrapper.appendChild(slider);wrapper.appendChild(readout);eqDiv.appendChild(wrapper);
+    });
+
+    const bufferLength=analyser.frequencyBinCount; const dataArray=new Uint8Array(bufferLength);
+    const canvas=document.getElementById("visualizer"); const canvasCtx=canvas.getContext("2d");
+    function draw(){requestAnimationFrame(draw);analyser.getByteFrequencyData(dataArray);canvasCtx.fillStyle="#000";canvasCtx.fillRect(0,0,canvas.width,canvas.height);
+      const barWidth=(canvas.width/bufferLength)*2.5; let x=0;
+      for(let i=0;i<bufferLength;i++){const barHeight=dataArray[i];canvasCtx.fillStyle=`rgb(${barHeight+50},200,100)`;canvasCtx.fillRect(x,canvas.height-barHeight,barWidth,barHeight);x+=barWidth+1;}
+    } draw();
+
+    document.body.addEventListener("click",()=>{if(ctx.state==="suspended")ctx.resume();});
+  </script>
+</body>
+</html>

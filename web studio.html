@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Middlanders Suite: Web Studio & Config Lab</title>
+    <style>
+        :root {
+            --bg: #0d1117; --panel: #161b22; --panel-light: #21262d; --border: #30363d;
+            --accent: #58a6ff; --accent-hover: #3182ce;
+            --success: #2ea043; --danger: #da3633; --warn: #d29922; --text: #c9d1d9;
+            --font-code: 'Consolas', 'Courier New', monospace;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        
+        .screen { display: none; flex: 1; flex-direction: column; width: 100%; height: 100%; }
+        .screen.active { display: flex; }
+
+        .btn { padding: 6px 14px; background: var(--panel-light); border: 1px solid var(--border); color: var(--text); border-radius: 5px; cursor: pointer; transition: 0.2s; font-size: 12px; font-weight: bold; }
+        .btn.primary { background: var(--success); color: #fff; border: none; }
+        .btn.accent { background: var(--accent); color: #000; border: none; }
+        .btn.warn { background: var(--warn); color: #000; border: none; }
+        .btn:hover { filter: brightness(1.2); }
+
+        /* Dashboard */
+        .header { background: var(--panel); padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .header h2 { margin: 0; color: var(--accent); font-size: 18px; letter-spacing: 1px; }
+        #dashboard-screen { padding: 20px; overflow-y: auto; align-items: center; }
+        .board-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; margin-top: 20px; width: 100%; max-width: 1100px; }
+        .board-card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 15px; cursor: pointer; transition: 0.2s; position: relative; }
+        .board-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+        .board-title { font-weight: bold; font-size: 15px; margin-bottom: 5px; color: #fff; padding-right: 30px; }
+        .board-meta { font-size: 11px; color: #8b949e; }
+
+        /* Workspace */
+        #workspace-screen { flex-direction: column; }
+        .workspace-topbar { background: var(--panel); padding: 8px 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        
+        .workspace-body { flex: 1; display: flex; overflow: hidden; }
+        
+        /* Editor Panel */
+        .editor-panel { flex: 1; display: flex; flex-direction: column; border-right: 1px solid var(--border); background: var(--panel); min-width: 300px; }
+        .editor-tabs { display: flex; background: #010409; border-bottom: 1px solid var(--border); }
+        .editor-tab { flex: 1; padding: 10px; background: transparent; border: none; color: #8b949e; cursor: pointer; font-size: 12px; font-weight: bold; border-bottom: 2px solid transparent; }
+        .editor-tab.active { color: var(--accent); border-bottom-color: var(--accent); background: var(--panel); }
+        
+        .editor-container { flex: 1; display: flex; overflow: hidden; position: relative; background: #010409; }
+        .line-numbers { width: 40px; background: #0d1117; color: #484f58; text-align: right; padding: 10px 5px; font-family: var(--font-code); font-size: 13px; line-height: 1.5; overflow: hidden; user-select: none; border-right: 1px solid var(--border); }
+        .code-area { flex: 1; background: transparent; color: #c9d1d9; border: none; padding: 10px; font-family: var(--font-code); font-size: 13px; line-height: 1.5; outline: none; resize: none; white-space: pre; overflow: auto; tab-size: 4; }
+        
+        /* Viewer Panel */
+        .viewer-panel { flex: 1; display: flex; flex-direction: column; background: #111; min-width: 300px; }
+        .viewer-tabs { display: flex; background: #010409; border-bottom: 1px solid var(--border); }
+        .viewer-tab { flex: 1; padding: 10px; background: transparent; border: none; color: #8b949e; cursor: pointer; font-size: 12px; font-weight: bold; border-bottom: 2px solid transparent; }
+        .viewer-tab.active { color: var(--success); border-bottom-color: var(--success); background: #111; }
+
+        .preview-container { flex: 1; background: #fff; position: relative; display: flex; flex-direction: column; }
+        iframe { width: 100%; height: 100%; border: none; background: #fff; flex: 1; }
+
+        /* Console Output */
+        .console-container { flex: 1; background: #0d1117; padding: 10px; overflow-y: auto; font-family: var(--font-code); font-size: 12px; display: none; }
+        .log-entry { margin-bottom: 4px; padding: 4px; border-bottom: 1px solid #21262d; word-break: break-all; }
+        .log-entry.error { color: var(--danger); background: rgba(218, 54, 51, 0.1); border-left: 3px solid var(--danger); padding-left: 8px; }
+        .log-entry.info { color: #8b949e; }
+        .log-entry.warn { color: var(--warn); }
+
+        /* Config / JSON Results */
+        .config-tools { display: none; padding: 10px; background: var(--panel); border-bottom: 1px solid var(--border); gap: 10px; }
+        .json-output { flex: 1; background: #0d1117; padding: 15px; font-family: var(--font-code); font-size: 13px; color: var(--success); white-space: pre-wrap; overflow-y: auto; display: none; }
+        
+        /* Auto-Save indicator */
+        .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+        .status-dot.saved { background: var(--success); }
+        .status-dot.dirty { background: var(--warn); }
+
+    </style>
+</head>
+<body>
+
+    <!-- DASHBOARD SCREEN -->
+    <div id="dashboard-screen" class="screen active">
+        <div class="header">
+            <h2>💻 Middlanders Dev Studio & Config Lab</h2>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="file" id="import-proj" style="display:none" accept=".json" onchange="importProject(event)">
+                <button class="btn accent" onclick="document.getElementById('import-proj').click()">📥 Import Project</button>
+                <button class="btn primary" onclick="createNewProject()">+ New App / Script</button>
+                <button class="btn warn" onclick="clearAllData()">🗑️ Purge Local Storage</button>
+            </div>
+        </div>
+        <div class="dashboard-container" style="margin: 0 auto;">
+            <p style="color: #8b949e; font-size: 13px; text-align: center;">100% Offline 0-Dependency Environment. Auto-saves to IndexedDB.</p>
+            <div class="board-grid" id="project-grid"></div>
+        </div>
+    </div>
+
+    <!-- WORKSPACE SCREEN -->
+    <div id="workspace-screen" class="screen">
+        <div class="workspace-topbar">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="btn" onclick="exitToDashboard()">⬅ Dashboard</button>
+                <span id="workspace-title" style="font-weight:bold; font-size:14px; color:var(--accent);">Untitled Project</span>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="font-size: 11px; color: #8b949e; display: flex; align-items: center;">
+                    <span id="sync-dot" class="status-dot saved"></span> <span id="sync-text">Saved</span>
+                </div>
+                <button class="btn" onclick="exportHTML()">📤 Export to Single .html</button>
+                <button class="btn" onclick="exportProjectJSON()">📤 Export Backup (.json)</button>
+                <button class="btn primary" onclick="runCode()">▶ Run / Compile Code</button>
+            </div>
+        </div>
+
+        <div class="workspace-body">
+            <!-- Left Panel: Editor -->
+            <div class="editor-panel">
+                <div class="editor-tabs">
+                    <button class="editor-tab active" onclick="switchEditorTab('html')" id="tab-html">HTML</button>
+                    <button class="editor-tab" onclick="switchEditorTab('css')" id="tab-css">CSS</button>
+                    <button class="editor-tab" onclick="switchEditorTab('js')" id="tab-js">JS</button>
+                    <button class="editor-tab" onclick="switchEditorTab('config')" id="tab-config">JSON/YAML Validator</button>
+                </div>
+                
+                <div class="config-tools" id="config-tools-bar">
+                    <button class="btn" onclick="validateJSON()">🔍 Format & Validate JSON</button>
+                    <button class="btn" onclick="minifyJSON()">📉 Minify JSON</button>
+                    <span style="font-size: 11px; color: #8b949e; margin-top: 5px;">Paste server configs, LuckPerms, or general JSON here.</span>
+                </div>
+
+                <div class="editor-container">
+                    <div class="line-numbers" id="line-numbers">1</div>
+                    <textarea class="code-area" id="code-editor" spellcheck="false" oninput="handleEditorInput()" onscroll="syncScroll()" onkeydown="handleTabs(event)"></textarea>
+                </div>
+            </div>
+
+            <!-- Right Panel: Output -->
+            <div class="viewer-panel">
+                <div class="viewer-tabs">
+                    <button class="viewer-tab active" onclick="switchOutputTab('preview')" id="out-tab-preview">🌐 Live App</button>
+                    <button class="viewer-tab" onclick="switchOutputTab('console')" id="out-tab-console">Terminal / Console</button>
+                    <button class="viewer-tab" onclick="switchOutputTab('json')" id="out-tab-json">Config Validation Result</button>
+                </div>
+
+                <div id="out-preview" class="preview-container">
+                    <iframe id="preview-frame" sandbox="allow-scripts allow-modals allow-pointer-lock allow-same-origin allow-popups"></iframe>
+                </div>
+
+                <div id="out-console" class="console-container">
+                    <div class="log-entry info">System: VM Ready. Waiting for execution...</div>
+                </div>
+
+                <div id="out-json" class="json-output">Waiting for validation...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATABASE INIT ---
+        const DB_NAME = "MiddlandersDevDB";
+        let db;
+        
+        let currentProject = null;
+        let activeEditorTab = 'html'; 
+        let activeOutputTab = 'preview';
+        let autoSaveTimer = null;
+
+        const request = indexedDB.open(DB_NAME, 1);
+        request.onupgradeneeded = (e) => {
+            const tempDb = e.target.result;
+            tempDb.createObjectStore("projects", { keyPath: "id" });
+        };
+        request.onsuccess = (e) => { 
+            db = e.target.result; 
+            loadDashboard(); 
+        };
+
+        // --- DASHBOARD ---
+        function switchScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function loadDashboard() {
+            const grid = document.getElementById('project-grid');
+            grid.innerHTML = '';
+            
+            const tx = db.transaction("projects", "readonly");
+            const store = tx.objectStore("projects");
+            const projects = [];
+            
+            store.openCursor().onsuccess = (e) => {
+                const cursor = e.target.result;
+                if (cursor) {
+                    projects.push(cursor.value);
+                    cursor.continue();
+                } else {
+                    projects.sort((a,b) => b.updated - a.updated);
+                    if (projects.length === 0) {
+                        grid.innerHTML = '<div style="color:#8b949e;">No local projects found. Create one to begin.</div>';
+                        return;
+                    }
+                    projects.forEach(p => {
+                        grid.innerHTML += `
+                            <div class="board-card" onclick="openProject('${p.id}')">
+                                <div class="board-title">${p.name}</div>
+                                <div class="board-meta">Last Edit: ${new Date(p.updated).toLocaleString()}</div>
+                                <button class="btn" style="position:absolute; top:10px; right:10px; background:transparent; border:none; color:var(--danger);" onclick="deleteProject(event, '${p.id}')">✖</button>
+                            </div>
+                        `;
+                    });
+                }
+            };
+        }
+
+        function createNewProject() {
+            const name = prompt("Enter Application / Script Name:", "Untitled App");
+            if (!name) return;
+            
+            const proj = {
+                id: 'app_' + Date.now(),
+                name: name,
+                updated: Date.now(),
+                files: {
+                    html: "<!-- Write your HTML here -->\n<div class=\"container\">\n    <h1>Hello Middlanders</h1>\n    <button onclick=\"testClick()\">Click Me</button>\n</div>",
+                    css: "/* Write CSS here */\nbody {\n    background: #0d1117;\n    color: #c9d1d9;\n    font-family: sans-serif;\n    text-align: center;\n    padding-top: 50px;\n}\nbutton {\n    background: #58a6ff;\n    border: none;\n    padding: 10px 20px;\n    border-radius: 5px;\n    cursor: pointer;\n}",
+                    js: "// Write JavaScript here\nconsole.log('App Initialized successfully.');\n\nfunction testClick() {\n    console.log('Button was clicked!');\n    alert('Logic execution confirmed.');\n}",
+                    config: "{\n    \"server\": \"Middlanders-Survival\",\n    \"max_players\": 100,\n    \"plugins\": [\"LuckPerms\", \"Skript\"]\n}"
+                }
+            };
+
+            db.transaction("projects", "readwrite").objectStore("projects").put(proj).onsuccess = () => {
+                openProject(proj.id);
+            };
+        }
+
+        function openProject(id) {
+            db.transaction("projects", "readonly").objectStore("projects").get(id).onsuccess = (e) => {
+                currentProject = e.target.result;
+                if (!currentProject) return;
+                
+                document.getElementById('workspace-title').innerText = currentProject.name;
+                switchScreen('workspace-screen');
+                switchEditorTab('html');
+                switchOutputTab('preview');
+                document.getElementById('out-console').innerHTML = '<div class="log-entry info">System: VM Ready. Waiting for execution...</div>';
+                
+                // Immediately compile the saved state
+                runCode(); 
+            };
+        }
+
+        function deleteProject(e, id) {
+            e.stopPropagation();
+            if (!confirm("Permanently delete this project?")) return;
+            db.transaction("projects", "readwrite").objectStore("projects").delete(id).onsuccess = () => loadDashboard();
+        }
+
+        function clearAllData() {
+            if (!confirm("WARNING: This will permanently destroy ALL offline apps and configs. Proceed?")) return;
+            const tx = db.transaction("projects", "readwrite");
+            tx.objectStore("projects").clear().onsuccess = () => {
+                alert("Database purged.");
+                loadDashboard();
+            };
+        }
+
+        function exitToDashboard() {
+            saveProject();
+            currentProject = null;
+            switchScreen('dashboard-screen');
+            loadDashboard();
+        }
+
+        // --- EDITOR LOGIC ---
+        const editor = document.getElementById('code-editor');
+        const linesDiv = document.getElementById('line-numbers');
+
+        function switchEditorTab(tabId) {
+            if (currentProject) {
+                // Save current tab content before switching
+                currentProject.files[activeEditorTab] = editor.value;
+            }
+            
+            activeEditorTab = tabId;
+            document.querySelectorAll('.editor-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            
+            editor.value = currentProject.files[tabId];
+            updateLineNumbers();
+            
+            if (tabId === 'config') {
+                document.getElementById('config-tools-bar').style.display = 'flex';
+                switchOutputTab('json');
+            } else {
+                document.getElementById('config-tools-bar').style.display = 'none';
+            }
+        }
+
+        function handleEditorInput() {
+            updateLineNumbers();
+            triggerAutoSave();
+        }
+
+        function syncScroll() {
+            linesDiv.scrollTop = editor.scrollTop;
+        }
+
+        function updateLineNumbers() {
+            const lines = editor.value.split('\n').length;
+            let numbersStr = '';
+            for (let i = 1; i <= lines; i++) numbersStr += i + '<br>';
+            linesDiv.innerHTML = numbersStr;
+        }
+
+        // Smart Tabbing Support
+        function handleTabs(e) {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = editor.selectionStart;
+                const end = editor.selectionEnd;
+                editor.value = editor.value.substring(0, start) + "    " + editor.value.substring(end);
+                editor.selectionStart = editor.selectionEnd = start + 4;
+                handleEditorInput();
+            }
+        }
+
+        // --- AUTO SAVE ---
+        function triggerAutoSave() {
+            currentProject.files[activeEditorTab] = editor.value;
+            currentProject.updated = Date.now();
+            
+            document.getElementById('sync-dot').className = 'status-dot dirty';
+            document.getElementById('sync-text').innerText = 'Unsaved changes';
+
+            if (autoSaveTimer) clearTimeout(autoSaveTimer);
+            autoSaveTimer = setTimeout(() => { saveProject(); }, 1500);
+        }
+
+        function saveProject() {
+            if (!currentProject) return;
+            currentProject.files[activeEditorTab] = editor.value;
+            db.transaction("projects", "readwrite").objectStore("projects").put(currentProject).onsuccess = () => {
+                document.getElementById('sync-dot').className = 'status-dot saved';
+                document.getElementById('sync-text').innerText = 'Saved';
+            };
+        }
+
+        // --- OUTPUT PANEL LOGIC ---
+        function switchOutputTab(tabId) {
+            activeOutputTab = tabId;
+            document.querySelectorAll('.viewer-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(`out-tab-${tabId}`).classList.add('active');
+            
+            document.getElementById('out-preview').style.display = 'none';
+            document.getElementById('out-console').style.display = 'none';
+            document.getElementById('out-json').style.display = 'none';
+            
+            document.getElementById(`out-${tabId}`).style.display = tabId === 'preview' ? 'flex' : 'block';
+        }
+
+        // --- COMPILER & CONSOLE INTERCEPTOR ---
+        function runCode() {
+            saveProject(); // Ensure all files are in JS object
+            switchOutputTab('preview');
+            
+            const frame = document.getElementById('preview-frame');
+            const consoleDiv = document.getElementById('out-console');
+            consoleDiv.innerHTML = '<div class="log-entry info">System: Application Compiled & Running...</div>';
+
+            const html = currentProject.files.html;
+            const css = `<style>\n${currentProject.files.css}\n</style>`;
+            
+            // Interceptor script to catch console.log and errors from inside the iframe sandbox
+            const interceptor = `
+                <script>
+                    (function(){
+                        const originalLog = console.log;
+                        const originalWarn = console.warn;
+                        const originalError = console.error;
+
+                        function formatMsg(args) {
+                            return Array.from(args).map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(' ');
+                        }
+
+                        console.log = function(...args) {
+                            window.parent.postMessage({type: 'console_log', msg: formatMsg(args)}, '*');
+                            originalLog.apply(console, args);
+                        };
+                        console.warn = function(...args) {
+                            window.parent.postMessage({type: 'console_warn', msg: formatMsg(args)}, '*');
+                            originalWarn.apply(console, args);
+                        };
+                        console.error = function(...args) {
+                            window.parent.postMessage({type: 'console_error', msg: formatMsg(args)}, '*');
+                            originalError.apply(console, args);
+                        };
+                        window.onerror = function(message, source, lineno, colno, error) {
+                            window.parent.postMessage({type: 'console_error', msg: message + ' at line ' + lineno}, '*');
+                            return false;
+                        };
+                    })();
+                <\/script>
+            `;
+
+            const js = `<script>\n${currentProject.files.js}\n<\/script>`;
+            
+            const fullDoc = `<!DOCTYPE html>\n<html>\n<head>\n${css}\n${interceptor}\n</head>\n<body>\n${html}\n${js}\n</body>\n</html>`;
+
+            const doc = frame.contentWindow.document;
+            doc.open();
+            doc.write(fullDoc);
+            doc.close();
+        }
+
+        // Listen for console logs from the iframe
+        window.addEventListener('message', (e) => {
+            if (!e.data || !e.data.type || !e.data.type.startsWith('console_')) return;
+            
+            const consoleDiv = document.getElementById('out-console');
+            const entry = document.createElement('div');
+            
+            if (e.data.type === 'console_error') entry.className = 'log-entry error';
+            else if (e.data.type === 'console_warn') entry.className = 'log-entry warn';
+            else entry.className = 'log-entry';
+            
+            entry.innerText = "> " + e.data.msg;
+            consoleDiv.appendChild(entry);
+            consoleDiv.scrollTop = consoleDiv.scrollHeight; // Auto-scroll to bottom
+        });
+
+        // --- JSON CONFIG LAB LOGIC ---
+        function validateJSON() {
+            currentProject.files[activeEditorTab] = editor.value; // sync
+            const jsonDiv = document.getElementById('out-json');
+            switchOutputTab('json');
+            
+            try {
+                const parsed = JSON.parse(currentProject.files.config);
+                const pretty = JSON.stringify(parsed, null, 4);
+                
+                // Format in editor
+                editor.value = pretty;
+                currentProject.files.config = pretty;
+                saveProject();
+                handleEditorInput();
+                
+                jsonDiv.style.color = 'var(--success)';
+                jsonDiv.innerText = "✅ JSON is Valid.\n\n" + pretty;
+            } catch (err) {
+                jsonDiv.style.color = 'var(--danger)';
+                jsonDiv.innerText = "❌ JSON Syntax Error:\n\n" + err.message;
+                
+                // Attempt to highlight the error line if browser provides it
+                const match = err.message.match(/position (\d+)/);
+                if (match) {
+                    const pos = parseInt(match[1]);
+                    const lines = currentProject.files.config.substring(0, pos).split('\n');
+                    const lineNum = lines.length;
+                    jsonDiv.innerText += `\n\nError is near line ${lineNum}.`;
+                }
+            }
+        }
+
+        function minifyJSON() {
+            currentProject.files[activeEditorTab] = editor.value;
+            const jsonDiv = document.getElementById('out-json');
+            try {
+                const parsed = JSON.parse(currentProject.files.config);
+                const minified = JSON.stringify(parsed);
+                editor.value = minified;
+                currentProject.files.config = minified;
+                saveProject();
+                handleEditorInput();
+                switchOutputTab('json');
+                jsonDiv.style.color = 'var(--success)';
+                jsonDiv.innerText = "✅ JSON Minified.\n\n" + minified;
+            } catch (err) {
+                alert("Cannot minify invalid JSON. Please fix errors first.");
+            }
+        }
+
+        // --- EXPORT & IMPORT ---
+        function exportHTML() {
+            if (!currentProject) return;
+            saveProject();
+            
+            // Generate clean un-intercepted HTML code
+            const fullDoc = `<!DOCTYPE html>\n<html>\n<head>\n<style>\n${currentProject.files.css}\n</style>\n</head>\n<body>\n${currentProject.files.html}\n<script>\n${currentProject.files.js}\n<\/script>\n</body>\n</html>`;
+            
+            const dataStr = "data:text/html;charset=utf-8," + encodeURIComponent(fullDoc);
+            const a = document.createElement('a');
+            a.href = dataStr;
+            a.download = currentProject.name.replace(/[^a-z0-9]/gi, '_').toLowerCase() + "_build.html";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }
+
+        function exportProjectJSON() {
+            if (!currentProject) return;
+            saveProject();
+            const exportData = { type: "MiddlandersStudioProject", version: "1.0", project: currentProject };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData));
+            const a = document.createElement('a');
+            a.href = dataStr;
+            a.download = currentProject.name.replace(/[^a-z0-9]/gi, '_').toLowerCase() + "_source.json";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }
+
+        function importProject(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (parsed.type !== "MiddlandersStudioProject" || !parsed.project) throw new Error("Invalid format");
+                    
+                    let newProj = parsed.project;
+                    newProj.id = 'app_' + Date.now();
+                    newProj.name = newProj.name + " (Imported)";
+                    newProj.updated = Date.now();
+                    
+                    db.transaction("projects", "readwrite").objectStore("projects").put(newProj).onsuccess = () => {
+                        loadDashboard();
+                        alert("Project imported successfully.");
+                    };
+                } catch (err) {
+                    alert("Failed to parse project file. Ensure it is a valid Dev Studio backup.");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+    </script>
+</body>
+</html>

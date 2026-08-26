@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Middlanders Suite: Canvas & Whiteboard Engine</title>
+    <style>
+        :root {
+            --bg: #0d1117; --panel: #161b22; --panel-light: #21262d; --border: #30363d;
+            --accent: #58a6ff; --accent-hover: #3182ce;
+            --success: #2ea043; --danger: #da3633; --warn: #d29922; --text: #c9d1d9;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        
+        .screen { display: none; flex: 1; flex-direction: column; width: 100%; height: 100%; }
+        .screen.active { display: flex; }
+
+        /* Auth Screen */
+        #auth-screen { justify-content: center; align-items: center; }
+        .auth-box { background: var(--panel); padding: 30px; border-radius: 10px; border: 1px solid var(--border); width: 380px; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.6); }
+        .auth-box input { width: 100%; padding: 10px; margin: 8px 0; background: #010409; border: 1px solid var(--border); color: #fff; border-radius: 5px; }
+        .auth-tabs { display: flex; margin-bottom: 15px; gap: 5px; }
+        .auth-tab-btn { flex: 1; padding: 8px; background: var(--panel-light); border: 1px solid var(--border); color: var(--text); cursor: pointer; border-radius: 4px; font-weight: bold; }
+        .auth-tab-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+        /* Navigation Header */
+        .header { background: var(--panel); padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .header h2 { margin: 0; color: var(--accent); font-size: 18px; letter-spacing: 1px; }
+        .btn { padding: 6px 14px; background: var(--panel-light); border: 1px solid var(--border); color: var(--text); border-radius: 5px; cursor: pointer; transition: 0.2s; font-size: 12px; font-weight: bold; }
+        .btn.primary { background: var(--success); color: #fff; border: none; }
+        .btn.warn { background: var(--warn); color: #000; border: none; }
+        .btn:hover { border-color: var(--accent); filter: brightness(1.1); }
+        
+        /* Dashboard */
+        #dashboard-screen { padding: 20px; overflow-y: auto; align-items: center; }
+        .dashboard-container { width: 100%; max-width: 1100px; }
+        .board-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; margin-top: 20px; }
+        .board-card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 15px; cursor: pointer; transition: 0.2s; position: relative; }
+        .board-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+        .board-title { font-weight: bold; font-size: 15px; margin-bottom: 5px; color: #fff; }
+        .board-meta { font-size: 11px; color: #8b949e; }
+
+        /* Main Workspace Layout */
+        #workspace-screen { flex-direction: column; }
+        .workspace-topbar { background: var(--panel); padding: 8px 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .tab-selector { display: flex; gap: 5px; background: #010409; padding: 3px; border-radius: 6px; border: 1px solid var(--border); }
+        .mode-btn { padding: 6px 12px; background: transparent; border: none; color: #8b949e; cursor: pointer; border-radius: 4px; font-weight: bold; font-size: 12px; }
+        .mode-btn.active { background: var(--panel-light); color: var(--accent); }
+
+        .page-bar { display: flex; align-items: center; gap: 8px; background: #010409; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 12px; }
+        
+        .workspace-body { flex: 1; display: flex; position: relative; overflow: hidden; }
+        .toolbar { width: 260px; background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 12px; gap: 12px; overflow-y: auto; }
+        .canvas-container { flex: 1; position: relative; background: #111; overflow: hidden; cursor: crosshair; }
+        canvas { display: block; background: #ffffff; }
+        canvas.dark-mode { background: #121212; }
+
+        .tool-group { display: flex; flex-direction: column; gap: 6px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+        .tool-group label { font-size: 11px; font-weight: bold; color: #8b949e; text-transform: uppercase; }
+        .tool-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; }
+        .tool-btn { padding: 6px; background: #010409; border: 1px solid var(--border); color: #fff; border-radius: 4px; cursor: pointer; font-size: 11px; text-align: left; }
+        .tool-btn.active { border-color: var(--accent); background: var(--panel-light); color: var(--accent); }
+
+        .color-picker { width: 100%; height: 35px; border: none; border-radius: 4px; cursor: pointer; background: transparent; }
+        
+        .wss-panel { background: #010409; padding: 8px; border-radius: 6px; border: 1px dashed var(--border); font-size: 11px; }
+        .wss-panel input { width: 100%; padding: 5px; background: #0d1117; border: 1px solid var(--border); color: #fff; border-radius: 4px; margin: 4px 0; font-family: monospace; font-size: 11px; }
+        .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--danger); margin-right: 5px; }
+        .status-dot.online { background: var(--success); }
+
+        /* Business Modal */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 9999; }
+        .modal-content { background: var(--panel); padding: 25px; border: 1px solid var(--border); border-radius: 8px; width: 450px; max-height: 85vh; overflow-y: auto; }
+        .calc-display { width: 100%; height: 45px; background: #010409; border: 1px solid var(--border); color: var(--success); font-size: 20px; font-family: monospace; text-align: right; padding: 10px; border-radius: 5px; margin-bottom: 10px; }
+        .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+        .calc-btn { padding: 12px; background: var(--panel-light); border: 1px solid var(--border); color: #fff; font-weight: bold; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <!-- AUTH SCREEN -->
+    <div id="auth-screen" class="screen active">
+        <div class="auth-box">
+            <h2 style="margin-top: 0; color: var(--accent);">Middlanders Engine</h2>
+            <p style="font-size: 12px; color: #8b949e; margin-bottom: 15px;">Backend Host Authentication & Data Vault</p>
+            
+            <div class="auth-tabs">
+                <button class="auth-tab-btn active" id="tab-login-btn" onclick="setAuthMode('login')">Login</button>
+                <button class="auth-tab-btn" id="tab-reg-btn" onclick="setAuthMode('register')">Register Account</button>
+            </div>
+
+            <input type="text" id="wss-host-url" placeholder="wss://your-tunnel.trycloudflare.com" value="ws://localhost:8080">
+            <input type="text" id="auth-user" placeholder="Username" autocomplete="off">
+            <input type="password" id="auth-pass" placeholder="Password">
+            <button class="btn primary" style="width:100%; padding:10px; margin-top:10px;" onclick="submitAuth()">Connect & Authenticate</button>
+            <div id="auth-msg" style="font-size:11px; margin-top:10px; color:var(--danger);"></div>
+        </div>
+    </div>
+
+    <!-- DASHBOARD SCREEN -->
+    <div id="dashboard-screen" class="screen">
+        <div class="header">
+            <h2>🗂️ Persistent Board & Project Vault</h2>
+            <div>
+                <span id="active-user-display" style="margin-right: 15px; font-weight: bold; font-size: 13px;"></span>
+                <button class="btn primary" onclick="requestNewBoard()">+ Create New Board</button>
+                <button class="btn" onclick="logout()">Disconnect</button>
+            </div>
+        </div>
+        <div id="dashboard-screen" class="dashboard-container">
+            <div class="board-grid" id="board-grid"></div>
+        </div>
+    </div>
+
+    <!-- WORKSPACE SCREEN -->
+    <div id="workspace-screen" class="screen">
+        <div class="workspace-topbar">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="btn" onclick="exitToDashboard()">⬅ Back</button>
+                <div class="tab-selector">
+                    <button class="mode-btn active" id="mode-draw-btn" onclick="setWorkspaceMode('draw')">🎨 Free Draw</button>
+                    <button class="mode-btn" id="mode-board-btn" onclick="setWorkspaceMode('whiteboard')">📋 Whiteboard</button>
+                </div>
+            </div>
+
+            <!-- Page Control System -->
+            <div class="page-bar">
+                <span>📄 Page:</span>
+                <button class="btn" onclick="changePage(-1)">◀</button>
+                <select id="page-select" onchange="switchPage(this.value)" style="background:#000; color:#fff; border:1px solid var(--border); padding:3px; border-radius:3px; font-size:11px;"></select>
+                <button class="btn" onclick="changePage(1)">▶</button>
+                <button class="btn primary" onclick="requestNewPage()">+ New Page</button>
+                <button class="btn" onclick="requestRenamePage()">✏️ Rename</button>
+            </div>
+
+            <div>
+                <button class="btn warn" onclick="openBusinessTools()">🧮 Business Tools</button>
+                <button class="btn primary" onclick="saveCurrentPageBackend()">💾 Save to Host PC</button>
+            </div>
+        </div>
+
+        <div class="workspace-body">
+            <!-- Sidebar Controls -->
+            <div class="toolbar">
+                <div class="tool-group">
+                    <label>Drawing Tools</label>
+                    <div class="tool-grid">
+                        <button class="tool-btn active" id="tool-pen" onclick="setTool('pen')">🖊️ Pen</button>
+                        <button class="tool-btn" id="tool-marker" onclick="setTool('marker')">🖍️ Marker</button>
+                        <button class="tool-btn" id="tool-highlighter" onclick="setTool('highlighter')">🖋️ Highlighter</button>
+                        <button class="tool-btn" id="tool-calligraphy" onclick="setTool('calligraphy')">✒️ Calligraphy</button>
+                        <button class="tool-btn" id="tool-spray" onclick="setTool('spray')">💨 Spray / Air</button>
+                        <button class="tool-btn" id="tool-bucket" onclick="setTool('bucket')">🪣 Paint Bucket</button>
+                        <button class="tool-btn" id="tool-text" onclick="setTool('text')">🔤 Text Tool</button>
+                        <button class="tool-btn" id="tool-eraser" onclick="setTool('eraser')">🧹 Eraser</button>
+                    </div>
+                </div>
+
+                <div class="tool-group">
+                    <label>Stroke Color</label>
+                    <input type="color" id="color-picker" class="color-picker" value="#000000" onchange="updateColor(this.value)">
+                    <div style="display: flex; gap: 5px; margin-top: 4px;">
+                        <div style="flex:1; height:18px; background:#000000; cursor:pointer; border-radius:3px;" onclick="updateColor('#000000')"></div>
+                        <div style="flex:1; height:18px; background:#ffffff; border:1px solid #555; cursor:pointer; border-radius:3px;" onclick="updateColor('#ffffff')"></div>
+                        <div style="flex:1; height:18px; background:#da3633; cursor:pointer; border-radius:3px;" onclick="updateColor('#da3633')"></div>
+                        <div style="flex:1; height:18px; background:#58a6ff; cursor:pointer; border-radius:3px;" onclick="updateColor('#58a6ff')"></div>
+                        <div style="flex:1; height:18px; background:#2ea043; cursor:pointer; border-radius:3px;" onclick="updateColor('#2ea043')"></div>
+                    </div>
+                </div>
+
+                <div class="tool-group">
+                    <label>Stroke Size: <span id="size-label">4</span>px</label>
+                    <input type="range" id="size-slider" min="1" max="80" value="4" style="width:100%;" oninput="updateSize(this.value)">
+                </div>
+
+                <div class="tool-group">
+                    <label>Background Preset</label>
+                    <div style="display:flex; gap:5px;">
+                        <button class="btn" style="flex:1;" onclick="setCanvasBackground('#ffffff')">Light</button>
+                        <button class="btn" style="flex:1;" onclick="setCanvasBackground('#121212')">Dark</button>
+                        <button class="btn" style="flex:1;" onclick="setCanvasBackground('#1e293b')">Blueprint</button>
+                    </div>
+                </div>
+
+                <div class="wss-panel">
+                    <span class="status-dot online" id="wss-status"></span>
+                    <span>Backend Sync Active</span>
+                </div>
+                
+                <button class="btn" style="border-color: var(--danger); color: var(--danger); margin-top: auto;" onclick="clearCanvas(true)">🗑️ Clear Current Page</button>
+            </div>
+
+            <!-- Canvas Container -->
+            <div class="canvas-container" id="canvas-container">
+                <canvas id="board-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- BUSINESS & PROFIT CALCULATOR MODAL -->
+    <div id="business-modal" class="modal">
+        <div class="modal-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:10px; margin-bottom:15px;">
+                <h3 style="margin:0; color:var(--warn);">🧮 Business & Utility Calculator</h3>
+                <button class="btn" onclick="closeBusinessTools()">✖ Close</button>
+            </div>
+
+            <!-- Standard Calc -->
+            <input type="text" id="calc-display" class="calc-display" readonly value="0">
+            <div class="calc-grid">
+                <button class="calc-btn" onclick="calcInput('C')">C</button>
+                <button class="calc-btn" onclick="calcInput('(')">(</button>
+                <button class="calc-btn" onclick="calcInput(')')">)</button>
+                <button class="calc-btn" onclick="calcInput('/')">÷</button>
+                <button class="calc-btn" onclick="calcInput('7')">7</button>
+                <button class="calc-btn" onclick="calcInput('8')">8</button>
+                <button class="calc-btn" onclick="calcInput('9')">9</button>
+                <button class="calc-btn" onclick="calcInput('*')">×</button>
+                <button class="calc-btn" onclick="calcInput('4')">4</button>
+                <button class="calc-btn" onclick="calcInput('5')">5</button>
+                <button class="calc-btn" onclick="calcInput('6')">6</button>
+                <button class="calc-btn" onclick="calcInput('-')">-</button>
+                <button class="calc-btn" onclick="calcInput('1')">1</button>
+                <button class="calc-btn" onclick="calcInput('2')">2</button>
+                <button class="calc-btn" onclick="calcInput('3')">3</button>
+                <button class="calc-btn" onclick="calcInput('+')">+</button>
+                <button class="calc-btn" onclick="calcInput('0')">0</button>
+                <button class="calc-btn" onclick="calcInput('.')">.</button>
+                <button class="calc-btn" style="grid-column: span 2; background:var(--accent); color:#000;" onclick="calcInput('=')">=</button>
+            </div>
+
+            <hr style="border-color:var(--border); margin:20px 0;">
+
+            <!-- Business Profit & Tax Estimator -->
+            <h4 style="margin:0 0 10px 0; color:var(--accent);">💵 Stand Profit & Sales Tax Estimator</h4>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:12px;">
+                <div>
+                    <label>Supply / Material Cost ($):</label>
+                    <input type="number" id="biz-cost" value="10.00" style="width:100%; padding:6px; background:#000; color:#fff; border:1px solid var(--border); border-radius:4px; margin-top:4px;" oninput="runBizCalc()">
+                </div>
+                <div>
+                    <label>Retail Selling Price ($):</label>
+                    <input type="number" id="biz-price" value="25.00" style="width:100%; padding:6px; background:#000; color:#fff; border:1px solid var(--border); border-radius:4px; margin-top:4px;" oninput="runBizCalc()">
+                </div>
+                <div>
+                    <label>Local Tax Rate (%):</label>
+                    <input type="number" id="biz-tax" value="10.6" style="width:100%; padding:6px; background:#000; color:#fff; border:1px solid var(--border); border-radius:4px; margin-top:4px;" oninput="runBizCalc()">
+                </div>
+                <div>
+                    <label>Estimated Units Sold:</label>
+                    <input type="number" id="biz-units" value="20" style="width:100%; padding:6px; background:#000; color:#fff; border:1px solid var(--border); border-radius:4px; margin-top:4px;" oninput="runBizCalc()">
+                </div>
+            </div>
+            
+            <div style="margin-top:15px; background:#010409; padding:10px; border-radius:5px; border:1px solid var(--border); font-size:12px; line-height:1.6;">
+                <div>Total Revenue: <strong id="res-rev" style="color:var(--success);">$0.00</strong></div>
+                <div>Total Sales Tax Collected: <strong id="res-tax" style="color:var(--warn);">$0.00</strong></div>
+                <div>Net Profit (Post Cost & Tax): <strong id="res-profit" style="color:var(--accent);">$0.00</strong></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- GLOBAL STATE ---
+        let ws = null;
+        let currentUser = null;
+        let currentAuthMode = 'login';
+        
+        let currentBoard = null; // { id, name, pages: [ {id, name, dataUrl} ] }
+        let currentPageIndex = 0;
+        let workspaceMode = 'draw'; // 'draw' or 'whiteboard'
+
+        // --- AUTH & BACKEND CONNECTION ---
+        function setAuthMode(mode) {
+            currentAuthMode = mode;
+            document.getElementById('tab-login-btn').classList.toggle('active', mode === 'login');
+            document.getElementById('tab-reg-btn').classList.toggle('active', mode === 'register');
+        }
+
+        function submitAuth() {
+            const url = document.getElementById('wss-host-url').value.trim();
+            const user = document.getElementById('auth-user').value.trim();
+            const pass = document.getElementById('auth-pass').value.trim();
+            const msgEl = document.getElementById('auth-msg');
+
+            if (!url || !user || !pass) {
+                msgEl.innerText = "All fields required.";
+                return;
+            }
+
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                try {
+                    ws = new WebSocket(url);
+                    ws.onopen = () => {
+                        ws.send(JSON.stringify({ type: currentAuthMode, username: user, password: pass }));
+                    };
+                    ws.onmessage = handleServerMessage;
+                    ws.onerror = () => { msgEl.innerText = "Connection failed. Check backend/tunnel URL."; };
+                    ws.onclose = () => {
+                        document.getElementById('wss-status').className = 'status-dot';
+                    };
+                } catch(e) {
+                    msgEl.innerText = "Invalid WSS URL format.";
+                }
+            } else {
+                ws.send(JSON.stringify({ type: currentAuthMode, username: user, password: pass }));
+            }
+        }
+
+        function handleServerMessage(e) {
+            try {
+                const msg = JSON.parse(e.data);
+                const msgEl = document.getElementById('auth-msg');
+
+                if (msg.type === 'auth_success') {
+                    currentUser = msg.username;
+                    document.getElementById('active-user-display').innerText = `👤 ${currentUser}`;
+                    switchScreen('dashboard-screen');
+                    renderBoardList(msg.boards);
+                } else if (msg.type === 'auth_fail') {
+                    msgEl.innerText = msg.reason;
+                } else if (msg.type === 'boards_update') {
+                    renderBoardList(msg.boards);
+                } else if (msg.type === 'board_data') {
+                    currentBoard = msg.board;
+                    currentPageIndex = 0;
+                    switchScreen('workspace-screen');
+                    setupWorkspace();
+                } else if (msg.type === 'draw') {
+                    if (currentBoard && msg.boardId === currentBoard.id && msg.pageIndex === currentPageIndex) {
+                        executeDrawAction(msg.data, false);
+                    }
+                } else if (msg.type === 'page_clear') {
+                    if (currentBoard && msg.boardId === currentBoard.id && msg.pageIndex === currentPageIndex) {
+                        ctx.clearRect(0,0, canvas.width, canvas.height);
+                    }
+                }
+            } catch(err) { console.error("Bad WS message:", err); }
+        }
+
+        function logout() {
+            if(ws) ws.close();
+            ws = null;
+            currentUser = null;
+            switchScreen('auth-screen');
+        }
+
+        function switchScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        // --- DASHBOARD & BOARD MANAGEMENT ---
+        function renderBoardList(boards) {
+            const grid = document.getElementById('board-grid');
+            grid.innerHTML = '';
+            if(!boards || boards.length === 0) {
+                grid.innerHTML = '<div style="color:#8b949e; font-style:italic;">No whiteboards saved on host server. Click "+ Create New Board" to begin.</div>';
+                return;
+            }
+
+            boards.forEach(b => {
+                grid.innerHTML += `
+                    <div class="board-card" onclick="openBoard('${b.id}')">
+                        <div class="board-title">${b.name}</div>
+                        <div class="board-meta">Owner: ${b.owner} | Pages: ${b.pages.length}</div>
+                    </div>
+                `;
+            });
+        }
+
+        function requestNewBoard() {
+            const name = prompt("Enter Whiteboard / Project Title:");
+            if (!name) return;
+            ws.send(JSON.stringify({ type: 'create_board', name: name }));
+        }
+
+        function openBoard(boardId) {
+            ws.send(JSON.stringify({ type: 'get_board', id: boardId }));
+        }
+
+        function exitToDashboard() {
+            saveCurrentPageBackend();
+            switchScreen('dashboard-screen');
+            ws.send(JSON.stringify({ type: 'get_boards_list' }));
+        }
+
+        // --- WORKSPACE & PAGE MANAGEMENT ---
+        function setupWorkspace() {
+            resizeCanvas();
+            updatePageSelectorUI();
+            loadCurrentPageCanvas();
+        }
+
+        function setWorkspaceMode(mode) {
+            workspaceMode = mode;
+            document.getElementById('mode-draw-btn').classList.toggle('active', mode === 'draw');
+            document.getElementById('mode-board-btn').classList.toggle('active', mode === 'whiteboard');
+            
+            // Adjust canvas styling preset for free draw vs whiteboard
+            if(mode === 'whiteboard') {
+                setCanvasBackground('#ffffff');
+            } else {
+                setCanvasBackground('#121212');
+            }
+        }
+
+        function updatePageSelectorUI() {
+            const select = document.getElementById('page-select');
+            select.innerHTML = '';
+            currentBoard.pages.forEach((p, idx) => {
+                const opt = document.createElement('option');
+                opt.value = idx;
+                opt.innerText = `${idx + 1}. ${p.name}`;
+                if(idx === currentPageIndex) opt.selected = true;
+                select.appendChild(opt);
+            });
+        }
+
+        function changePage(delta) {
+            saveCurrentPageBackend();
+            const newIndex = currentPageIndex + delta;
+            if (newIndex >= 0 && newIndex < currentBoard.pages.length) {
+                currentPageIndex = newIndex;
+                updatePageSelectorUI();
+                loadCurrentPageCanvas();
+            }
+        }
+
+        function switchPage(index) {
+            saveCurrentPageBackend();
+            currentPageIndex = parseInt(index, 10);
+            loadCurrentPageCanvas();
+        }
+
+        function requestNewPage() {
+            saveCurrentPageBackend();
+            const name = prompt("Page Name (e.g., Frame Blueprint, Math Notes):", `Page ${currentBoard.pages.length + 1}`);
+            if (!name) return;
+            currentBoard.pages.push({ id: 'pg_' + Date.now(), name: name, dataUrl: null });
+            currentPageIndex = currentBoard.pages.length - 1;
+            updatePageSelectorUI();
+            clearCanvas(false);
+            saveCurrentPageBackend();
+        }
+
+        function requestRenamePage() {
+            const curPage = currentBoard.pages[currentPageIndex];
+            const newName = prompt("Rename page title:", curPage.name);
+            if (!newName) return;
+            curPage.name = newName;
+            updatePageSelectorUI();
+            saveCurrentPageBackend();
+        }
+
+        function loadCurrentPageCanvas() {
+            const curPage = currentBoard.pages[currentPageIndex];
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (curPage && curPage.dataUrl) {
+                const img = new Image();
+                img.onload = () => { ctx.drawImage(img, 0, 0); };
+                img.src = curPage.dataUrl;
+            }
+        }
+
+        function saveCurrentPageBackend() {
+            if (!currentBoard) return;
+            const dataUrl = canvas.toDataURL("image/png");
+            currentBoard.pages[currentPageIndex].dataUrl = dataUrl;
+            
+            ws.send(JSON.stringify({
+                type: 'save_page',
+                boardId: currentBoard.id,
+                pageIndex: currentPageIndex,
+                dataUrl: dataUrl,
+                pagesMeta: currentBoard.pages.map(p => ({ id: p.id, name: p.name }))
+            }));
+        }
+
+        // --- DRAWING CANVAS ENGINE ---
+        const canvas = document.getElementById('board-canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        let isDrawing = false;
+        let lastX = 0, lastY = 0;
+
+        let currentTool = 'pen';
+        let strokeColor = '#000000';
+        let strokeSize = 4;
+        let canvasBgColor = '#ffffff';
+
+        function resizeCanvas() {
+            const container = document.getElementById('canvas-container');
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+        }
+        window.addEventListener('resize', () => { if(document.getElementById('workspace-screen').classList.contains('active')) resizeCanvas(); });
+
+        function setCanvasBackground(color) {
+            canvasBgColor = color;
+            canvas.style.backgroundColor = color;
+        }
+
+        function setTool(tool) {
+            currentTool = tool;
+            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+            const activeBtn = document.getElementById(`tool-${tool}`);
+            if(activeBtn) activeBtn.classList.add('active');
+        }
+
+        function updateColor(col) {
+            strokeColor = col;
+            document.getElementById('color-picker').value = col;
+            if (currentTool === 'eraser') setTool('pen');
+        }
+
+        function updateSize(sz) {
+            strokeSize = parseInt(sz, 10);
+            document.getElementById('size-label').innerText = sz;
+        }
+
+        function clearCanvas(broadcast = true) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (broadcast && ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'page_clear', boardId: currentBoard.id, pageIndex: currentPageIndex }));
+            }
+        }
+
+        // --- BRUSHES & TOOLS EXECUTION ---
+        function executeDrawAction(data, emit = true) {
+            const { tool, x0, y0, x1, y1, color, size, textStr } = data;
+
+            ctx.save();
+            if (tool === 'pen') {
+                ctx.globalAlpha = 1.0;
+                ctx.strokeStyle = color;
+                ctx.lineWidth = size;
+                ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+            } else if (tool === 'marker') {
+                ctx.globalAlpha = 0.9;
+                ctx.lineCap = 'square';
+                ctx.strokeStyle = color;
+                ctx.lineWidth = size * 1.5;
+                ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+            } else if (tool === 'highlighter') {
+                ctx.globalAlpha = 0.35;
+                ctx.strokeStyle = color;
+                ctx.lineWidth = size * 3;
+                ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+            } else if (tool === 'calligraphy') {
+                ctx.globalAlpha = 1.0;
+                ctx.fillStyle = color;
+                // Draw angled chisel polygon
+                const dist = Math.hypot(x1 - x0, y1 - y0);
+                const steps = Math.max(1, Math.floor(dist));
+                for(let i=0; i<=steps; i++) {
+                    const curX = x0 + (x1 - x0) * (i / steps);
+                    const curY = y0 + (y1 - y0) * (i / steps);
+                    ctx.beginPath();
+                    ctx.ellipse(curX, curY, size, size/3, Math.PI / 4, 0, Math.PI*2);
+                    ctx.fill();
+                }
+            } else if (tool === 'spray') {
+                ctx.globalAlpha = 0.8;
+                ctx.fillStyle = color;
+                const density = size * 3;
+                for (let i = 0; i < density; i++) {
+                    const offsetAngle = Math.random() * Math.PI * 2;
+                    const offsetRad = Math.random() * size * 2;
+                    const sx = x1 + Math.cos(offsetAngle) * offsetRad;
+                    const sy = y1 + Math.sin(offsetAngle) * offsetRad;
+                    ctx.fillRect(sx, sy, 1.5, 1.5);
+                }
+            } else if (tool === 'eraser') {
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.lineWidth = size * 2;
+                ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+            } else if (tool === 'text') {
+                ctx.globalAlpha = 1.0;
+                ctx.font = `${Math.max(14, size * 3)}px 'Segoe UI', sans-serif`;
+                ctx.fillStyle = color;
+                ctx.fillText(textStr, x0, y0);
+            } else if (tool === 'bucket') {
+                floodFill(Math.floor(x0), Math.floor(y0), color);
+            }
+            ctx.restore();
+
+            if (emit && ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'draw',
+                    boardId: currentBoard.id,
+                    pageIndex: currentPageIndex,
+                    data: data
+                }));
+            }
+        }
+
+        // Stack-based flood fill algorithm
+        function floodFill(startX, startY, fillHex) {
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imgData.data;
+            
+            // Parse target color
+            const tempDiv = document.createElement('div');
+            tempDiv.style.color = fillHex;
+            document.body.appendChild(tempDiv);
+            const cs = window.getComputedStyle(tempDiv).color.match(/\d+/g).map(Number);
+            document.body.removeChild(tempDiv);
+            const fillR = cs[0], fillG = cs[1], fillB = cs[2], fillA = 255;
+
+            const startPos = (startY * canvas.width + startX) * 4;
+            const startR = data[startPos], startG = data[startPos+1], startB = data[startPos+2], startA = data[startPos+3];
+
+            if (startR === fillR && startG === fillG && startB === fillB && startA === fillA) return;
+
+            const pixelStack = [[startX, startY]];
+            while(pixelStack.length) {
+                const newPos = pixelStack.pop();
+                const x = newPos[0];
+                let y = newPos[1];
+
+                let pixelPos = (y * canvas.width + x) * 4;
+                while(y-- >= 0 && matchColor(pixelPos)) { pixelPos -= canvas.width * 4; }
+                pixelPos += canvas.width * 4;
+                ++y;
+
+                let reachLeft = false, reachRight = false;
+                while(y++ < canvas.height - 1 && matchColor(pixelPos)) {
+                    colorPixel(pixelPos);
+
+                    if(x > 0) {
+                        if(matchColor(pixelPos - 4)) {
+                            if(!reachLeft) { pixelStack.push([x - 1, y]); reachLeft = true; }
+                        } else if(reachLeft) { reachLeft = false; }
+                    }
+
+                    if(x < canvas.width - 1) {
+                        if(matchColor(pixelPos + 4)) {
+                            if(!reachRight) { pixelStack.push([x + 1, y]); reachRight = true; }
+                        } else if(reachRight) { reachRight = false; }
+                    }
+                    pixelPos += canvas.width * 4;
+                }
+            }
+            ctx.putImageData(imgData, 0, 0);
+
+            function matchColor(pos) {
+                return (data[pos] === startR && data[pos+1] === startG && data[pos+2] === startB && data[pos+3] === startA);
+            }
+            function colorPixel(pos) {
+                data[pos] = fillR; data[pos+1] = fillG; data[pos+2] = fillB; data[pos+3] = fillA;
+            }
+        }
+
+        // Canvas Mouse Events
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            if (currentTool === 'text') {
+                const textStr = prompt("Enter text overlay:");
+                if (textStr) {
+                    executeDrawAction({ tool: 'text', x0: x, y0: y, x1: x, y1: y, color: strokeColor, size: strokeSize, textStr: textStr });
+                }
+                return;
+            }
+
+            if (currentTool === 'bucket') {
+                executeDrawAction({ tool: 'bucket', x0: x, y0: y, x1: x, y1: y, color: strokeColor, size: strokeSize });
+                return;
+            }
+
+            isDrawing = true;
+            lastX = x; lastY = y;
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDrawing) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            executeDrawAction({ tool: currentTool, x0: lastX, y0: lastY, x1: x, y1: y, color: strokeColor, size: strokeSize });
+            lastX = x; lastY = y;
+        });
+
+        canvas.addEventListener('mouseup', () => isDrawing = false);
+        canvas.addEventListener('mouseleave', () => isDrawing = false);
+
+        // --- BUSINESS CALCULATOR SUITE ---
+        function openBusinessTools() {
+            document.getElementById('business-modal').style.display = 'flex';
+            runBizCalc();
+        }
+        function closeBusinessTools() {
+            document.getElementById('business-modal').style.display = 'none';
+        }
+
+        let calcVal = "0";
+        function calcInput(key) {
+            const disp = document.getElementById('calc-display');
+            if (key === 'C') {
+                calcVal = "0";
+            } else if (key === '=') {
+                try {
+                    calcVal = eval(calcVal.replace(/×/g, '*').replace(/÷/g, '/')).toString();
+                } catch(e) { calcVal = "Error"; }
+            } else {
+                if (calcVal === "0" || calcVal === "Error") calcVal = key;
+                else calcVal += key;
+            }
+            disp.value = calcVal;
+        }
+
+        function runBizCalc() {
+            const cost = parseFloat(document.getElementById('biz-cost').value) || 0;
+            const price = parseFloat(document.getElementById('biz-price').value) || 0;
+            const taxPct = parseFloat(document.getElementById('biz-tax').value) || 0;
+            const units = parseInt(document.getElementById('biz-units').value, 10) || 0;
+
+            const totalRev = price * units;
+            const totalTax = totalRev * (taxPct / 100);
+            const totalCost = cost * units;
+            const netProfit = totalRev - totalTax - totalCost;
+
+            document.getElementById('res-rev').innerText = `$${totalRev.toFixed(2)}`;
+            document.getElementById('res-tax').innerText = `$${totalTax.toFixed(2)}`;
+            document.getElementById('res-profit').innerText = `$${netProfit.toFixed(2)}`;
+        }
+    </script>
+</body>
+</html>

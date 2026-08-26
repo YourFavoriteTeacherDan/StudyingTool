@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Middlanders Focus & Productivity Suite</title>
+    <style>
+        :root {
+            --bg: #0d1117; --panel: #161b22; --panel-light: #21262d; --border: #30363d;
+            --accent: #58a6ff; --accent-hover: #3182ce;
+            --success: #2ea043; --danger: #da3633; --warn: #d29922; --text: #c9d1d9;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+        .header { background: var(--panel); padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .header h2 { margin: 0; color: var(--accent); font-size: 18px; letter-spacing: 1px; }
+
+        .workspace { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; overflow-y: auto; max-width: 1250px; margin: 0 auto; width: 100%; }
+        
+        .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 25px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+        .card h3 { margin-top: 0; color: #fff; border-bottom: 1px solid var(--border); width: 100%; padding-bottom: 10px; margin-bottom: 20px; font-size: 15px; text-transform: uppercase; }
+
+        /* Timer UI */
+        .timer-modes { display: flex; gap: 5px; background: #010409; padding: 4px; border-radius: 6px; border: 1px solid var(--border); margin-bottom: 15px; width: 100%; }
+        .mode-btn { flex: 1; padding: 8px; background: transparent; border: none; color: #8b949e; cursor: pointer; border-radius: 4px; font-weight: bold; font-size: 12px; transition: 0.2s; }
+        .mode-btn.active { background: var(--panel-light); color: var(--accent); }
+
+        .timer-display { font-size: 72px; font-family: monospace; font-weight: bold; color: #fff; margin: 10px 0; text-shadow: 0 0 20px rgba(88,166,255,0.2); }
+        
+        /* Custom Time Setters */
+        .settings-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; margin-bottom: 20px; background: #010409; padding: 10px; border-radius: 6px; border: 1px solid var(--border); }
+        .settings-field { display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: #8b949e; font-weight: bold; }
+        .settings-field input { width: 100%; padding: 5px; background: var(--bg); border: 1px solid var(--border); color: #fff; border-radius: 4px; text-align: center; font-family: monospace; font-size: 13px; }
+
+        .timer-controls { display: flex; gap: 10px; margin-top: 5px; width: 100%; }
+        .btn { flex: 1; padding: 12px; background: var(--panel-light); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; transition: 0.2s; text-align: center; }
+        .btn.primary { background: var(--success); color: #fff; border: none; }
+        .btn.danger { background: var(--danger); color: #fff; border: none; }
+        .btn:hover { filter: brightness(1.2); border-color: var(--accent); }
+
+        /* Ambient Sound Panel */
+        .sound-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 10px; }
+        .sound-btn { padding: 10px; background: #010409; border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; text-align: left; transition: 0.2s; display: flex; flex-direction: column; gap: 2px; }
+        .sound-btn.active { border-color: var(--accent); background: var(--panel-light); color: var(--accent); box-shadow: 0 0 8px rgba(88,166,255,0.3); }
+        .sound-title { font-weight: bold; font-size: 12px; display: flex; align-items: center; gap: 5px; }
+        .sound-desc { font-size: 10px; color: #8b949e; line-height: 1.3; }
+        .sound-btn.active .sound-desc { color: #a5d6ff; }
+
+        /* Tasks / To-Do List */
+        .task-input-box { display: flex; gap: 8px; width: 100%; margin-bottom: 15px; }
+        .task-input-box input { flex: 1; padding: 10px; background: #010409; border: 1px solid var(--border); color: #fff; border-radius: 6px; outline: none; }
+        .task-list { width: 100%; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; max-height: 400px; }
+        .task-item { display: flex; justify-content: space-between; align-items: center; background: #010409; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px; }
+        .task-item.completed { opacity: 0.5; text-decoration: line-through; }
+        .task-item button { background: transparent; border: none; color: var(--danger); cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>⏱️ Middlanders Focus & Productivity Suite</h2>
+        <div style="font-size: 12px; color: #8b949e;">100% Offline Web Audio Synthesis Enabled</div>
+    </div>
+
+    <div class="workspace">
+        
+        <!-- CARD 1: POMODORO TIMER & AMBIENT NOISE -->
+        <div class="card">
+            <h3>Pomodoro Focus Timer</h3>
+            
+            <div class="timer-modes">
+                <button class="mode-btn active" id="mode-pomodoro" onclick="setPresetMode('pomodoro', 25)">Focus</button>
+                <button class="mode-btn" id="mode-short" onclick="setPresetMode('short', 5)">Short Break</button>
+                <button class="mode-btn" id="mode-long" onclick="setPresetMode('long', 15)">Long Break</button>
+            </div>
+
+            <!-- Custom Time Setters -->
+            <div class="settings-bar">
+                <div class="settings-field">
+                    <label>Focus (Mins)</label>
+                    <input type="number" id="input-focus" value="25" min="1" max="180" onchange="applyCustomTimes()">
+                </div>
+                <div class="settings-field">
+                    <label>Short (Mins)</label>
+                    <input type="number" id="input-short" value="5" min="1" max="60" onchange="applyCustomTimes()">
+                </div>
+                <div class="settings-field">
+                    <label>Long (Mins)</label>
+                    <input type="number" id="input-long" value="15" min="1" max="120" onchange="applyCustomTimes()">
+                </div>
+            </div>
+
+            <div class="timer-display" id="timer-text">25:00</div>
+
+            <div class="timer-controls">
+                <button class="btn primary" id="btn-start" onclick="toggleTimer()">Start Timer</button>
+                <button class="btn danger" onclick="resetTimer()">Reset</button>
+            </div>
+
+            <h3 style="margin-top: 25px;">Ambient Focus Generator</h3>
+            <div class="sound-grid">
+                <button class="sound-btn" id="snd-white" onclick="toggleAmbient('white')">
+                    <span class="sound-title">📻 White Noise</span>
+                    <span class="sound-desc">Masks background chatter and sudden room sounds.</span>
+                </button>
+                <button class="sound-btn" id="snd-pink" onclick="toggleAmbient('pink')">
+                    <span class="sound-title">🌊 Pink Noise</span>
+                    <span class="sound-desc">Balanced, steady hum (like heavy rain or rustling leaves).</span>
+                </button>
+                <button class="sound-btn" id="snd-brown" onclick="toggleAmbient('brown')">
+                    <span class="sound-title">⛈️ Brown Noise</span>
+                    <span class="sound-desc">Deep, muffled roar (like a distant waterfall or storm).</span>
+                </button>
+                <button class="sound-btn" id="snd-binaural" onclick="toggleAmbient('binaural')">
+                    <span class="sound-title">🧬 Focus Beats</span>
+                    <span class="sound-desc">40Hz Gamma wave pulses optimized for deep work & problem solving.</span>
+                </button>
+                <button class="sound-btn" id="snd-vinyl" onclick="toggleAmbient('vinyl')">
+                    <span class="sound-title">📀 Vinyl Crackle</span>
+                    <span class="sound-desc">Classic warm turntable pops and vintage analog hiss.</span>
+                </button>
+                <button class="sound-btn" id="snd-cosmic" onclick="toggleAmbient('cosmic')">
+                    <span class="sound-title">🪐 Cosmic Drone</span>
+                    <span class="sound-desc">Deep, low-frequency atmospheric space hum.</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- CARD 2: TASK CHECKLIST -->
+        <div class="card" style="height: 100%;">
+            <h3>Session Objectives / Tasks</h3>
+            
+            <div class="task-input-box">
+                <input type="text" id="task-input" placeholder="Add a new task (e.g. Finish Kart Frame)..." onkeydown="if(event.key==='Enter') addTask()">
+                <button class="btn primary" onclick="addTask()">Add</button>
+            </div>
+
+            <div class="task-list" id="task-list"></div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- TIMER ENGINE ---
+        let currentMode = 'pomodoro';
+        let timeLeft = 25 * 60;
+        let timerInterval = null;
+        let isRunning = false;
+
+        function getCustomMinutes(mode) {
+            if (mode === 'pomodoro') return parseInt(document.getElementById('input-focus').value) || 25;
+            if (mode === 'short') return parseInt(document.getElementById('input-short').value) || 5;
+            if (mode === 'long') return parseInt(document.getElementById('input-long').value) || 15;
+            return 25;
+        }
+
+        function setPresetMode(mode) {
+            pauseTimer();
+            currentMode = mode;
+            timeLeft = getCustomMinutes(mode) * 60;
+            updateTimerDisplay();
+            
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`mode-${mode}`).classList.add('active');
+        }
+
+        function applyCustomTimes() {
+            if (!isRunning) {
+                timeLeft = getCustomMinutes(currentMode) * 60;
+                updateTimerDisplay();
+            }
+        }
+
+        function updateTimerDisplay() {
+            const m = Math.floor(timeLeft / 60);
+            const s = timeLeft % 60;
+            document.getElementById('timer-text').innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+
+        function toggleTimer() {
+            if (isRunning) {
+                pauseTimer();
+            } else {
+                startTimer();
+            }
+        }
+
+        function startTimer() {
+            if (isRunning) return;
+            isRunning = true;
+            document.getElementById('btn-start').innerText = "Pause";
+            document.getElementById('btn-start').className = "btn warn";
+
+            timerInterval = setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    updateTimerDisplay();
+                } else {
+                    pauseTimer();
+                    playDistinctBeep();
+                    alert("Timer Complete!");
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            isRunning = false;
+            clearInterval(timerInterval);
+            document.getElementById('btn-start').innerText = "Start Timer";
+            document.getElementById('btn-start').className = "btn primary";
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            timeLeft = getCustomMinutes(currentMode) * 60;
+            updateTimerDisplay();
+        }
+
+        // --- WEB AUDIO API SYNTHESIS (Zero External Assets) ---
+        let audioCtx = null;
+        function getAudioContext() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            return audioCtx;
+        }
+
+        // Distinct, clean, single mid-high beep that cuts through ambient noise without startling
+        function playDistinctBeep() {
+            const ctx = getAudioContext();
+            if (ctx.state === 'suspended') ctx.resume();
+
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, ctx.currentTime); // Crisp, audible pitch
+
+            // Loud enough to punch through noise, with a clean natural fade out
+            gain.gain.setValueAtTime(0.4, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            
+            osc.start();
+            osc.stop(ctx.currentTime + 0.8);
+        }
+
+        // --- AMBIENT NOISE GENERATOR ---
+        let activeNoiseNode = null;
+        let activeGainNode = null;
+        let currentNoiseType = null;
+
+        function toggleAmbient(type) {
+            const ctx = getAudioContext();
+            if (ctx.state === 'suspended') ctx.resume();
+
+            if (currentNoiseType === type) {
+                stopAmbient();
+                return;
+            }
+
+            stopAmbient();
+            currentNoiseType = type;
+            document.getElementById(`snd-${type}`).classList.add('active');
+
+            if (type === 'binaural') {
+                const oscLeft = ctx.createOscillator();
+                const oscRight = ctx.createOscillator();
+                const merger = ctx.createChannelMerger(2);
+                activeGainNode = ctx.createGain();
+
+                oscLeft.frequency.value = 200;
+                oscRight.frequency.value = 240; // 40Hz Gamma wave difference
+
+                oscLeft.connect(merger, 0, 0);
+                oscRight.connect(merger, 0, 1);
+                
+                activeGainNode.gain.setValueAtTime(0.08, ctx.currentTime);
+                merger.connect(activeGainNode);
+                activeGainNode.connect(ctx.destination);
+
+                oscLeft.start(); oscRight.start();
+                activeNoiseNode = { stop: () => { oscLeft.stop(); oscRight.stop(); } };
+            } else if (type === 'vinyl') {
+                // Procedural vinyl crackle & hiss simulation
+                const bufferSize = 2 * ctx.sampleRate;
+                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                
+                for (let i = 0; i < bufferSize; i++) {
+                    let val = (Math.random() * 2 - 1) * 0.05;
+                    // Random pops / crackles
+                    if (Math.random() < 0.0003) {
+                        val += (Math.random() * 2 - 1) * 0.8;
+                    }
+                    data[i] = val;
+                }
+                const source = ctx.createBufferSource();
+                source.buffer = buffer; source.loop = true;
+                
+                activeGainNode = ctx.createGain();
+                activeGainNode.gain.setValueAtTime(0.2, ctx.currentTime);
+                source.connect(activeGainNode);
+                activeGainNode.connect(ctx.destination);
+                source.start();
+                activeNoiseNode = source;
+            } else if (type === 'cosmic') {
+                // Dual low drone
+                const osc1 = ctx.createOscillator();
+                const osc2 = ctx.createOscillator();
+                const filter = ctx.createBiquadFilter();
+                activeGainNode = ctx.createGain();
+
+                osc1.type = 'sawtooth'; osc1.frequency.value = 55; // A1
+                osc2.type = 'sine'; osc2.frequency.value = 82.5; // E2
+
+                filter.type = 'lowpass'; filter.frequency.value = 150;
+
+                activeGainNode.gain.setValueAtTime(0.12, ctx.currentTime);
+
+                osc1.connect(filter); osc2.connect(filter);
+                filter.connect(activeGainNode);
+                activeGainNode.connect(ctx.destination);
+
+                osc1.start(); osc2.start();
+                activeNoiseNode = { stop: () => { osc1.stop(); osc2.stop(); } };
+            } else {
+                // White, Pink, Brown Noise buffers
+                const bufferSize = 2 * ctx.sampleRate;
+                const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const output = noiseBuffer.getChannelData(0);
+                
+                let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+                for (let i = 0; i < bufferSize; i++) {
+                    const white = Math.random() * 2 - 1;
+                    if (type === 'white') {
+                        output[i] = white * 0.1;
+                    } else if (type === 'pink') {
+                        b0 = 0.99886 * b0 + white * 0.0555179;
+                        b1 = 0.99332 * b1 + white * 0.0750759;
+                        b2 = 0.96900 * b2 + white * 0.1538520;
+                        b3 = 0.86650 * b3 + white * 0.3104856;
+                        b4 = 0.55000 * b4 + white * 0.5329522;
+                        b5 = -0.7616 * b5 - white * 0.0168980;
+                        output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.02;
+                        b6 = white * 0.115926;
+                    } else if (type === 'brown') {
+                        b0 = (b0 + (0.02 * white)) / 1.02;
+                        output[i] = b0 * 0.5;
+                    }
+                }
+
+                const whiteNoise = ctx.createBufferSource();
+                whiteNoise.buffer = noiseBuffer;
+                whiteNoise.loop = true;
+
+                activeGainNode = ctx.createGain();
+                activeGainNode.gain.setValueAtTime(0.15, ctx.currentTime);
+
+                whiteNoise.connect(activeGainNode);
+                activeGainNode.connect(ctx.destination);
+                whiteNoise.start();
+                activeNoiseNode = whiteNoise;
+            }
+        }
+
+        function stopAmbient() {
+            if (activeNoiseNode) {
+                try { activeNoiseNode.stop(); } catch(e) {}
+                activeNoiseNode = null;
+            }
+            document.querySelectorAll('.sound-btn').forEach(b => b.classList.remove('active'));
+            currentNoiseType = null;
+        }
+
+        // --- TASK LIST ---
+        let tasks = [];
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const saved = localStorage.getItem('md_tasks');
+            if (saved) {
+                try { tasks = JSON.parse(saved); } catch(e) {}
+            }
+            renderTasks();
+            updateTimerDisplay();
+        });
+
+        function saveTasks() {
+            localStorage.setItem('md_tasks', JSON.stringify(tasks));
+        }
+
+        function addTask() {
+            const input = document.getElementById('task-input');
+            const val = input.value.trim();
+            if (!val) return;
+
+            tasks.push({ id: Date.now(), text: val, completed: false });
+            input.value = '';
+            saveTasks();
+            renderTasks();
+        }
+
+        function toggleTask(id) {
+            const t = tasks.find(x => x.id === id);
+            if (t) t.completed = !t.completed;
+            saveTasks();
+            renderTasks();
+        }
+
+        function deleteTask(id) {
+            tasks = tasks.filter(x => x.id !== id);
+            saveTasks();
+            renderTasks();
+        }
+
+        function renderTasks() {
+            const list = document.getElementById('task-list');
+            list.innerHTML = '';
+            if (tasks.length === 0) {
+                list.innerHTML = '<div style="color:#8b949e; font-style:italic; text-align:center; margin-top:20px;">No tasks added yet.</div>';
+                return;
+            }
+
+            tasks.forEach(t => {
+                list.innerHTML += `
+                    <div class="task-item ${t.completed ? 'completed' : ''}">
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; flex:1;">
+                            <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTask(${t.id})">
+                            <span>${t.text}</span>
+                        </label>
+                        <button onclick="deleteTask(${t.id})">✖</button>
+                    </div>
+                `;
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Clever | Portal</title>
+<link rel="icon" type="image/x-icon" href="https://assets.clever.com/favicons/favicon.ico" />
+<style>
+body { 
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; 
+    background: #180052; 
+    margin: 0; 
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+#tab-bar {
+    display: flex;
+    background: #0d0030;
+    padding: 5px 5px 0 5px;
+    align-items: flex-end;
+    z-index: 1000;
+    border-bottom: 2px solid #336eed;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+#tab-bar::-webkit-scrollbar { display: none; }
+.tab {
+    background: #1a005e;
+    color: #aaa;
+    padding: 8px 15px;
+    border-radius: 8px 8px 0 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.85rem;
+    margin-right: 5px;
+    user-select: none;
+    min-width: 100px;
+    max-width: 180px;
+    border: 1px solid transparent;
+    border-bottom: none;
+}
+.tab.active { background: #336eed; color: white; font-weight: bold; border-color: rgba(255,255,255,0.2); }
+.tab:hover:not(.active) { background: #2a0099; color: white; }
+.tab-title { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; flex-grow: 1; pointer-events: none; }
+.tab-close { font-size: 1.1rem; opacity: 0.5; cursor: pointer; padding: 0 5px; }
+.tab-close:hover { opacity: 1; color: #ff4d4d; }
+#new-tab-btn {
+    background: rgba(255,255,255,0.1);
+    color: white; border: none; padding: 8px 15px; cursor: pointer;
+    border-radius: 4px; font-size: 1.2rem; line-height: 1; margin-bottom: 3px;
+    flex-shrink: 0;
+}
+#viewport { flex-grow: 1; position: relative; background: #000; }
+.app-iframe { 
+    width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; 
+    display: none; 
+    pointer-events: none;
+}
+.app-iframe.active { 
+    display: block; 
+    pointer-events: auto;
+}
+#boss-key-overlay {
+    display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: #180052; z-index: 9999999; flex-direction: column; align-items: center; justify-content: center;
+}
+#boss-image { max-width: 100%; max-height: 100%; object-fit: contain; aspect-ratio: 1365 / 633; }
+.upload-screen {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 100%; width: 100%; background: #180052; color: white; position: absolute; z-index: 50;
+}
+.upload-container {
+    background: rgba(0, 0, 0, 0.8); padding: 40px; border-radius: 12px; text-align: center; 
+    box-shadow: 0 10px 50px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.1);
+    max-width: 500px;
+}
+.upload-row { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
+input[type="file"] { display: none; }
+.file-upload-label {
+    padding: 10px; background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.3);
+    border-radius: 6px; cursor: pointer; font-size: 0.75rem; width: 100px;
+}
+.file-upload-label.loaded { border-color: #00CC6A; color: #00CC6A; border-style: solid; background: rgba(0, 204, 106, 0.05); }
+.launch-btn {
+    padding: 15px; background: #336eed; border: none; border-radius: 8px;
+    color: white; font-size: 1rem; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 8px;
+}
+.launch-btn.stealth { background: #00CC6A; }
+.launch-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.fs-btn { background: none; border: 1px solid rgba(255,255,255,0.2); color: white; padding: 2px 5px; border-radius: 3px; font-size: 0.65rem; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<div id="tab-bar">
+    <button id="new-tab-btn" onclick="showUploadScreen(true)">+</button>
+</div>
+
+<div id="viewport">
+    <div id="upload-ui" class="upload-screen">
+        <div class="upload-container">
+            <h2 style="font-weight:300; margin-top:0;">Resource Handler</h2>
+            <div class="upload-row">
+                <label for="html-upload" class="file-upload-label" id="html-label"><span>📄</span><br>HTML App</label>
+                <input type="file" id="html-upload" accept=".html,.htm" onchange="handleHtmlSelect(event)">
+                <label for="fav-upload" class="file-upload-label" id="fav-label"><span>🖼️</span><br>.ico Icon</label>
+                <input type="file" id="fav-upload" accept=".ico" onchange="handleFaviconSelect(event)">
+                <label for="screen-upload" class="file-upload-label" id="screen-label"><span>📸</span><br>.png Screen</label>
+                <input type="file" id="screen-upload" accept=".png" onchange="handleScreenshotSelect(event)">
+            </div>
+            <button id="launch-tab-btn" class="launch-btn" disabled onclick="executeLaunch('tab')">Open Tab</button>
+            <button id="launch-blank-btn" class="launch-btn stealth" disabled onclick="executeLaunch('blank')">Open about:blank</button>
+            <button id="cancel-btn" class="launch-btn" style="display:none; background:#E81123;" onclick="cancelUpload()">Cancel</button>
+            <p style="font-size:0.75rem; color:#aaa; margin-top:15px; background:rgba(255,255,255,0.1); padding:10px; border-radius:5px;">
+                <b>SWITCH TIP:</b> If the mouse is locked in-game, use <b>Alt + [1, 2, 3...]</b> to switch tabs instantly.
+            </p>
+        </div>
+    </div>
+</div>
+
+<div id="boss-key-overlay"></div>
+
+<script>
+let customFavicon = 'https://assets.clever.com/favicons/favicon.ico'; 
+let customScreenshot = null; 
+let pendingHtmlContent = '';
+let pendingFileName = '';
+let tabCount = 0;
+let activeTabId = null;
+let isBossKeyManual = false;
+window.keyBuffer = '';
+
+// --- DATABASE ---
+const dbRequest = indexedDB.open("PortalData", 1);
+let db;
+dbRequest.onupgradeneeded = (e) => e.target.result.createObjectStore("assets");
+dbRequest.onsuccess = (e) => { db = e.target.result; loadStoredAssets(); };
+
+function saveAsset(key, val) { db.transaction("assets", "readwrite").objectStore("assets").put(val, key); }
+function loadStoredAssets() {
+    const store = db.transaction("assets", "readonly").objectStore("assets");
+    store.get("favicon").onsuccess = (e) => { if(e.target.result) { customFavicon = e.target.result; applyFavicon(document); document.getElementById('fav-label').classList.add('loaded'); } };
+    store.get("screenshot").onsuccess = (e) => { if(e.target.result) { customScreenshot = e.target.result; updateBossScreenUI(); document.getElementById('screen-label').classList.add('loaded'); } };
+}
+
+const audioInterceptor = `<script>
+    window.__audioContexts = [];
+    const _AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (_AudioContext) {
+        window.AudioContext = window.webkitAudioContext = new Proxy(_AudioContext, {
+            construct(target, args) {
+                const ctx = new target(...args);
+                window.__audioContexts.push(ctx);
+                return ctx;
+            }
+        });
+    }
+<\/script>`;
+
+function handleHtmlSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        pendingHtmlContent = audioInterceptor + e.target.result;
+        pendingFileName = file.name;
+        document.getElementById('html-label').classList.add('loaded');
+        document.getElementById('launch-tab-btn').disabled = false;
+        document.getElementById('launch-blank-btn').disabled = false;
+    };
+    reader.readAsText(file);
+}
+
+function handleFaviconSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => { customFavicon = e.target.result; saveAsset("favicon", customFavicon); applyFavicon(document); document.getElementById('fav-label').classList.add('loaded'); };
+    reader.readAsDataURL(file);
+}
+
+function handleScreenshotSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => { customScreenshot = e.target.result; saveAsset("screenshot", customScreenshot); updateBossScreenUI(); document.getElementById('screen-label').classList.add('loaded'); };
+    reader.readAsDataURL(file);
+}
+
+function applyFavicon(doc) {
+    doc.title = "Clever | Portal";
+    let link = doc.querySelector("link[rel*='icon']") || doc.createElement('link');
+    link.type = 'image/x-icon'; link.rel = 'shortcut icon'; link.href = customFavicon;
+    doc.head.appendChild(link);
+}
+
+function updateBossScreenUI(targetDoc = document) {
+    const overlay = targetDoc.getElementById('boss-key-overlay');
+    if (customScreenshot) {
+        overlay.innerHTML = `<img id="boss-image" src="${customScreenshot}">`;
+    } else {
+        overlay.innerHTML = `<div style="background:white; padding:40px; border-radius:10px; text-align:center;"><img src="${customFavicon}" width="50"><h2 style="color:#333; font-family:sans-serif;">Clever</h2></div>`;
+    }
+}
+
+function showUploadScreen(isNewTab) {
+    document.getElementById('upload-ui').style.display = 'flex';
+    if (isNewTab && tabCount > 0) document.getElementById('cancel-btn').style.display = 'block';
+}
+
+function cancelUpload() { 
+    document.getElementById('upload-ui').style.display = 'none'; 
+    resetHtmlInput();
+}
+
+function resetHtmlInput() {
+    document.getElementById('html-upload').value = '';
+    document.getElementById('html-label').classList.remove('loaded');
+    document.getElementById('launch-tab-btn').disabled = true;
+    document.getElementById('launch-blank-btn').disabled = true;
+}
+
+function executeLaunch(method) {
+    if (method === 'blank') { launchAboutBlank(); } 
+    else {
+        createTab(pendingFileName, pendingHtmlContent);
+        document.getElementById('upload-ui').style.display = 'none';
+        resetHtmlInput();
+    }
+}
+
+function createTab(fileName, htmlContent, win = window) {
+    if (!win.tabCount) win.tabCount = 0;
+    win.tabCount++;
+    const currentCount = win.tabCount;
+    const tabId = 'tab-' + currentCount;
+
+    const tab = win.document.createElement('div');
+    tab.className = 'tab'; 
+    tab.id = 'ui-' + tabId;
+    tab.innerHTML = `<span class="tab-title">${fileName}</span><button class="fs-btn" onclick="window.toggleFullscreen('${tabId}')">⛶</button><span class="tab-close" onclick="window.closeTab('${tabId}')">×</span>`;
+    tab.onclick = () => win.switchTab(tabId);
+    win.document.getElementById('tab-bar').insertBefore(tab, win.document.getElementById('new-tab-btn'));
+
+    const iframe = win.document.createElement('iframe');
+    iframe.className = 'app-iframe'; 
+    iframe.id = 'frame-' + tabId;
+    iframe.allow = "fullscreen; autoplay"; 
+    iframe.tabIndex = "-1"; // Not focusable until active
+    win.document.getElementById('viewport').appendChild(iframe);
+
+    const checkSize = setInterval(() => {
+        if (iframe.clientWidth > 0) {
+            clearInterval(checkSize);
+            iframe.contentWindow.document.open();
+            iframe.contentWindow.document.write(htmlContent);
+            iframe.contentWindow.document.close();
+            iframe.contentWindow.addEventListener('keydown', (e) => win.handleKeydown(e));
+            iframe.contentWindow.addEventListener('mousedown', () => iframe.focus());
+        }
+    }, 50);
+
+    win.switchTab(tabId);
+}
+
+window.toggleFullscreen = function(tabId) {
+    const frame = document.getElementById('frame-' + tabId);
+    if (frame && frame.requestFullscreen) frame.requestFullscreen();
+}
+
+window.switchTab = function(tabId) {
+    // Deselect all
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.app-iframe').forEach(f => {
+        f.classList.remove('active');
+        f.tabIndex = -1;
+        f.style.pointerEvents = "none";
+    });
+    window.blur();
+
+    // Activate selected
+    activeTabId = tabId;
+    const activeTab = document.getElementById('ui-' + tabId);
+    const activeFrame = document.getElementById('frame-' + tabId);
+    if (activeTab && activeFrame) {
+        activeTab.classList.add('active');
+        activeFrame.classList.add('active');
+        activeFrame.tabIndex = 0;
+        activeFrame.style.pointerEvents = "auto";
+
+        // Focus the iframe
+        setTimeout(() => {
+            activeFrame.focus();
+            if (activeFrame.contentWindow) activeFrame.contentWindow.focus();
+        }, 50);
+    }
+};
+
+window.closeTab = function(tabId) {
+    const tab = document.getElementById('ui-' + tabId);
+    const frame = document.getElementById('frame-' + tabId);
+    if (tab) tab.remove();
+    if (frame) {
+        frame.srcdoc = "";
+        frame.remove();
+    }
+    const remainingTabs = document.querySelectorAll('.tab');
+    if (remainingTabs.length === 0) {
+        activeTabId = null;
+        showUploadScreen(false);
+    } else if (activeTabId === tabId) {
+        window.switchTab(remainingTabs[0].id.replace('ui-', ''));
+    }
+};
+
+// Optimized key handler for faster "epepep" detection
+function handleKeydown(e) {
+    // Quick switch: Alt + 1-9
+    if (e.altKey && e.key >= "1" && e.key <= "9") {
+        const tabs = document.querySelectorAll('.tab');
+        const idx = parseInt(e.key) - 1;
+        if (tabs[idx]) {
+            e.preventDefault();
+            window.switchTab(tabs[idx].id.replace('ui-', ''));
+        }
+        return;
+    }
+
+    // Detect "epepep" sequence quickly
+    const sequence = 'epepep';
+    window.keyBuffer = (window.keyBuffer || '');
+    window.keyBuffer += e.key.toLowerCase();
+    if (window.keyBuffer.length > sequence.length) {
+        window.keyBuffer = window.keyBuffer.slice(-sequence.length);
+    }
+    if (window.keyBuffer === sequence) {
+        // Toggle boss mode
+        isBossKeyManual = !isBossKeyManual;
+        document.getElementById('boss-key-overlay').style.display = isBossKeyManual ? 'flex' : 'none';
+        if (document.exitPointerLock) document.exitPointerLock();
+        // Suspend or resume audio contexts inside iframes
+        document.querySelectorAll('.app-iframe').forEach(iframe => {
+            try {
+                if (iframe.contentWindow.__audioContexts) {
+                    iframe.contentWindow.__audioContexts.forEach(ctx => isBossKeyManual ? ctx.suspend() : ctx.resume());
+                }
+            } catch(err) {}
+        });
+        window.keyBuffer = ''; // Reset buffer immediately
+    }
+}
+
+// Launch current page as blank in new tab
+function launchAboutBlank() {
+    const win = window.open('about:blank', '_blank');
+    if (!win) return alert("Allow Popups!");
+    const doc = win.document;
+    doc.write('<html><head></head><body>' + document.body.innerHTML + '</body></html>');
+    const style = doc.createElement('style');
+    style.innerHTML = document.querySelector('style').innerHTML;
+    doc.head.appendChild(style);
+    win.customFavicon = customFavicon; 
+    win.customScreenshot = customScreenshot;
+    win.tabCount = 0;
+    win.handleKeydown = handleKeydown;
+    win.switchTab = switchTab;
+    win.closeTab = closeTab;
+    win.createTab = (name, content) => createTab(name, content, win);
+    win.toggleFullscreen = window.toggleFullscreen;
+    applyFavicon(doc);
+    updateBossScreenUI(doc);
+    win.addEventListener('keydown', win.handleKeydown);
+    doc.addEventListener('visibilitychange', () => {
+        const overlay = doc.getElementById('boss-key-overlay');
+        overlay.style.display = doc.hidden ? 'flex' : (win.isBossKeyManual ? 'flex' : 'none');
+    });
+    win.createTab(pendingFileName, pendingHtmlContent);
+    window.location.replace("https://classroom.google.com");
+}
+
+// Show or hide overlay when tab is backgrounded
+// (handled in handleKeydown's toggle and visibilitychange event listener)
+
+// Utility functions
+function applyFavicon(doc) {
+    doc.title = "Clever | Portal";
+    let link = doc.querySelector("link[rel*='icon']") || doc.createElement('link');
+    link.type = 'image/x-icon'; link.rel = 'shortcut icon'; link.href = customFavicon;
+    doc.head.appendChild(link);
+}
+
+function updateBossScreenUI(targetDoc = document) {
+    const overlay = targetDoc.getElementById('boss-key-overlay');
+    if (customScreenshot) {
+        overlay.innerHTML = `<img id="boss-image" src="${customScreenshot}">`;
+    } else {
+        overlay.innerHTML = `<div style="background:white; padding:40px; border-radius:10px; text-align:center;"><img src="${customFavicon}" width="50"><h2 style="color:#333; font-family:sans-serif;">Clever</h2></div>`;
+    }
+}
+
+function showUploadScreen(isNewTab) {
+    document.getElementById('upload-ui').style.display = 'flex';
+    if (isNewTab && tabCount > 0) document.getElementById('cancel-btn').style.display = 'block';
+}
+
+function cancelUpload() { 
+    document.getElementById('upload-ui').style.display = 'none'; 
+    resetHtmlInput();
+}
+
+function resetHtmlInput() {
+    document.getElementById('html-upload').value = '';
+    document.getElementById('html-label').classList.remove('loaded');
+    document.getElementById('launch-tab-btn').disabled = true;
+    document.getElementById('launch-blank-btn').disabled = true;
+}
+
+function executeLaunch(method) {
+    if (method === 'blank') { launchAboutBlank(); } 
+    else {
+        createTab(pendingFileName, pendingHtmlContent);
+        document.getElementById('upload-ui').style.display = 'none';
+        resetHtmlInput();
+    }
+}
+
+function createTab(fileName, htmlContent, win = window) {
+    if (!win.tabCount) win.tabCount = 0;
+    win.tabCount++;
+    const currentCount = win.tabCount;
+    const tabId = 'tab-' + currentCount;
+
+    const tab = win.document.createElement('div');
+    tab.className = 'tab'; 
+    tab.id = 'ui-' + tabId;
+    tab.innerHTML = `<span class="tab-title">${fileName}</span><button class="fs-btn" onclick="window.toggleFullscreen('${tabId}')">⛶</button><span class="tab-close" onclick="window.closeTab('${tabId}')">×</span>`;
+    tab.onclick = () => win.switchTab(tabId);
+    win.document.getElementById('tab-bar').insertBefore(tab, win.document.getElementById('new-tab-btn'));
+
+    const iframe = win.document.createElement('iframe');
+    iframe.className = 'app-iframe'; 
+    iframe.id = 'frame-' + tabId;
+    iframe.allow = "fullscreen; autoplay"; 
+    iframe.tabIndex = "-1"; // Not focusable until active
+    win.document.getElementById('viewport').appendChild(iframe);
+
+    const checkSize = setInterval(() => {
+        if (iframe.clientWidth > 0) {
+            clearInterval(checkSize);
+            iframe.contentWindow.document.open();
+            iframe.contentWindow.document.write(htmlContent);
+            iframe.contentWindow.document.close();
+            iframe.contentWindow.addEventListener('keydown', (e) => win.handleKeydown(e));
+            iframe.contentWindow.addEventListener('mousedown', () => iframe.focus());
+        }
+    }, 50);
+
+    win.switchTab(tabId);
+}
+
+// Toggle fullscreen
+window.toggleFullscreen = function(tabId) {
+    const frame = document.getElementById('frame-' + tabId);
+    if (frame && frame.requestFullscreen) frame.requestFullscreen();
+}
+
+// Switch tab with focus management
+window.switchTab = function(tabId) {
+    // Remove active class and disable pointer-events
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.app-iframe').forEach(f => {
+        f.classList.remove('active');
+        f.tabIndex = -1;
+        f.style.pointerEvents = "none";
+    });
+    window.blur();
+
+    // Activate target tab
+    activeTabId = tabId;
+    const activeTab = document.getElementById('ui-' + tabId);
+    const activeFrame = document.getElementById('frame-' + tabId);
+    if (activeTab && activeFrame) {
+        activeTab.classList.add('active');
+        activeFrame.classList.add('active');
+        activeFrame.tabIndex = 0;
+        activeFrame.style.pointerEvents = "auto";
+
+        // Focus iframe
+        setTimeout(() => {
+            activeFrame.focus();
+            if (activeFrame.contentWindow) activeFrame.contentWindow.focus();
+        }, 50);
+    }
+};
+
+// Close tab
+window.closeTab = function(tabId) {
+    const tab = document.getElementById('ui-' + tabId);
+    const frame = document.getElementById('frame-' + tabId);
+    if (tab) tab.remove();
+    if (frame) {
+        frame.srcdoc = "";
+        frame.remove();
+    }
+    const remainingTabs = document.querySelectorAll('.tab');
+    if (remainingTabs.length === 0) {
+        activeTabId = null;
+        showUploadScreen(false);
+    } else if (activeTabId === tabId) {
+        window.switchTab(remainingTabs[0].id.replace('ui-', ''));
+    }
+};
+
+// Handle key events
+function handleKeydown(e) {
+    // Quick tab switch with Alt+Number
+    if (e.altKey && e.key >= "1" && e.key <= "9") {
+        const tabs = document.querySelectorAll('.tab');
+        const idx = parseInt(e.key) - 1;
+        if (tabs[idx]) {
+            e.preventDefault();
+            window.switchTab(tabs[idx].id.replace('ui-', ''));
+        }
+        return;
+    }
+
+    // Faster "epepep" detection
+    const sequence = 'epepep';
+    window.keyBuffer = (window.keyBuffer || '');
+    window.keyBuffer += e.key.toLowerCase();
+    if (window.keyBuffer.length > sequence.length) {
+        window.keyBuffer = window.keyBuffer.slice(-sequence.length);
+    }
+    if (window.keyBuffer === sequence) {
+        // Toggle boss mode
+        isBossKeyManual = !isBossKeyManual;
+        document.getElementById('boss-key-overlay').style.display = isBossKeyManual ? 'flex' : 'none';
+        if (document.exitPointerLock) document.exitPointerLock();
+        // Suspend/resume audio contexts
+        document.querySelectorAll('.app-iframe').forEach(iframe => {
+            try {
+                if (iframe.contentWindow.__audioContexts) {
+                    iframe.contentWindow.__audioContexts.forEach(ctx => isBossKeyManual ? ctx.suspend() : ctx.resume());
+                }
+            } catch(err) {}
+        });
+        window.keyBuffer = '';
+    }
+}
+
+// Launch current page as blank
+function launchAboutBlank() {
+    const win = window.open('about:blank', '_blank');
+    if (!win) return alert("Allow Popups!");
+    const doc = win.document;
+    doc.write('<html><head></head><body>' + document.body.innerHTML + '</body></html>');
+    const style = doc.createElement('style');
+    style.innerHTML = document.querySelector('style').innerHTML;
+    doc.head.appendChild(style);
+    win.customFavicon = customFavicon; 
+    win.customScreenshot = customScreenshot;
+    win.tabCount = 0;
+    win.handleKeydown = handleKeydown;
+    win.switchTab = switchTab;
+    win.closeTab = closeTab;
+    win.createTab = (name, content) => createTab(name, content, win);
+    win.toggleFullscreen = window.toggleFullscreen;
+    applyFavicon(doc);
+    updateBossScreenUI(doc);
+    win.addEventListener('keydown', win.handleKeydown);
+    doc.addEventListener('visibilitychange', () => {
+        const overlay = doc.getElementById('boss-key-overlay');
+        overlay.style.display = doc.hidden ? 'flex' : (win.isBossKeyManual ? 'flex' : 'none');
+    });
+    win.createTab(pendingFileName, pendingHtmlContent);
+    window.location.replace("https://classroom.google.com");
+}
+
+// Show overlay when backgrounded
+// (handled in handleKeydown's toggle and visibilitychange event listener)
+
+// Utility functions
+function applyFavicon(doc) {
+    doc.title = "Clever | Portal";
+    let link = doc.querySelector("link[rel*='icon']") || doc.createElement('link');
+    link.type = 'image/x-icon'; link.rel = 'shortcut icon'; link.href = customFavicon;
+    doc.head.appendChild(link);
+}
+
+function updateBossScreenUI(targetDoc = document) {
+    const overlay = targetDoc.getElementById('boss-key-overlay');
+    if (customScreenshot) {
+        overlay.innerHTML = `<img id="boss-image" src="${customScreenshot}">`;
+    } else {
+        overlay.innerHTML = `<div style="background:white; padding:40px; border-radius:10px; text-align:center;"><img src="${customFavicon}" width="50"><h2 style="color:#333; font-family:sans-serif;">Clever</h2></div>`;
+    }
+}
+
+function showUploadScreen(isNewTab) {
+    document.getElementById('upload-ui').style.display = 'flex';
+    if (isNewTab && tabCount > 0) document.getElementById('cancel-btn').style.display = 'block';
+}
+
+function cancelUpload() { 
+    document.getElementById('upload-ui').style.display = 'none'; 
+    resetHtmlInput();
+}
+
+function resetHtmlInput() {
+    document.getElementById('html-upload').value = '';
+    document.getElementById('html-label').classList.remove('loaded');
+    document.getElementById('launch-tab-btn').disabled = true;
+    document.getElementById('launch-blank-btn').disabled = true;
+}
+
+function executeLaunch(method) {
+    if (method === 'blank') { launchAboutBlank(); } 
+    else {
+        createTab(pendingFileName, pendingHtmlContent);
+        document.getElementById('upload-ui').style.display = 'none';
+        resetHtmlInput();
+    }
+}
+
+function createTab(fileName, htmlContent, win = window) {
+    if (!win.tabCount) win.tabCount = 0;
+    win.tabCount++;
+    const currentCount = win.tabCount;
+    const tabId = 'tab-' + currentCount;
+
+    const tab = win.document.createElement('div');
+    tab.className = 'tab'; 
+    tab.id = 'ui-' + tabId;
+    tab.innerHTML = `<span class="tab-title">${fileName}</span><button class="fs-btn" onclick="window.toggleFullscreen('${tabId}')">⛶</button><span class="tab-close" onclick="window.closeTab('${tabId}')">×</span>`;
+    tab.onclick = () => win.switchTab(tabId);
+    win.document.getElementById('tab-bar').insertBefore(tab, win.document.getElementById('new-tab-btn'));
+
+    const iframe = win.document.createElement('iframe');
+    iframe.className = 'app-iframe'; 
+    iframe.id = 'frame-' + tabId;
+    iframe.allow = "fullscreen; autoplay"; 
+    iframe.tabIndex = "-1"; // Not focusable until active
+    win.document.getElementById('viewport').appendChild(iframe);
+
+    const checkSize = setInterval(() => {
+        if (iframe.clientWidth > 0) {
+            clearInterval(checkSize);
+            iframe.contentWindow.document.open();
+            iframe.contentWindow.document.write(htmlContent);
+            iframe.contentWindow.document.close();
+            iframe.contentWindow.addEventListener('keydown', (e) => win.handleKeydown(e));
+            iframe.contentWindow.addEventListener('mousedown', () => iframe.focus());
+        }
+    }, 50);
+
+    win.switchTab(tabId);
+}
+
+// Toggle full screen
+window.toggleFullscreen = function(tabId) {
+    const frame = document.getElementById('frame-' + tabId);
+    if (frame && frame.requestFullscreen) frame.requestFullscreen();
+}
+
+// Switch tab with focus
+window.switchTab = function(tabId) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.app-iframe').forEach(f => {
+        f.classList.remove('active');
+        f.tabIndex = -1;
+        f.style.pointerEvents = "none";
+    });
+    window.blur();
+
+    const activeTab = document.getElementById('ui-' + tabId);
+    const activeFrame = document.getElementById('frame-' + tabId);
+    if (activeTab && activeFrame) {
+        activeTab.classList.add('active');
+        activeFrame.classList.add('active');
+        activeFrame.tabIndex = 0;
+        activeFrame.style.pointerEvents = "auto";
+
+        setTimeout(() => {
+            activeFrame.focus();
+            if (activeFrame.contentWindow) activeFrame.contentWindow.focus();
+        }, 50);
+    }
+};
+
+// Close tab
+window.closeTab = function(tabId) {
+    const tab = document.getElementById('ui-' + tabId);
+    const frame = document.getElementById('frame-' + tabId);
+    if (tab) tab.remove();
+    if (frame) {
+        frame.srcdoc = "";
+        frame.remove();
+    }
+
+    const remainingTabs = document.querySelectorAll('.tab');
+    if (remainingTabs.length === 0) {
+        activeTabId = null;
+        showUploadScreen(false);
+    } else if (activeTabId === tabId) {
+        window.switchTab(remainingTabs[0].id.replace('ui-', ''));
+    }
+};
+
+// Faster detection of "epepep"
+function handleKeydown(e) {
+    // Quick tab switch with Alt+Number
+    if (e.altKey && e.key >= "1" && e.key <= "9") {
+        const tabs = document.querySelectorAll('.tab');
+        const idx = parseInt(e.key) - 1;
+        if (tabs[idx]) {
+            e.preventDefault();
+            window.switchTab(tabs[idx].id.replace('ui-', ''));
+        }
+        return;
+    }
+
+    // Detect "epepep" faster
+    const sequence = 'epepep';
+    window.keyBuffer = (window.keyBuffer || '');
+    window.keyBuffer += e.key.toLowerCase();
+    if (window.keyBuffer.length > sequence.length) {
+        window.keyBuffer = window.keyBuffer.slice(-sequence.length);
+    }
+    if (window.keyBuffer === sequence) {
+        // Toggle boss mode
+        isBossKeyManual = !isBossKeyManual;
+        document.getElementById('boss-key-overlay').style.display = isBossKeyManual ? 'flex' : 'none';
+        if (document.exitPointerLock) document.exitPointerLock();
+        // Suspend or resume audio contexts
+        document.querySelectorAll('.app-iframe').forEach(iframe => {
+            try {
+                if (iframe.contentWindow.__audioContexts) {
+                    iframe.contentWindow.__audioContexts.forEach(ctx => isBossKeyManual ? ctx.suspend() : ctx.resume());
+                }
+            } catch(err) {}
+        });
+        window.keyBuffer = '';
+    }
+}
+
+// Launch blank in new tab
+function launchAboutBlank() {
+    const win = window.open('about:blank', '_blank');
+    if (!win) return alert("Allow Popups!");
+    const doc = win.document;
+    doc.write('<html><head></head><body>' + document.body.innerHTML + '</body></html>');
+    const style = doc.createElement('style');
+    style.innerHTML = document.querySelector('style').innerHTML;
+    doc.head.appendChild(style);
+    win.customFavicon = customFavicon; 
+    win.customScreenshot = customScreenshot;
+    win.tabCount = 0;
+    win.handleKeydown = handleKeydown;
+    win.switchTab = switchTab;
+    win.closeTab = closeTab;
+    win.createTab = (name, content) => createTab(name, content, win);
+    win.toggleFullscreen = window.toggleFullscreen;
+    applyFavicon(doc);
+    updateBossScreenUI(doc);
+    win.addEventListener('keydown', win.handleKeydown);
+    doc.addEventListener('visibilitychange', () => {
+        const overlay = doc.getElementById('boss-key-overlay');
+        overlay.style.display = doc.hidden ? 'flex' : (win.isBossKeyManual ? 'flex' : 'none');
+    });
+    win.createTab(pendingFileName, pendingHtmlContent);
+    window.location.replace("https://classroom.google.com");
+}
+
+// Show overlay when backgrounded
+// (handled in handleKeydown's toggle and visibilitychange event listener)
+
+// Utility functions
+function applyFavicon(doc) {
+    doc.title = "Clever | Portal";
+    let link = doc.querySelector("link[rel*='icon']") || doc.createElement('link');
+    link.type = 'image/x-icon'; link.rel = 'shortcut icon'; link.href = customFavicon;
+    doc.head.appendChild(link);
+}
+
+function updateBossScreenUI(targetDoc = document) {
+    const overlay = targetDoc.getElementById('boss-key-overlay');
+    if (customScreenshot) {
+        overlay.innerHTML = `<img id="boss-image" src="${customScreenshot}">`;
+    } else {
+        overlay.innerHTML = `<div style="background:white; padding:40px; border-radius:10px; text-align:center;"><img src="${customFavicon}" width="50"><h2 style="color:#333; font-family:sans-serif;">Clever</h2></div>`;
+    }
+}
+
+function showUploadScreen(isNewTab) {
+    document.getElementById('upload-ui').style.display = 'flex';
+    if (isNewTab && tabCount > 0) document.getElementById('cancel-btn').style.display = 'block';
+}
+
+function cancelUpload() { 
+    document.getElementById('upload-ui').style.display = 'none'; 
+    resetHtmlInput();
+}
+
+function resetHtmlInput() {
+    document.getElementById('html-upload').value = '';
+    document.getElementById('html-label').classList.remove('loaded');
+    document.getElementById('launch-tab-btn').disabled = true;
+    document.getElementById('launch-blank-btn').disabled = true;
+}
+
+function executeLaunch(method) {
+    if (method === 'blank') { launchAboutBlank(); } 
+    else {
+        createTab(pendingFileName, pendingHtmlContent);
+        document.getElementById('upload-ui').style.display = 'none';
+        resetHtmlInput();
+    }
+}
+
+function createTab(fileName, htmlContent, win = window) {
+    if (!win.tabCount) win.tabCount = 0;
+    win.tabCount++;
+    const currentCount = win.tabCount;
+    const tabId = 'tab-' + currentCount;
+
+    const tab = win.document.createElement('div');
+    tab.className = 'tab'; 
+    tab.id = 'ui-' + tabId;
+    tab.innerHTML = `<span class="tab-title">${fileName}</span><button class="fs-btn" onclick="window.toggleFullscreen('${tabId}')">⛶</button><span class="tab-close" onclick="window.closeTab('${tabId}')">×</span>`;
+    tab.onclick = () => win.switchTab(tabId);
+    win.document.getElementById('tab-bar').insertBefore(tab, win.document.getElementById('new-tab-btn'));
+
+    const iframe = win.document.createElement('iframe');
+    iframe.className = 'app-iframe'; 
+    iframe.id = 'frame-' + tabId;
+    iframe.allow = "fullscreen; autoplay"; 
+    iframe.tabIndex = "-1"; // Not focusable until active
+    win.document.getElementById('viewport').appendChild(iframe);
+
+    const checkSize = setInterval(() => {
+        if (iframe.clientWidth > 0) {
+            clearInterval(checkSize);
+            iframe.contentWindow.document.open();
+            iframe.contentWindow.document.write(htmlContent);
+            iframe.contentWindow.document.close();
+            iframe.contentWindow.addEventListener('keydown', (e) => win.handleKeydown(e));
+            iframe.contentWindow.addEventListener('mousedown', () => iframe.focus());
+        }
+    }, 50);
+
+    win.switchTab(tabId);
+}
+
+// Toggle fullscreen
+window.toggleFullscreen = function(tabId) {
+    const frame = document.getElementById('frame-' + tabId);
+    if (frame && frame.requestFullscreen) frame.requestFullscreen();
+}
+
+// Switch tab with focus management
+window.switchTab = function(tabId) {
+    // Remove active class and disable pointer-events
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.app-iframe').forEach(f => {
+        f.classList.remove('active');
+        f.tabIndex = -1;
+        f.style.pointerEvents = "none";
+    });
+    window.blur();
+
+    // Activate selected
+    const activeTab = document.getElementById('ui-' + tabId);
+    const activeFrame = document.getElementById('frame-' + tabId);
+    if (activeTab && activeFrame) {
+        activeTab.classList.add('active');
+        activeFrame.classList.add('active');
+        activeFrame.tabIndex = 0;
+        activeFrame.style.pointerEvents = "auto";
+
+        setTimeout(() => {
+            activeFrame.focus();
+            if (activeFrame.contentWindow) activeFrame.contentWindow.focus();
+        }, 50);
+    }
+};
+
+// Close tab
+window.closeTab = function(tabId) {
+    const tab = document.getElementById('ui-' + tabId);
+    const frame = document.getElementById('frame-' + tabId);
+    if (tab) tab.remove();
+    if (frame) {
+        frame.srcdoc = "";
+        frame.remove();
+    }
+    const remainingTabs = document.querySelectorAll('.tab');
+    if (remainingTabs.length === 0) {
+        activeTabId = null;
+        showUploadScreen(false);
+    } else if (activeTabId === tabId) {
+        window.switchTab(remainingTabs[0].id.replace('ui-', ''));
+    }
+};
+
+// Faster "epepep" detection
+// Immediate after each key press, check sequence
+// Reset buffer immediately after sequence detection
+function handleKeydown(e) {
+    // Quick tab switch with Alt+Number
+    if (e.altKey && e.key >= "1" && e.key <= "9") {
+        const tabs = document.querySelectorAll('.tab');
+        const idx = parseInt(e.key) - 1;
+        if (tabs[idx]) {
+            e.preventDefault();
+            window.switchTab(tabs[idx].id.replace('ui-', ''));
+        }
+        return;
+    }
+
+    // Detect "epepep" faster
+    const sequence = 'epepep';
+    window.keyBuffer = (window.keyBuffer || '');
+    window.keyBuffer += e.key.toLowerCase();
+    if (window.keyBuffer.length > sequence.length) {
+        window.keyBuffer = window.keyBuffer.slice(-sequence.length);
+    }
+    if (window.keyBuffer === sequence) {
+        // Toggle boss overlay
+        isBossKeyManual = !isBossKeyManual;
+        document.getElementById('boss-key-overlay').style.display = isBossKeyManual ? 'flex' : 'none';
+        if (document.exitPointerLock) document.exitPointerLock();
+        // Suspend or resume audio contexts inside iframes
+        document.querySelectorAll('.app-iframe').forEach(iframe => {
+            try {
+                if (iframe.contentWindow.__audioContexts) {
+                    iframe.contentWindow.__audioContexts.forEach(ctx => isBossKeyManual ? ctx.suspend() : ctx.resume());
+                }
+            } catch(err) {}
+        });
+        window.keyBuffer = ''; // Reset immediately
+    }
+}
+
+// Launch page as blank in new tab
+function launchAboutBlank() {
+    const win = window.open('about:blank', '_blank');
+    if (!win) return alert("Allow Popups!");
+    const doc = win.document;
+    doc.write('<html><head></head><body>' + document.body.innerHTML + '</body></html>');
+    const style = doc.createElement('style');
+    style.innerHTML = document.querySelector('style').innerHTML;
+    doc.head.appendChild(style);
+    win.customFavicon = customFavicon; 
+    win.customScreenshot = customScreenshot;
+    win.tabCount = 0;
+    win.handleKeydown = handleKeydown;
+    win.switchTab = switchTab;
+    win.closeTab = closeTab;
+    win.createTab = (name, content) => createTab(name, content, win);
+    win.toggleFullscreen = window.toggleFullscreen;
+    applyFavicon(doc);
+    updateBossScreenUI(doc);
+    win.addEventListener('keydown', win.handleKeydown);
+    doc.addEventListener('visibilitychange', () => {
+        const overlay = doc.getElementById('boss-key-overlay');
+        overlay.style.display = doc.hidden ? 'flex' : (win.isBossKeyManual ? 'flex' : 'none');
+    });
+    win.createTab(pendingFileName, pendingHtmlContent);
+    window.location.replace("https://classroom.google.com");
+}
+
+// Show overlay when backgrounded
+// (handled in visibilitychange)
+
+</script>
+</body>
+</html>
