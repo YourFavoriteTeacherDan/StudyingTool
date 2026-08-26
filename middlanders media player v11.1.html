@@ -159,7 +159,7 @@
         }
         
         .media-wrapper.audio-mode { background: var(--bg-color); }
-        #spectrogram { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; opacity: 0.8; }
+        #spectrogram { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; opacity: 0.8; pointer-events: none;}
         #now-playing-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; background: radial-gradient(circle, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%); text-align: center; }
         #np-cover { width: 350px; height: 350px; border-radius: 16px; box-shadow: 0 30px 60px rgba(0,0,0,0.8); object-fit: cover; margin-bottom: 30px; display: flex; align-items: center; justify-content: center; font-size: 6rem; background: #2c2c2e; color: transparent; }
         #np-title { font-size: 2.8rem; font-weight: 800; text-shadow: 0 4px 15px rgba(0,0,0,0.9); margin: 0; letter-spacing: -1px; }
@@ -193,7 +193,7 @@
         .speed-num-input:focus { border-color: var(--accent); }
 
         /* Lyrics Engine */
-        #lyrics-panel { right: 380px; width: 380px; }
+        #lyrics-panel { width: 380px; }
         .lyric-line { padding: 12px; font-size: 1.1rem; color: #888; transition: 0.3s; border-radius: 12px; cursor: pointer; font-weight: 600; line-height: 1.4; }
         .lyric-line:hover { background: rgba(255,255,255,0.08); color: #bbb; }
         .lyric-line.active { color: #fff; font-size: 1.3rem; font-weight: 800; background: transparent; transform: scale(1.05); text-shadow: 0 2px 10px rgba(255,255,255,0.2); }
@@ -389,17 +389,19 @@
         </div>
     </div>
 
-    <!-- Hidden PiP Canvas/Video for Audio -->
-    <canvas id="pip-canvas" width="600" height="600" style="display:none;"></canvas>
-    <video id="pip-video" style="display:none;" muted autoplay playsinline></video>
+    <!-- Hidden PiP Canvas/Video for Audio (moved off-screen instead of display:none to prevent frame dropping) -->
+    <div style="position:absolute; top:-9999px; left:-9999px; pointer-events:none;">
+        <canvas id="pip-canvas" width="600" height="600"></canvas>
+        <video id="pip-video" muted autoplay playsinline></video>
+    </div>
 
     <!-- Floating Panels -->
-    <div id="queue-panel" class="floating-panel" style="right: 30px;">
+    <div id="queue-panel" class="floating-panel" style="right: 25px;">
         <h3 style="margin:0 0 10px 0; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Queue</h3>
         <div id="queue-list" style="display:flex; flex-direction:column; gap:4px;"></div>
     </div>
 
-    <div id="lyrics-panel" class="floating-panel" style="width:400px;">
+    <div id="lyrics-panel" class="floating-panel" style="right: 25px; width:400px;">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom:15px;">
             <h3 style="margin:0; font-size:1.1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:260px;" id="lyrics-header-title">Lyrics</h3>
             <button class="btn-secondary" style="padding:6px 12px; font-size:0.85rem;" onclick="editLyrics()">✏️ Edit</button>
@@ -415,7 +417,7 @@
         </div>
     </div>
 
-    <div id="settings-panel" class="floating-panel" style="right: 380px;">
+    <div id="settings-panel" class="floating-panel" style="right: 25px;">
         <h3 style="margin:0 0 10px 0; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Customization</h3>
         
         <div class="setting-row" style="flex-direction:row; align-items:center; justify-content:space-between; margin-bottom:5px;">
@@ -551,8 +553,10 @@
         let explicitFolders = JSON.parse(localStorage.getItem('explicitFoldersV13') || '[]');
         
         let userProfile = null;
-        let playlistCovers = {}; // Loaded dynamically from IDB to avoid QuotaExceededError
+        let playlistCovers = {}; 
         
+        // Navigation tracking stacks
+        window.currentPlayableList = [];
         let playQueue = [];
         let playHistory = [];
 
@@ -755,7 +759,6 @@
         window.updateVisualsState = function() {
             if(!currentMediaName) return;
             const wrapper = document.getElementById('media-wrapper');
-            // Only toggle overlay elements if we are actually viewing audio in fullscreen
             if (wrapper.classList.contains('audio-mode')) {
                 const showOverlay = document.getElementById('setting-show-overlay').checked;
                 const showVis = document.getElementById('setting-show-visualizer').checked;
@@ -873,7 +876,6 @@
             const w = document.getElementById('media-wrapper');
             w.style.display = w.classList.contains('audio-mode') ? 'flex' : 'block';
             
-            // If we are minimizing from a picture back to an actively running audio visualizer
             if (currentMediaName) {
                 const r = dbRecords.find(x => x.name === currentMediaName);
                 if(r) {
@@ -1218,12 +1220,14 @@
             else { filtered = dbRecords.filter(r => r.type === currentTab); }
 
             if (searchInput) { filtered = filtered.filter(r => { const title = (r.customTitle || r.name).toLowerCase(); const artist = (r.artist || "").toLowerCase(); const folder = (r.folder || "").toLowerCase(); return title.includes(searchInput) || artist.includes(searchInput) || folder.includes(searchInput); }); }
+            
+            window.currentPlayableList = filtered.map(r => r.name);
 
             if (filtered.length === 0 && explicitFolders.length === 0) {
                 if (currentTab.startsWith('pl_')) {
                     emptyState.innerHTML = `
                         <div style="font-size: 4rem; margin-bottom: 10px;">🔍</div><h2 style="margin:0 0 10px 0; color:#fff;">${searchInput ? 'No matches found.' : 'Playlist is empty.'}</h2>
-                        ${searchInput ? '' : `<div style="margin-bottom: 15px;">Click '+' to add files from your library.</div><div id="suggestion-list" style="text-align:left; max-height: 400px; overflow-y:auto; background:var(--panel-bg); border-radius:12px; padding:10px; border: 1px solid var(--border-color);">${dbRecords.map(r => `<div style="padding: 12px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;"><div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80%; font-weight:600;">${r.customTitle || r.name}</div><button class="btn-secondary" style="padding: 6px 12px;" onclick="addToCurrentPlaylist('${r.name}')">+</button></div>`).join('')}</div>`}
+                        ${searchInput ? '' : `<div style="margin-bottom: 15px;">Click '+' to add files from your library.</div><div id="suggestion-list" style="text-align:left; max-height: 400px; overflow-y:auto; background:var(--panel-bg); border-radius:12px; padding:10px; border: 1px solid var(--border-color);">${dbRecords.map(r => `<div style="padding: 12px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;"><div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80%; font-weight:600;">${r.customTitle || r.name}</div><button class="btn-secondary" style="padding: 6px 12px;" onclick="addToCurrentPlaylist('${r.name.replace(/'/g, "\\'")}')">+</button></div>`).join('')}</div>`}
                     `;
                 } else { emptyState.innerHTML = `<div style="font-size: 4rem; margin-bottom: 15px;">📂</div><h2 style="margin:0 0 10px 0; color:#fff;">${searchInput ? 'No matches found.' : 'No files here.'}</h2><div style="color:var(--text-dim);">${searchInput ? 'Try adjusting your search.' : 'Click "Add Files" or drag and drop a .mpack file to build your library.'}</div>`; }
                 emptyState.style.display = 'block'; stats.style.display = 'none'; updateBulkBar(); return;
@@ -1267,8 +1271,7 @@
                     container = contentDiv;
                 }
 
-                groups[groupName].forEach((record, arrayIndex) => {
-                    const originalIndex = filtered.findIndex((x, idx) => x.name === record.name && idx >= arrayIndex); 
+                groups[groupName].forEach((record) => {
                     const li = document.createElement('li'); li.className = `media-item ${currentMediaName === record.name ? 'active' : ''}`;
                     const title = record.customTitle || record.name.replace(/\.[^/.]+$/, ""); const artist = record.artist || "Unknown Artist";
                     let coverStyle = ''; let coverChar = '🎵';
@@ -1288,13 +1291,15 @@
                     if(isMusicOrAudio && !isVisualMedia) {
                         artistHtml = `<div class="item-artist">${artist}</div>`;
                     }
+                    
+                    const safeRecordName = record.name.replace(/'/g, "\\'").replace(/"/g, "&quot;");
 
-                    let actions = `<button class="btn-action" onclick="exportTrack('${record.name}', event)" title="Export with metadata (.mpack)">💾</button><button class="btn-action" onclick="openMetadataModal('${record.name}', event)" title="Info">ℹ️</button>`;
-                    if(currentTab === 'trash') { actions += `<button class="btn-action" onclick="restoreItem('${record.name}', event)" title="Restore">♻️</button><button class="btn-action" onclick="permanentlyDelete('${record.name}', event)" style="color:var(--accent);">🗑️</button>`; } 
-                    else if (currentTab.startsWith('pl_')) { actions += `<button class="btn-action" onclick="removeFromPlaylist('${record.name}', event)">❌</button>`; } 
-                    else { actions += `<button class="btn-action" onclick="deleteItem('${record.name}', event)">🗑️</button>`; }
+                    let actions = `<button class="btn-action" onclick="exportTrack('${safeRecordName}', event)" title="Export with metadata (.mpack)">💾</button><button class="btn-action" onclick="openMetadataModal('${safeRecordName}', event)" title="Info">ℹ️</button>`;
+                    if(currentTab === 'trash') { actions += `<button class="btn-action" onclick="restoreItem('${safeRecordName}', event)" title="Restore">♻️</button><button class="btn-action" onclick="permanentlyDelete('${safeRecordName}', event)" style="color:var(--accent);">🗑️</button>`; } 
+                    else if (currentTab.startsWith('pl_')) { actions += `<button class="btn-action" onclick="removeFromPlaylist('${safeRecordName}', event)">❌</button>`; } 
+                    else { actions += `<button class="btn-action" onclick="deleteItem('${safeRecordName}', event)">🗑️</button>`; }
 
-                    li.innerHTML = `<div class="item-cover" style="${coverStyle}">${coverChar}</div><div class="item-main" onclick="triggerMediaPlay('${record.name}', false, null, null, ${originalIndex})"><div class="item-title">${title}</div>${artistHtml}</div>${actions}<input type="checkbox" ${selectedItems.has(record.name) ? 'checked' : ''} onchange="toggleSelect('${record.name}')" onclick="event.stopPropagation()" style="transform: scale(1.3); margin-left:10px;">`;
+                    li.innerHTML = `<div class="item-cover" style="${coverStyle}">${coverChar}</div><div class="item-main" onclick="triggerMediaPlay('${safeRecordName}')"><div class="item-title">${title}</div>${artistHtml}</div>${actions}<input type="checkbox" ${selectedItems.has(record.name) ? 'checked' : ''} onchange="toggleSelect('${safeRecordName}')" onclick="event.stopPropagation()" style="transform: scale(1.3); margin-left:10px;">`;
                     container.appendChild(li);
                 });
             });
@@ -1314,7 +1319,22 @@
                 const tx = db.transaction("media", "readwrite"); tx.objectStore("media").get(name).onsuccess = (e) => {
                     const r = e.target.result; r.customTitle = document.getElementById('edit-title').value; r.artist = document.getElementById('edit-artist').value; r.folder = document.getElementById('edit-folder').value.trim();
                     if (coverDataUrl !== undefined) r.coverArt = coverDataUrl;
-                    tx.objectStore("media").put(r).onsuccess = () => { closeModal('metadata-modal'); loadPlaylist(); if(currentMediaName === name) updateNowPlayingUI(dbRecords.find(x => x.name === name)); };
+                    
+                    tx.objectStore("media").put(r).onsuccess = () => { 
+                        closeModal('metadata-modal'); 
+                        
+                        // Update in-memory dbRecords so it reflects immediately
+                        const memRec = dbRecords.find(x => x.name === name);
+                        if (memRec) {
+                            memRec.customTitle = r.customTitle;
+                            memRec.artist = r.artist;
+                            memRec.folder = r.folder;
+                            if (coverDataUrl !== undefined) memRec.coverArt = r.coverArt;
+                        }
+                        
+                        loadPlaylist(); 
+                        if(currentMediaName === name) updateNowPlayingUI(r); 
+                    };
                 };
             };
             const fileInput = document.getElementById('edit-cover');
@@ -1338,21 +1358,30 @@
         window.toggleSelect = function(name) { selectedItems.has(name) ? selectedItems.delete(name) : selectedItems.add(name); updateBulkBar(); }
         window.updateBulkBar = function() { const bar = document.getElementById('bulk-bar'); bar.style.display = selectedItems.size > 0 ? 'flex' : 'none'; document.getElementById('select-count').innerText = `${selectedItems.size} Selected`; }
         window.updateBulkMoveDropdown = function() {
-            const select = document.getElementById('bulk-move-to'); select.innerHTML = `<option value="">Move Tab...</option><option value="anime">Anime</option><option value="movie">Movies</option><option value="episode">TV Shows</option><option value="music">Music</option><option value="audiobook">Audiobooks</option><option value="document">Docs/Books</option><option value="personal_video">Home Vids</option><option value="photo">Photos</option><option value="audio">Raw Audio</option><option value="unsorted">Unsorted</option>`;
-            Object.keys(customTabs).forEach(id => { const opt = document.createElement('option'); opt.value = id; opt.innerText = `${customTabs[id].icon} ${customTabs[id].name}`; select.appendChild(opt); });
+            const select = document.getElementById('bulk-move-to'); select.innerHTML = `<option value="">Move To...</option><option value="anime">Anime</option><option value="movie">Movies</option><option value="episode">TV Shows</option><option value="music">Music</option><option value="audiobook">Audiobooks</option><option value="document">Docs/Books</option><option value="personal_video">Home Vids</option><option value="photo">Photos</option><option value="audio">Raw Audio</option><option value="unsorted">Unsorted</option>`;
+            explicitFolders.forEach(f => { const opt = document.createElement('option'); opt.value = 'folder:'+f; opt.innerText = `📁 Folder: ${f}`; select.appendChild(opt); });
+            Object.keys(customTabs).forEach(id => { const opt = document.createElement('option'); opt.value = id; opt.innerText = `${customTabs[id].icon} Tab: ${customTabs[id].name}`; select.appendChild(opt); });
             Object.keys(customPlaylists).forEach(id => { const opt = document.createElement('option'); opt.value = id; opt.innerText = `+ Playlist: ${customPlaylists[id].name}`; select.appendChild(opt); });
         }
         window.bulkMove = function(target) {
             if (!target) return;
+            const tx = db.transaction("media", "readwrite");
+            
             if (target.startsWith('pl_')) {
-                const pl = customPlaylists[target]; const tx = db.transaction("media", "readwrite");
+                const pl = customPlaylists[target]; 
                 selectedItems.forEach(n => { 
                     if(!pl.items.includes(n)) pl.items.push(n); else { if(confirm(`"${n}" already in playlist. Add duplicate?`)) pl.items.push(n); }
                     const r = dbRecords.find(x => x.name === n); if(r && r.type === 'unsorted') { r.type = 'music'; tx.objectStore("media").put(r); }
                 });
                 localStorage.setItem('customPlaylistsV13', JSON.stringify(customPlaylists));
-            } else { const tx = db.transaction("media", "readwrite"); selectedItems.forEach(name => { const r = dbRecords.find(x => x.name === name); if(r) { r.type = target; tx.objectStore("media").put(r); } }); }
-            selectedItems.clear(); document.getElementById('bulk-move-to').value = ""; document.getElementById('select-all').checked = false; loadPlaylist();
+            } else if (target.startsWith('folder:')) {
+                const folderName = target.substring(7);
+                selectedItems.forEach(name => { const r = dbRecords.find(x => x.name === name); if(r) { r.folder = folderName; tx.objectStore("media").put(r); } });
+            } else { 
+                selectedItems.forEach(name => { const r = dbRecords.find(x => x.name === name); if(r) { r.type = target; tx.objectStore("media").put(r); } }); 
+            }
+            selectedItems.clear(); document.getElementById('bulk-move-to').value = ""; document.getElementById('select-all').checked = false; 
+            tx.oncomplete = () => loadPlaylist();
         }
 
         // Strict Queue, Shuffle & History Logic
@@ -1363,18 +1392,27 @@
 
             let list = []; if(customPlaylists[target]) list = [...customPlaylists[target].items]; else list = dbRecords.filter(r => r.type === target).map(r => r.name);
             if (list.length === 0) return alert("Nothing to play in this list.");
-            if (shuffle) list = list.sort(() => Math.random() - 0.5);
+            
             const expectedTab = customPlaylists[target] ? target : target; if (currentTab !== expectedTab) switchTab(expectedTab);
+            
             triggerMediaPlay(list[0], false, null, list); 
         };
 
-        function buildQueue(overrideList = null, startIndex = 0) {
-            let list = overrideList;
-            if(!list) {
-                if(currentTab.startsWith('pl_')) list = [...customPlaylists[currentTab].items]; else list = dbRecords.filter(r => r.type === currentTab).map(r => r.name);
-                if(isShuffle) { const current = list[startIndex]; list.splice(startIndex, 1); list = list.sort(() => Math.random() - 0.5); list.unshift(current); startIndex = 0; }
+        function buildQueue(list, startIndex = 0) {
+            if (!list || list.length === 0) return;
+            let playbackList = [...list];
+            
+            if (isShuffle) { 
+                const current = playbackList[startIndex]; 
+                playbackList.splice(startIndex, 1); 
+                playbackList = playbackList.sort(() => Math.random() - 0.5); 
+                playbackList.unshift(current); 
+                startIndex = 0; 
             }
-            playQueue = list.slice(startIndex + 1); renderQueueUI();
+            
+            playHistory = playbackList.slice(0, startIndex);
+            playQueue = playbackList.slice(startIndex + 1);
+            renderQueueUI();
         }
 
         window.toggleQueue = function() { const p = document.getElementById('queue-panel'); p.style.display = p.style.display === 'flex' ? 'none' : 'flex'; document.getElementById('lyrics-panel').style.display = 'none'; document.getElementById('settings-panel').style.display = 'none'; renderQueueUI(); }
@@ -1391,7 +1429,13 @@
             playQueue.forEach((name, i) => { const r = dbRecords.find(x => x.name === name); const t = r ? (r.customTitle || r.name.replace(/\.[^/.]+$/, "")) : name; list.innerHTML += `<div class="queue-item" onclick="jumpQueue(${i})">${t}</div>`; });
         }
         
-        window.jumpQueue = function(index) { const next = playQueue[index]; playQueue.splice(0, index + 1); if(currentMediaName) playHistory.push(currentMediaName); playMedia(next); }
+        window.jumpQueue = function(index) { 
+            const next = playQueue[index]; 
+            const skipped = playQueue.slice(0, index);
+            if(currentMediaName) playHistory.push(currentMediaName, ...skipped);
+            playQueue = playQueue.slice(index + 1); 
+            playMedia(next); 
+        }
         
         window.playHistoryTrack = function(index) { 
             const name = playHistory[index]; 
@@ -1410,7 +1454,11 @@
             const btn = document.getElementById('btn-shuffle');
             if(isShuffle) btn.classList.add('active'); else btn.classList.remove('active');
             
-            if(currentMediaName) { let list = currentTab.startsWith('pl_') ? customPlaylists[currentTab].items : dbRecords.filter(r => r.type === currentTab).map(r => r.name); let idx = list.indexOf(currentMediaName); if(idx === -1) idx = 0; buildQueue(null, idx); }
+            if(currentMediaName) { 
+                let list = currentTab.startsWith('pl_') ? customPlaylists[currentTab].items : dbRecords.filter(r => r.type === currentTab).map(r => r.name); 
+                let idx = list.indexOf(currentMediaName); if(idx === -1) idx = 0; 
+                buildQueue(list, idx); 
+            }
         }
         window.toggleLoop = function() {
             loopMode = (loopMode + 1) % 3; const btn = document.getElementById('btn-loop');
@@ -1421,42 +1469,50 @@
         }
 
         window.playNext = function() {
-            if(playQueue.length === 0) { if(loopMode === 1) { buildQueue(null, -1); } else if (loopMode === 2) { player.currentTime = 0; player.play(); return; } else return; }
-            if(playQueue.length > 0) { if(currentMediaName) playHistory.push(currentMediaName); playMedia(playQueue.shift()); }
+            if(playQueue.length > 0) { 
+                if(currentMediaName) playHistory.push(currentMediaName); 
+                playMedia(playQueue.shift()); 
+            }
+            else if (loopMode === 1) {
+                // Wrap around to start
+                if(playHistory.length > 0) {
+                    let dynamicList = [...playHistory, currentMediaName];
+                    triggerMediaPlay(dynamicList[0], false, null, dynamicList, 0);
+                }
+            }
+            else if (loopMode === 2) {
+                player.currentTime = 0; 
+                player.play();
+            }
         }
         
         window.playPrev = function() {
-            const record = dbRecords.find(r => r.name === currentMediaName);
-            if(record) {
-                const ext = currentMediaName.split('.').pop().toLowerCase(); 
-                const audioExts = ['mp3', 'wav', 'ogg', 'flac', 'm4a', 'aac', 'wma', 'alac', 'opus', 'webm']; 
-                const baseType = customTabs[record.type] ? customTabs[record.type].baseType : record.type; 
-                const isMusic = ['music', 'audio', 'audiobook'].includes(baseType) || audioExts.includes(ext) || (record.mimeType && record.mimeType.startsWith('audio/'));
-                if (isMusic && player.currentTime > 3) { 
-                    player.currentTime = 0; 
-                    return; 
-                }
-            }
             if(player.currentTime > 3) { 
                 player.currentTime = 0; 
+                return;
             } 
-            else if(playHistory.length > 0) { 
+            
+            if(playHistory.length > 0) { 
                 let prev = playHistory.pop(); 
                 while(prev === currentMediaName && playHistory.length > 0) { 
                     prev = playHistory.pop(); 
                 } 
-                if(currentMediaName) playQueue.unshift(currentMediaName); 
+                if(currentMediaName && prev !== currentMediaName) {
+                    playQueue.unshift(currentMediaName); 
+                }
                 playMedia(prev); 
             } 
             else if (loopMode === 1) { 
-                buildQueue(); 
-                if(playQueue.length > 0) { 
-                    let last = playQueue.pop(); 
-                    if(currentMediaName) playQueue.unshift(currentMediaName); 
-                    playMedia(last); 
-                } 
+                // Wrap around to the end of the current linear/shuffle stack
+                if(playQueue.length > 0) {
+                    let dynamicList = [currentMediaName, ...playQueue];
+                    let last = dynamicList[dynamicList.length - 1];
+                    triggerMediaPlay(last, false, null, dynamicList, dynamicList.length - 1);
+                }
             } 
-            else { player.currentTime = 0; }
+            else { 
+                player.currentTime = 0; 
+            }
         }
 
         // Lyrics Engine
@@ -1546,7 +1602,12 @@
             updateEcho(document.getElementById('setting-echo').value);
         }
         
-        document.getElementById('setting-vol').oninput = (e) => { const val = parseFloat(e.target.value); if (masterGain) masterGain.gain.value = val; else player.volume = Math.min(1, val); saveSetting('volume', val); };
+        document.getElementById('setting-vol').oninput = (e) => { 
+            const val = parseFloat(e.target.value); 
+            if (masterGain) masterGain.gain.value = val; 
+            player.volume = Math.min(1, val);
+            saveSetting('volume', val); 
+        };
         window.updateEQ = function(index, val) { if(filters[index]) filters[index].gain.value = val; saveSetting('eq_'+index, val); }
         window.updateReverb = function(val) { if(reverbGain) reverbGain.gain.value = val; saveSetting('reverb', val); }
         window.updateEcho = function(val) { 
@@ -1625,11 +1686,18 @@
             else { document.getElementById('img-viewer').style.display = 'block'; document.getElementById('img-viewer').src = url; }
         }
 
-        window.triggerMediaPlay = function(name, preview = false, e = null, explicitList = null, startIndex = 0) {
+        window.triggerMediaPlay = function(name, preview = false, e = null, explicitList = null) {
             if(e) e.stopPropagation(); 
             
             const record = dbRecords.find(r => r.name === name);
             if (!record) return;
+
+            let listToUse = explicitList || window.currentPlayableList || [];
+            let startIndex = listToUse.indexOf(name);
+            if (startIndex === -1) {
+                listToUse = [name];
+                startIndex = 0;
+            }
             
             const ext = name.split('.').pop().toLowerCase();
             const videoExts = ['mp4', 'mkv', 'webm', 'avi', 'mov', 'm4v', 'flv', 'ts', 'm2ts'];
@@ -1638,9 +1706,8 @@
             
             const isVideo = ['personal_video', 'movie', 'episode', 'anime', 'video'].includes(baseType) || videoExts.includes(ext) || (record.mimeType && record.mimeType.startsWith('video/'));
             const isAudioOnly = !isVideo && (['music', 'audiobook', 'audio'].includes(baseType) || audioExts.includes(ext) || (record.mimeType && record.mimeType.startsWith('audio/')));
-            const isVisualMedia = !isAudioOnly && !isVideo; // True for photo, epub, models, docs
+            const isVisualMedia = !isAudioOnly && !isVideo;
 
-            // Determine if we currently have an active audio track registered
             let hasActiveAudio = false;
             if (currentMediaName) {
                 const currentRec = dbRecords.find(x => x.name === currentMediaName);
@@ -1654,13 +1721,14 @@
                 }
             }
 
-            // Keep music playing/queued if it's currently active and a static visual media is clicked
             if (isVisualMedia && hasActiveAudio && player.src && player.src !== "") {
                 showVisualOnly(record);
                 return;
             }
 
-            playHistory = []; currentMediaName = name; buildQueue(explicitList, startIndex); playMedia(name, preview);
+            currentMediaName = name; 
+            buildQueue(listToUse, startIndex); 
+            playMedia(name, preview);
         }
 
         function updateNowPlayingUI(record) {
@@ -1679,7 +1747,6 @@
             document.getElementById('btm-title').innerText = title;
             document.getElementById('np-title').innerText = title;
 
-            // D requirement: Hide artist/time text for anime, photos, and videos.
             if (isVideoOrAnime || isPhotoOrDoc) {
                 document.getElementById('btm-artist').style.display = 'none';
                 document.getElementById('np-artist').style.display = 'none';
@@ -1757,7 +1824,9 @@
             const canvas = document.getElementById('spectrogram'); const ctx = canvas.getContext('2d'); if(!canvas.parentElement) return;
             canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight; const bufferLength = analyser.frequencyBinCount; const dataArray = new Uint8Array(bufferLength);
             function render() {
-                visualizerAnimation = requestAnimationFrame(render); analyser.getByteFrequencyData(dataArray); ctx.clearRect(0, 0, canvas.width, canvas.height);
+                visualizerAnimation = requestAnimationFrame(render); 
+                if (canvas.style.display === 'none') return;
+                analyser.getByteFrequencyData(dataArray); ctx.clearRect(0, 0, canvas.width, canvas.height);
                 const barWidth = (canvas.width / bufferLength) * 2.5; let x = 0; const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
                 for(let i = 0; i < bufferLength; i++) {
                     const barHeight = dataArray[i] * 3; const gradient = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - barHeight); gradient.addColorStop(0, accent); gradient.addColorStop(1, 'rgba(255,255,255,0.9)'); ctx.fillStyle = gradient; ctx.fillRect(x, canvas.height - barHeight, barWidth - 2, barHeight); x += barWidth;
