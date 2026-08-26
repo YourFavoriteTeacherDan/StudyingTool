@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Middlanders Universal Emulation Engine</title>
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <script src="coi-serviceworker.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/v86/build/libv86.js"></script>
+    <style>
+        :root { 
+            --bg: #0b0c10; --panel: #14181f; --accent: #66fcf1; --text: #c5c6c7; 
+            --danger: #ff0055; --success: #00ffaa; --warn: #ffd700;
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, monospace; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
+        /* HEADER & NAVIGATION */
+        .header { background: rgba(20, 24, 31, 0.95); backdrop-filter: blur(10px); padding: 15px 20px; border-bottom: 2px solid var(--accent); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.6); z-index: 100; }
+        .header h1 { margin: 0; font-size: 20px; color: var(--accent); letter-spacing: 2px; text-shadow: 0 0 10px rgba(102,252,241,0.3); }
+        .tabs { display: flex; gap: 10px; align-items: center;}
+        .tab-btn, .storage-btn, .profile-btn { background: #000; color: #888; border: 1px solid #333; padding: 8px 20px; cursor: pointer; font-weight: bold; border-radius: 6px; transition: all 0.3s ease; display: flex; align-items: center; gap: 5px; }
+        .tab-btn.active { background: var(--accent); color: #000; border-color: var(--accent); box-shadow: 0 0 15px rgba(102,252,241,0.3); }
+        .tab-btn:hover:not(.active) { color: #fff; border-color: #555; background: #111; }
+        .storage-btn { background: #222; color: #fff; border-color: var(--accent); }
+        .storage-btn:hover { background: var(--accent); color: #000; }
+        .profile-btn { background: #111; color: var(--warn); border-color: var(--warn); }
+        .profile-btn:hover { background: var(--warn); color: #000; box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);}
+
+        /* WORKSPACE & LAYOUT */
+        .workspace { flex: 1; display: flex; position: relative; padding: 20px; gap: 20px; overflow: hidden; }
+        .main-engine { flex: 1; display: none; flex-direction: column; overflow-y: auto; overflow-x: hidden; }
+        .main-engine.active { display: flex; }
+        
+        /* ---------------------------------------------------- */
+        /* DYNAMIC CONSOLE DASHBOARD ENGINE CSS */
+        /* ---------------------------------------------------- */
+        
+        #console-dashboard-wrapper { 
+            flex: 1; display: flex; flex-direction: column; border-radius: 12px; border: 1px solid #333; overflow: hidden; position: relative; transition: background 0.4s ease; 
+            background: var(--theme-bg, var(--panel));
+            font-family: var(--theme-font, 'Segoe UI', sans-serif);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5);
+        }
+        
+        .dashboard-header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 15px 20px; background: rgba(0,0,0,0.5); z-index: 20; position: relative; backdrop-filter: blur(10px);}
+        .xmb-nav { display: flex; gap: 15px; overflow-x: auto; flex: 1; padding-right: 20px; scroll-behavior: smooth; }
+        .xmb-nav::-webkit-scrollbar { display: none; } /* Hide ugly scrollbar on tabs */
+        .xmb-tab { background: transparent; border: none; color: #888; font-size: 14px; font-weight: bold; cursor: pointer; padding: 5px 12px; border-bottom: 3px solid transparent; transition: all 0.3s ease; white-space: nowrap; text-transform: uppercase; letter-spacing: 1px;}
+        .xmb-tab:hover { color: #fff; }
+        .xmb-tab.active { color: #fff; border-bottom: 3px solid var(--accent); text-shadow: 0 0 10px rgba(102,252,241,0.5); }
+        .xmb-tab.fav-tab { color: var(--warn); opacity: 0.6; }
+        .xmb-tab.fav-tab:hover { opacity: 1; }
+        .xmb-tab.fav-tab.active { border-bottom: 3px solid var(--warn); text-shadow: 0 0 10px rgba(255,215,0,0.5); opacity: 1;}
+        
+        .action-buttons { display: flex; gap: 10px; }
+        .btn-primary { background: var(--accent); color: #000; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; font-family: monospace; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 8px;}
+        .btn-primary:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(102,252,241,0.4); }
+        .btn-netplay { background: #1a1a24; color: var(--success); border: 1px solid var(--success); padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
+        .btn-netplay:hover { background: var(--success); color: #000; box-shadow: 0 5px 15px rgba(0, 255, 170, 0.3);}
+
+        #dynamic-system-title { text-align: center; font-size: 28px; font-weight: bold; color: var(--theme-color, #fff); padding: 25px 40px 0 40px; min-height: 60px; text-shadow: var(--theme-text-shadow, 0 2px 10px rgba(0,0,0,0.9)); z-index: 10; position: relative; letter-spacing: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+
+        /* THEMED CARDS & DRAG/DROP */
+        .viewer-grid { flex: 1; z-index: 10; position: relative; padding: 20px 30px; }
+        
+        .viewer-grid.layout-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 25px; align-content: flex-start; overflow-y: auto; overflow-x: hidden; }
+        .layout-grid .theme-card h4 { display: block; }
+
+        .viewer-grid.layout-horizontal { display: flex; flex-direction: row; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; align-items: center; gap: 30px; padding: 40px; }
+        .layout-horizontal .theme-card { flex: 0 0 240px; margin: 0; }
+        .layout-horizontal .theme-card h4, .layout-horizontal .card-meta { display: none; }
+
+        .theme-card { 
+            background: var(--theme-card-bg, rgba(20,24,31,0.8)); 
+            border: var(--theme-card-border, 1px solid #333); 
+            border-radius: var(--theme-card-radius, 8px); 
+            box-shadow: var(--theme-card-shadow, 0 4px 6px rgba(0,0,0,0.3)); 
+            color: var(--theme-color, #fff); 
+            padding: 12px; display: flex; flex-direction: column; gap: 10px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; cursor: grab; outline: 3px solid transparent; 
+        }
+        
+        .theme-card:active { cursor: grabbing; transform: scale(0.98); }
+        .theme-card.drag-over { outline: 3px dashed var(--accent) !important; transform: scale(1.02); opacity: 0.8; }
+
+        .theme-card:hover, .theme-card.gamepad-focus { 
+            outline: var(--theme-focus-outline, 3px solid var(--accent)); 
+            box-shadow: var(--theme-focus-shadow, 0 15px 30px rgba(0,0,0,0.6)); 
+            transform: var(--theme-focus-transform, scale(1.05) translateY(-5px)); 
+            z-index: 10; 
+            background: rgba(40, 45, 55, 0.95);
+        }
+
+        .viewer-cover { width: 100%; height: 220px; object-fit: cover; border-radius: calc(var(--theme-card-radius, 8px) - 4px); background: #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.8); transition: 0.2s; pointer-events: none; }
+        .layout-horizontal .viewer-cover { height: 240px; }
+        
+        .theme-card h4 { margin: 8px 0 0 0; font-size: 14px; text-shadow: var(--theme-text-shadow, 0 2px 4px rgba(0,0,0,0.8)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 25px; color: var(--theme-color, #fff);}
+        .card-meta { font-size: 11px; opacity: 0.8; display: flex; justify-content: space-between; margin-top: auto; font-family: monospace; color: var(--theme-color, #fff); background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 4px;}
+        
+        /* CARD INLINE MANAGEMENT BUTTONS */
+        .card-btn { position: absolute; top: 15px; background: rgba(0,0,0,0.8); border: 1px solid #555; border-radius: 50%; color: #fff; width: 30px; height: 30px; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); z-index: 5; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);}
+        .fav-btn { right: 15px; color: #666; }
+        .gear-btn { left: 15px; opacity: 0; transform: scale(0.8); }
+        .theme-card:hover .gear-btn, .theme-card.gamepad-focus .gear-btn { opacity: 1; transform: scale(1); }
+        
+        .card-btn:hover { color: #fff; transform: scale(1.15); background: #111; }
+        .fav-btn.active { color: var(--warn); border-color: var(--warn); text-shadow: 0 0 8px rgba(255, 215, 0, 0.8); opacity: 1; background: rgba(0,0,0,0.9);}
+        .gear-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* X86 SIDEBAR & PANELS */
+        .sidebar-panel { width: 340px; background: var(--panel); border-radius: 12px; border: 1px solid #333; display: flex; flex-direction: column; overflow: hidden; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
+        .sidebar-section { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .sidebar-section h2 { margin: 0; padding: 15px; background: #0a0c10; color: var(--accent); font-size: 14px; border-bottom: 1px solid #333; }
+        .library-list { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+        .lib-item { background: #0a0c10; padding: 12px; border: 1px solid #222; border-radius: 6px; display: flex; flex-direction: column; gap: 10px; border-left: 4px solid var(--accent); transition: 0.2s;}
+        .lib-item:hover { background: #111; border-color: #444; }
+        .lib-actions { display: flex; gap: 5px; flex-wrap: wrap; }
+        
+        /* FORM CONTROLS & MODALS */
+        select, input[type="file"], input[type="text"], button { padding: 10px; background: #000; color: white; border: 1px solid var(--accent); border-radius: 6px; font-family: monospace; outline: none;}
+        select:focus, input[type="text"]:focus { border-color: var(--success); box-shadow: 0 0 8px rgba(0,255,170,0.3); }
+        button { cursor: pointer; font-weight: bold; background: #000; color: var(--accent); transition: all 0.2s; }
+        button:hover { background: var(--accent); color: #000; }
+        
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(8px); }
+        .modal-content { background: var(--panel); padding: 30px; border: 1px solid #333; width: 500px; display: flex; flex-direction: column; gap: 15px; border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.9); border-top: 4px solid var(--accent); }
+        .form-group { display: flex; flex-direction: column; gap: 8px; }
+        .form-group label { font-size: 13px; color: var(--accent); font-weight: bold; letter-spacing: 0.5px;}
+        
+        /* EMULATOR SCREENS */
+        #os-screen, #console-screen { flex: 1; background: #000; border: 2px solid #333; border-radius: 12px; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 50px rgba(0,0,0,0.8); }
+        #os-screen_container { transform: scale(1.1); } 
+        iframe { width: 100%; height: 100%; border: none; background: #000; }
+        
+        /* NETPLAY DASHBOARD UI */
+        .netplay-dashboard { display: none; flex-direction: column; flex: 1; padding: 40px; position: relative; z-index: 10;}
+        .netplay-dashboard.active { display: flex; }
+        .status-node { display: flex; align-items: center; gap: 15px; background: rgba(0,255,170,0.1); border: 1px solid var(--success); padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #000; border-radius: 4px;}
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+        #v86-loader { display: none; position: absolute; top: 20px; right: 20px; background: rgba(20, 24, 31, 0.95); border: 2px solid var(--accent); padding: 15px; border-radius: 8px; z-index: 1000; align-items: center; gap: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.7); }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .spinner { width: 24px; height: 24px; border: 3px solid #333; border-top: 3px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Ω UNIVERSAL EMULATION DECK</h1>
+        <div class="tabs">
+            <button class="tab-btn" onclick="switchMainTab('os')">🖥️ x86 Workstation</button>
+            <button class="tab-btn active" onclick="switchMainTab('console')">🎮 Console Dashboard</button>
+            <button class="storage-btn" onclick="document.getElementById('storage-modal').style.display='flex'">💽 Storage Manager</button>
+            <button class="profile-btn" onclick="document.getElementById('profile-modal').style.display='flex'">👤 <span id="header-username">Guest</span></button>
+        </div>
+    </div>
+
+    <div class="workspace">
+        
+        <!-- SIDEBAR: X86 OS SNAPSHOTS -->
+        <div class="sidebar-panel" id="os-sidebar" style="display: none;">
+            <div style="padding: 15px; background: rgba(255,0,85,0.1); border-bottom: 1px solid #333; font-size: 12px; color: var(--text); line-height: 1.5;">
+                <strong style="color:var(--danger);">⚠️ FULL SYSTEM SNAPSHOTS:</strong><br>
+                Snapshots bundle RAM state and Hard Drive (.img) to prevent OS corruption.
+            </div>
+            <div class="sidebar-section">
+                <h2>🖥️ Virtual Machine Snapshots</h2>
+                <div id="snapshot-list" class="library-list"></div>
+            </div>
+            <div style="padding: 15px; border-top: 1px solid #333; background: #0d0f14; display: flex; flex-direction: column; gap: 10px;">
+                <button style="border-color: var(--success); color: var(--success);" onclick="createNewOSState()">📸 Capture Full Snapshot</button>
+                <button style="border-color: #888; color: #fff;" onclick="document.getElementById('import-state-upload').click()">📥 Import State</button>
+                <input type="file" id="import-state-upload" accept=".bin" style="display:none" onchange="importOSState(event)">
+            </div>
+        </div>
+
+        <!-- ENGINE: X86 WORKSTATION -->
+        <div id="os-engine" class="main-engine">
+            <div style="display: flex; gap: 15px; border-bottom: 2px solid #333; margin-bottom: 20px; padding-bottom: 10px;">
+                <button class="tab-btn active" style="background:transparent; border:none; border-bottom:3px solid var(--accent); border-radius:0;">Hardware Configuration</button>
+            </div>
+
+            <div style="background: var(--panel); padding: 20px; border-radius: 12px; border: 1px solid #333; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <div class="form-group">
+                        <label>v86.wasm (Engine) <span id="stat-wasm" style="color:var(--danger); float:right;">🔴 MISSING</span></label>
+                        <div style="display:flex; gap:5px;"><input type="file" id="v86-wasm" accept=".wasm" style="width:100%"><button onclick="saveV86Core('wasm')">Inject</button></div>
+                    </div>
+                    <div class="form-group">
+                        <label>seabios.bin (BIOS) <span id="stat-bios" style="color:var(--danger); float:right;">🔴 MISSING</span></label>
+                        <div style="display:flex; gap:5px;"><input type="file" id="v86-bios" accept=".bin" style="width:100%"><button onclick="saveV86Core('bios')">Inject</button></div>
+                    </div>
+                    <div class="form-group">
+                        <label>vgabios.bin (VGA) <span id="stat-vga" style="color:var(--danger); float:right;">🔴 MISSING</span></label>
+                        <div style="display:flex; gap:5px;"><input type="file" id="v86-vga" accept=".bin" style="width:100%"><button onclick="saveV86Core('vga')">Inject</button></div>
+                    </div>
+                </div>
+                
+                <hr style="border-color:#333; margin: 20px 0;">
+                
+                <div style="display: flex; gap: 20px; align-items: center; flex-wrap:wrap;">
+                    <div class="form-group" style="flex:1;">
+                        <label>Boot Media (ISO):</label>
+                        <input type="file" id="os-file" accept=".iso,.img,.fd,.dsk,.raw,.vhd,.qcow2">
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label style="color:var(--warn);">Target HDD (IMG):</label>
+                        <input type="file" id="hdd-file" accept=".img,.raw,.vhd,.hda" style="border-color:var(--warn);">
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: flex-end;">
+                        <button class="btn-primary" onclick="bootOS()">🚀 Boot Machine</button>
+                        <button onclick="stopOS()" style="background:rgba(255,0,85,0.1); border-color: var(--danger); color: var(--danger); padding:10px;">🛑 Off</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="os-screen">
+                <div id="v86-loader">
+                    <div class="spinner"></div>
+                    <div style="display:flex; flex-direction:column;">
+                        <span style="font-size:13px; font-weight:bold; color:var(--accent);">Initializing Hypervisor...</span>
+                        <span id="v86-boot-status" style="font-size:11px; color:var(--success); margin-top:4px;">Allocating memory...</span>
+                    </div>
+                </div>
+                <div id="os-screen_container">
+                    <div style="white-space: pre; font: 14px monospace; line-height: 14px; color:#fff;"></div>
+                    <canvas style="display: none"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- ENGINE: CONSOLE DASHBOARD ENVELOPE -->
+        <div id="console-engine" class="main-engine active">
+            <div id="console-dashboard-wrapper">
+                
+                <div class="dashboard-header">
+                    <!-- DYNAMIC TABS GENERATED HERE -->
+                    <div class="xmb-nav" id="dynamic-tabs-container"></div>
+                    
+                    <div class="action-buttons">
+                        <button class="btn-netplay" onclick="switchConsoleView('netplay')">🌐 Netplay Hub</button>
+                        <button class="btn-primary" onclick="document.getElementById('upload-modal').style.display='flex'">+ Install Game</button>
+                    </div>
+                </div>
+
+                <div id="dynamic-system-title">Select a title to begin...</div>
+
+                <!-- LIBRARY GRID VIEW (Drag & Drop Enabled) -->
+                <div id="full-library-grid" class="viewer-grid layout-grid"></div>
+
+                <!-- NETPLAY HUB VIEW -->
+                <div id="netplay-dashboard" class="netplay-dashboard">
+                    <h2 style="margin-top:0; color:var(--success); font-size: 28px; text-shadow: 0 0 15px rgba(0,255,170,0.4);">🌐 Global Netplay Hub</h2>
+                    <div class="status-node">
+                        <div style="width: 14px; height: 14px; background: var(--success); border-radius: 50%; box-shadow: 0 0 15px var(--success);"></div>
+                        <div>
+                            <strong style="color:#fff; font-size:16px;">STUN/TURN ICE Routing: ONLINE</strong><br>
+                            <span style="font-size: 13px; color:#aaa;">P2P NAT Traversal Active via OpenRelay. Port forwarding is not required.</span>
+                        </div>
+                    </div>
+                    
+                    <div style="background: rgba(0,0,0,0.5); border: 1px solid #333; border-radius: 12px; padding: 25px; max-width: 600px; backdrop-filter: blur(5px);">
+                        <h3 style="margin-top:0; color:var(--warn); font-size: 20px;">How to connect:</h3>
+                        <ol style="color:#ccc; font-size: 14px; line-height: 1.8; padding-left: 20px;">
+                            <li>Ensure both players have the <strong>exact same ROM installed</strong>.</li>
+                            <li>Launch the game from your dashboard.</li>
+                            <li>Once in-game, press <kbd style="background:#333; padding:2px 8px; border-radius:4px; color:#fff; border:1px solid #555;">Shift</kbd> (or Start+Select on Gamepad) to open the Emulator Menu.</li>
+                            <li>Navigate to <strong>Netplay</strong>. Player 1 selects <em>Host</em>. Player 2 selects <em>Join</em> and enters the Room ID provided by Player 1.</li>
+                        </ol>
+                        <div style="margin-top: 25px; padding: 20px; background: #000; border-radius: 8px; border: 1px dashed #555; text-align: center;">
+                            <span style="font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 1px;">Current Broadcast Identity</span><br>
+                            <strong style="font-size: 22px; color: #fff;" id="netplay-identity">Player 1</strong>
+                            <button style="margin-left:15px; font-size:11px; padding: 6px 12px;" onclick="document.getElementById('profile-modal').style.display='flex'">Change Identity</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACTIVE GAME VIEW (HIDDEN INITIALLY) -->
+            <div id="active-game-view" style="display:none; flex:1; flex-direction:column; min-height:0;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items:center;">
+                    <button style="background:transparent; border:1px solid #555; color:#fff;" onclick="closeGame()">🔙 Return to Dashboard</button>
+                    <span id="active-game-title" style="font-weight:bold; color:var(--accent); font-size:18px;">Game Running</span>
+                    <button style="border-color:var(--accent);" onclick="document.getElementById('console-screen').requestFullscreen()">📺 Fullscreen</button>
+                </div>
+                <div id="console-screen"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- UPLOAD MODAL -->
+    <div id="upload-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="margin:0; color:var(--accent); border-bottom:1px solid #333; padding-bottom:15px;">💾 Install New Title</h2>
+            <div class="form-group">
+                <label>System Core:</label>
+                <select id="console-core" onchange="handleCoreChange()">
+                    <option value="auto" style="font-weight:bold; color:var(--accent);">🤖 Auto-Detect System from File</option>
+                    <optgroup label="Sony"><option value="psx">PlayStation 1 (PSX)</option><option value="psp">PSP</option></optgroup>
+                    <optgroup label="Nintendo"><option value="nes">NES</option><option value="snes">SNES</option><option value="n64">Nintendo 64</option><option value="gba">Game Boy Advance</option><option value="gbc">Game Boy Color</option><option value="gb">Game Boy</option><option value="nds">Nintendo DS</option><option value="vb">Virtual Boy</option><option value="famicom_disk">Famicom Disk System</option><option value="pokemini">Pokemon Mini</option><option value="gameandwatch">Game & Watch</option></optgroup>
+                    <optgroup label="Sega"><option value="mastersystem">Master System</option><option value="megadrive">Genesis / Mega Drive</option><option value="segacd">Sega CD</option><option value="sega32x">Sega 32X</option><option value="saturn">Saturn</option><option value="dreamcast">Dreamcast</option><option value="gamegear">Game Gear</option><option value="sg1000">SG-1000</option><option value="naomi">NAOMI Arcade</option><option value="atomiswave">Atomiswave</option><option value="pico">Sega Pico</option></optgroup>
+                    <optgroup label="Arcade"><option value="mame2003">MAME 2003</option><option value="fbneo">FinalBurn Neo</option><option value="fba">FinalBurn Alpha</option><option value="neogeo">Neo Geo AES</option><option value="neogeocd">Neo Geo CD</option><option value="daphne">Daphne LaserDisc</option></optgroup>
+                    <optgroup label="PC / Engines"><option value="dos">MS-DOS</option><option value="scummvm">ScummVM</option><option value="prboom">DOOM Engine</option><option value="tyrquake">Quake Engine</option><option value="nxengine">Cave Story</option><option value="easyrpg">RPG Maker</option></optgroup>
+                    <optgroup label="Microcomputers"><option value="amiga">Amiga</option><option value="c64">Commodore 64</option><option value="vic20">VIC-20</option><option value="mac">Macintosh Classic</option><option value="apple2">Apple II</option><option value="x68000">Sharp X68000</option><option value="x1">Sharp X1</option><option value="pc88">NEC PC-88</option><option value="pc98">NEC PC-98</option><option value="fmtowns">FM Towns</option><option value="cpc">Amstrad CPC</option><option value="msx">MSX</option><option value="zxspectrum">ZX Spectrum</option><option value="zx81">ZX81</option></optgroup>
+                    <optgroup label="Classic Consoles"><option value="atari2600">Atari 2600</option><option value="atari5200">Atari 5200</option><option value="atari7800">Atari 7800</option><option value="lynx">Atari Lynx</option><option value="jaguar">Atari Jaguar</option><option value="atarist">Atari ST</option><option value="pce">TurboGrafx-16</option><option value="pcecd">TurboGrafx CD</option><option value="pcfx">PC-FX</option><option value="supergrafx">SuperGrafx</option><option value="wswan">WonderSwan</option><option value="ngp">Neo Geo Pocket</option><option value="vectrex">Vectrex</option><option value="colecovision">ColecoVision</option><option value="intellivision">Intellivision</option><option value="odyssey2">Magnavox Odyssey 2</option><option value="channelf">Fairchild Channel F</option><option value="arcadia2001">Arcadia 2001</option><option value="supervision">Watara Supervision</option><option value="uzebox">Uzebox</option><option value="tic80">TIC-80</option><option value="3do">3DO</option><option value="cdi">Philips CD-i</option></optgroup>
+                    <optgroup label="Web"><option value="flash">Flash (.swf)</option></optgroup>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>ROM File:</label>
+                <input type="file" id="console-rom" accept=".swf,.nes,.fds,.sfc,.smc,.z64,.n64,.v64,.gb,.gbc,.gba,.nds,.sms,.md,.gen,.smd,.gg,.exe,.zip,.a26,.a52,.a78,.lnx,.pce,.ws,.wsc,.chd,.iso,.cue,.bin,.m3u,.vb,.ngp,.ngc,.j64,.jag,.32x,.sg,.col,.int,.vec,.adf,.tap,.z80,.dim,.hdi,.d88,.mgw,.cdi,.st,.sgx,.uze,.p8,.sv,.dsk,.cas,.wad,.pak,.ldb" onchange="autoDetectCore()">
+            </div>
+            <div class="form-group">
+                <label>Cover Art (Highly Recommended):</label>
+                <input type="file" id="console-cover" accept="image/*">
+            </div>
+            <div class="form-group" id="bios-upload-container" style="display:none; background: rgba(255,215,0,0.1); padding: 10px; border-radius: 6px; border: 1px dashed var(--warn);">
+                <label style="color:var(--warn);">BIOS File (Required for this system):</label>
+                <input type="file" id="console-bios" accept=".bin,.rom,.zip" onchange="window.consoleBiosFile = this.files[0];" style="border-color:var(--warn); width: 100%;">
+            </div>
+            
+            <div style="display:flex; gap:10px; margin-top: 15px;">
+                <button class="close-modal" style="background:#333; color:white; flex:1;">Cancel</button>
+                <button onclick="installAndBootConsole()" style="background:var(--success); color:#000; flex:2;">💾 Install to Dashboard</button>
+            </div>
+            <span id="install-progress" style="color: var(--success); font-size: 13px; font-weight: bold; text-align:center;"></span>
+        </div>
+    </div>
+
+    <!-- GAME MANAGER MODAL (EDIT/DELETE) -->
+    <div id="game-manager-modal" class="modal">
+        <div class="modal-content" style="width: 450px; text-align: center;">
+            <h2 style="margin-top:0; color:var(--accent); border-bottom:1px solid #333; padding-bottom:15px;">⚙️ Manage Library Title</h2>
+            
+            <div style="position:relative; width: 240px; height: 240px; margin: 0 auto 20px auto; cursor:pointer; border-radius:12px; overflow:hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.5);" onclick="document.getElementById('edit-cover-upload').click()">
+                <img id="manager-cover-preview" src="" style="width:100%; height:100%; object-fit:cover; border:2px dashed #555;">
+                <div style="position:absolute; bottom:0; left:0; width:100%; background:rgba(0,0,0,0.85); color:#fff; font-size:13px; padding:10px; font-weight:bold; backdrop-filter: blur(5px);">📸 Click to change cover</div>
+            </div>
+            <input type="file" id="edit-cover-upload" accept="image/*" style="display:none" onchange="previewManagerCover(this)">
+            
+            <label style="font-size:12px; color:var(--accent); text-align:left; display:block; margin-bottom:6px; font-weight:bold; letter-spacing: 1px;">TITLE / DISPLAY NAME</label>
+            <input type="text" id="manager-name-input" style="width:100%; box-sizing:border-box; margin-bottom:30px; padding: 12px; font-size: 16px; text-align: center; border-color:#555;">
+            
+            <div style="display:flex; gap: 15px;">
+                <button class="close-modal" style="background:#333; color:white; flex: 1;">Cancel</button>
+                <button onclick="saveGameManager()" style="background:var(--success); color:#000; flex: 1;">Save Changes</button>
+            </div>
+            
+            <button onclick="deleteFromManager()" style="background:transparent; border:1px solid var(--danger); color:var(--danger); width:100%; margin-top:20px; padding: 12px; border-radius: 6px;">🗑️ Delete Game Permanently</button>
+        </div>
+    </div>
+
+    <!-- ELECTRON-SAFE CUSTOM PROMPT MODAL -->
+    <div id="custom-prompt" class="modal">
+        <div class="modal-content" style="width: 350px; text-align: center;">
+            <h3 id="prompt-title" style="margin-top:0; color:var(--accent);">Enter Name</h3>
+            <input type="text" id="prompt-input" style="width:100%; box-sizing:border-box; margin-bottom:20px; padding: 12px; font-size: 14px;">
+            <div style="display:flex; justify-content:space-between; gap: 10px;">
+                <button onclick="closePrompt()" style="background:#333; color:white; flex: 1;">Cancel</button>
+                <button onclick="submitPrompt()" style="background:var(--success); color:#000; flex: 1;">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- STORAGE MODAL -->
+    <div id="storage-modal" class="modal">
+        <div class="modal-content" style="max-height: 80vh; width: 600px;">
+            <h2 style="margin:0; color:var(--accent); border-bottom:1px solid #333; padding-bottom:15px;">💽 Storage Manager</h2>
+            <div id="storage-list" style="overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:8px;"></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-top: 1px solid #333; padding-top:20px; margin-top:15px;">
+                <span id="total-storage-size" style="font-weight:bold; color:var(--success); font-size: 16px;">Total Space Used: 0.00 MB</span>
+                <button class="close-modal" style="background:#333; color:white; padding: 10px 25px;">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROFILE MODAL -->
+    <div id="profile-modal" class="modal">
+        <div class="modal-content" style="width: 400px; text-align: center;">
+            <h2 style="margin-top:0; color:var(--warn); border-bottom:1px solid #333; padding-bottom:15px;">👤 Player Profile</h2>
+            <p style="font-size: 13px; color: #aaa; margin-bottom: 20px; line-height: 1.5;">Set your display name. This identity will be broadcast to peers when hosting Netplay rooms.</p>
+            <input type="text" id="profile-name-input" placeholder="Enter Username..." maxlength="16" style="width:100%; box-sizing:border-box; margin-bottom:25px; padding: 15px; font-size: 18px; text-align: center; border-color: var(--warn);">
+            <div style="display:flex; gap: 15px;">
+                <button class="close-modal" style="background:#333; color:white; flex: 1;">Cancel</button>
+                <button onclick="saveProfile()" style="background:var(--success); color:#000; flex: 1;">Save Profile</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener("beforeunload", (e) => {
+            if (window.activeGameUrl || emulatorInstance) {
+                e.preventDefault();
+                e.returnValue = "Emulation active. Leave and lose unsaved progress?";
+                return e.returnValue;
+            }
+        });
+
+        // App State
+        let db;
+        let emulatorInstance = null;
+        window.activeGameUrl = null;
+        window.consoleBiosFile = null;
+        window.currentViewerFilter = 'all';
+        window.coreUrlsCache = window.coreUrlsCache || {}; 
+
+        // Init DB
+        const request = indexedDB.open("MatrixROMVault", 4); 
+        request.onupgradeneeded = (e) => { 
+            db = e.target.result; 
+            if (e.oldVersion < 1) {
+                db.createObjectStore("games", { keyPath: "id", autoIncrement: true });
+                db.createObjectStore("saves", { keyPath: "gameName" }); 
+            }
+            if (e.oldVersion < 2) db.createObjectStore("chunks", { autoIncrement: true }); 
+            if (e.oldVersion < 3) db.createObjectStore("settings"); 
+        };
+        request.onsuccess = (e) => { 
+            db = e.target.result; 
+            loadProfile();
+            renderConsoleTabs();
+            renderSnapshots();
+            checkV86Status();
+        };
+
+        // --------------------------------------------------------
+        // AUTO-DETECT ROM EXTENSIONS & BIOS HANDLER
+        // --------------------------------------------------------
+        window.autoDetectCore = function() {
+            const fileInput = document.getElementById('console-rom');
+            if(!fileInput.files.length) return;
+            
+            const fileName = fileInput.files[0].name.toLowerCase();
+            const ext = fileName.split('.').pop();
+            const coreSelect = document.getElementById('console-core');
+            
+            const extMap = {
+                'nes': 'nes', 'sfc': 'snes', 'smc': 'snes', 'n64': 'n64', 'z64': 'n64', 'v64': 'n64',
+                'gb': 'gb', 'gbc': 'gbc', 'gba': 'gba', 'nds': 'nds', 'vb': 'vb', 'fds': 'famicom_disk',
+                'sms': 'mastersystem', 'md': 'megadrive', 'gen': 'megadrive', 'smd': 'megadrive', 'gg': 'gamegear',
+                'swf': 'flash', 'a26': 'atari2600', 'a52': 'atari5200', 'a78': 'atari7800',
+                'lnx': 'lynx', 'jag': 'jaguar', 'pce': 'pce', 'ngp': 'ngp', 'ws': 'wswan', 'wsc': 'wswan',
+                'vec': 'vectrex', 'int': 'intellivision', 'col': 'colecovision', 'chd': 'psx', 'iso': 'psx'
+            };
+            
+            if(extMap[ext]) {
+                coreSelect.value = extMap[ext];
+                handleCoreChange(); // Trigger BIOS prompt if required by the newly auto-detected core
+            }
+        };
+
+        window.handleCoreChange = function() {
+            const core = document.getElementById('console-core').value;
+            const biosContainer = document.getElementById('bios-upload-container');
+            // Systems that absolutely require a user-provided BIOS in EmulatorJS
+            const needsBios = ['psx', 'psp', 'saturn', 'segacd', 'neogeocd', 'dreamcast', 'pcecd', '3do', 'fmtowns', 'mac', 'x68000', 'amiga'];
+            
+            if(needsBios.includes(core)) {
+                biosContainer.style.display = 'block';
+            } else {
+                biosContainer.style.display = 'none';
+                window.consoleBiosFile = null;
+                document.getElementById('console-bios').value = '';
+            }
+        };
+
+        // --------------------------------------------------------
+        // MEGA DICTIONARY: 74 CONSOLE-SPECIFIC DASHBOARD THEMES
+        // --------------------------------------------------------
+        const CORE_NAMES = {
+            'all': 'All Titles', 'favorites': '⭐ Favorites',
+            'psx': 'PlayStation 1', 'psp': 'PlayStation Portable', 'n64': 'Nintendo 64', 'nes': 'NES', 'snes': 'Super Nintendo',
+            'gb': 'Game Boy', 'gbc': 'Game Boy Color', 'gba': 'Game Boy Advance', 'nds': 'Nintendo DS', 'vb': 'Virtual Boy',
+            'famicom_disk': 'Famicom Disk', 'pokemini': 'Pokémon Mini', 'gameandwatch': 'Game & Watch', 'mastersystem': 'Master System',
+            'megadrive': 'Sega Genesis', 'saturn': 'Sega Saturn', 'dreamcast': 'Dreamcast', 'segacd': 'Sega CD', 'sega32x': 'Sega 32X',
+            'sg1000': 'SG-1000', 'gamegear': 'Game Gear', 'naomi': 'Sega NAOMI', 'atomiswave': 'Atomiswave', 'pico': 'Sega Pico',
+            'mame2003': 'Arcade (MAME)', 'fbneo': 'FinalBurn Neo', 'fba': 'FinalBurn Alpha', 'neogeocd': 'Neo Geo CD', 'neogeo': 'Neo Geo AES',
+            'daphne': 'LaserDisc (Daphne)', 'atari2600': 'Atari 2600', 'atari5200': 'Atari 5200', 'atari7800': 'Atari 7800', 'lynx': 'Atari Lynx',
+            'jaguar': 'Atari Jaguar', 'atarist': 'Atari ST', 'pce': 'TurboGrafx-16', 'pcecd': 'TurboGrafx CD', 'pcfx': 'PC-FX',
+            'supergrafx': 'SuperGrafx', 'wswan': 'WonderSwan', 'ngp': 'Neo Geo Pocket', '3do': '3DO Multiplayer', 'vectrex': 'Vectrex',
+            'colecovision': 'ColecoVision', 'intellivision': 'Intellivision', 'odyssey2': 'Magnavox Odyssey²', 'amiga': 'Amiga', 'mac': 'Macintosh',
+            'x68000': 'Sharp X68000', 'x1': 'Sharp X1', 'pc88': 'PC-88', 'pc98': 'PC-98', 'fmtowns': 'FM Towns', 'scummvm': 'ScummVM',
+            'msx': 'MSX', 'zxspectrum': 'ZX Spectrum', 'dos': 'MS-DOS', 'c64': 'Commodore 64', 'tic80': 'TIC-80', 'uzebox': 'Uzebox',
+            'vic20': 'VIC-20', 'channelf': 'Channel F', 'zx81': 'ZX81', 'arcadia2001': 'Arcadia 2001', 'supervision': 'Watara Supervision',
+            'cdi': 'Philips CD-i', 'apple2': 'Apple II', 'cpc': 'Amstrad CPC', 'prboom': 'DOOM Engine', 'tyrquake': 'Quake Engine',
+            'nxengine': 'Cave Story', 'easyrpg': 'RPG Maker', 'flash': 'Web Flash'
+        };
+
+        const THEMES = {
+            // XBOX 360 / NXE / METRO STYLE FOR 'ALL TITLES'
+            'all': { bg: 'radial-gradient(ellipse at bottom right, #8fc31f 0%, #e0e5ec 50%, #ffffff 100%)', cBg: '#fff', cBd: '1px solid #ccc', cRad: '12px', col: '#333', font: '"Segoe UI", sans-serif', lay: 'grid', fOut: '4px solid #8fc31f', fShad: '0 15px 30px rgba(143,195,31,0.5)', fTrans: 'scale(1.08)', textShadow: 'none' },
+            'favorites': { bg: 'radial-gradient(ellipse at top, #332a00, #0b0c10)', cBg: '#1a1810', cBd: '1px solid #ffd700', cRad: '12px', col: '#ffd700', font: 'sans-serif', lay: 'grid', fOut: '3px solid #ffd700', fShad: '0 15px 30px rgba(255,215,0,0.4)', fTrans: 'scale(1.05) translateY(-5px)', textShadow: 'none' },
+            
+            // SONY
+            'psx': { bg: 'radial-gradient(circle at center, #000044 0%, #000000 100%)', cBg: 'rgba(128,128,128,0.2)', cBd: '2px solid #555', cRad: '6px', col: '#fff', font: 'sans-serif', lay: 'grid', fOut: '3px solid #00f', fShad: '0 0 20px #00f', fTrans: 'scale(1.05)', textShadow: '0 2px 4px #000' },
+            'psp': { bg: 'linear-gradient(135deg, #0f80cc, #042542)', cBg: 'transparent', cBd: 'none', cRad: '6px', col: '#fff', font: 'sans-serif', lay: 'horizontal', fOut: '2px solid #fff', fShad: '0 25px 50px rgba(0,0,0,0.8)', fTrans: 'scale(1.15)', textShadow: '0 2px 4px #000' },
+            
+            // NINTENDO
+            'nes': { bg: '#808080', cBg: '#000', cBd: '4px solid #000', cRad: '0', col: '#cc0000', font: 'monospace', lay: 'grid', fOut: '4px solid #cc0000', fShad: '0 10px 0px #000', fTrans: 'scale(1.05)', textShadow: 'none' },
+            'snes': { bg: '#b5b6b5', cBg: '#d3d4d5', cBd: '3px solid #5a5a72', cRad: '15px', col: '#333', font: 'sans-serif', lay: 'grid', fOut: '4px solid #684b82', fShad: '0 10px 20px rgba(0,0,0,0.5)', fTrans: 'scale(1.05)', textShadow: 'none' },
+            'n64': { bg: 'radial-gradient(circle, #222, #000)', cBg: '#333', cBd: '2px solid #e70012', cRad: '12px', col: '#ffcc00', font: 'sans-serif', lay: 'horizontal', fOut: '4px solid #009b3a', fShad: '0 15px 30px #000', fTrans: 'scale(1.1)', textShadow: '0 2px 4px #000' },
+            'gb': { bg: '#8bac0f', cBg: '#9bbc0f', cBd: '4px solid #0f380f', cRad: '5px', col: '#0f380f', font: 'monospace', lay: 'grid', fOut: '4px solid #0f380f', fShad: '0 0 15px #0f380f', fTrans: 'scale(1.05)', textShadow: 'none' },
+            'gbc': { bg: '#800080', cBg: 'rgba(255,255,255,0.2)', cBd: '2px solid #fff', cRad: '15px', col: '#fff', font: 'sans-serif', lay: 'grid', fOut: '4px solid #00ff00', fShad: '0 0 20px #00ff00', fTrans: 'scale(1.05)', textShadow: '0 2px 4px #000' },
+            'gba': { bg: '#3a2e85', cBg: '#fff', cBd: 'none', cRad: '20px', col: '#3a2e85', font: 'sans-serif', lay: 'horizontal', fOut: '5px solid #fff', fShad: '0 15px 25px rgba(0,0,0,0.8)', fTrans: 'scale(1.1)', textShadow: 'none' },
+            'nds': { bg: '#e6e6e6', cBg: '#fff', cBd: '2px solid #aaa', cRad: '12px', col: '#333', font: 'sans-serif', lay: 'grid', fOut: '4px solid #000', fShad: '0 10px 20px rgba(0,0,0,0.3)', fTrans: 'scale(1.05)', textShadow: 'none' },
+            
+            // SEGA
+            'megadrive': { bg: '#000', cBg: '#111', cBd: '2px solid #e00000', cRad: '8px', col: '#e00000', font: 'sans-serif', lay: 'grid', fOut: '3px solid #fff', fShad: '0 0 20px #e00000', fTrans: 'scale(1.05)', textShadow: 'none' },
+            'mastersystem': { bg: '#000044', cBg: '#000', cBd: '1px solid #44f', cRad: '0', col: '#fff', font: 'monospace', lay: 'grid', fOut: '3px solid #fff', fShad: '0 0 15px #44f', fTrans: 'scale(1.05)', textShadow: 'none' },
+            'saturn': { bg: '#333', cBg: '#222', cBd: '2px solid #1c82c4', cRad: '0', col: '#1c82c4', font: 'sans-serif', lay: 'grid', fOut: '3px solid #fff', fShad: '0 0 20px #1c82c4', fTrans: 'scale(1.05)', textShadow: 'none' },
+            'dreamcast': { bg: '#f5f5f5', cBg: '#fff', cBd: '3px solid #ff6600', cRad: '50% 10px 50% 10px', col: '#333', font: 'sans-serif', lay: 'horizontal', fOut: '4px solid #0059a6', fShad: '0 10px 20px #ff6600', fTrans: 'scale(1.1) rotate(-1deg)', textShadow: 'none' },
+            
+            // ARCADE
+            'mame2003': { bg: '#000', cBg: '#111', cBd: '2px solid #00ffaa', cRad: '15px', col: '#00ffaa', font: 'monospace', lay: 'grid', fOut: '4px solid #fff', fShad: 'inset 0 0 20px #00ffaa, 0 0 20px #fff', fTrans: 'scale(1.05)', textShadow: 'none' },
+            
+            // COMPUTERS
+            'dos': { bg: '#000', cBg: '#000', cBd: '2px solid #555', cRad: '0', col: '#00ff00', font: 'monospace', lay: 'grid', fOut: '3px solid #00ff00', fShad: '0 0 15px #00ff00', fTrans: 'scale(1.05)', textShadow: 'none' },
+            'flash': { bg: 'linear-gradient(to bottom, #ffffff, #cccccc)', cBg: '#f0f8ff', cBd: '1px solid #999', cRad: '12px', col: '#000', font: 'sans-serif', lay: 'grid', fOut: '4px solid #0059a6', fShad: '0 10px 20px rgba(0,0,0,0.3)', fTrans: 'scale(1.05)', textShadow: 'none' },
+        };
+
+        // UI Routing
+        function switchMainTab(tab) {
+            document.getElementById('os-engine').classList.toggle('active', tab === 'os');
+            document.getElementById('os-sidebar').style.display = tab === 'os' ? 'flex' : 'none';
+            document.getElementById('console-engine').classList.toggle('active', tab === 'console');
+            
+            const tabBtns = document.querySelectorAll('.header .tab-btn');
+            tabBtns.forEach(btn => {
+                if(tab === 'os' && btn.innerText.includes('x86')) btn.classList.add('active');
+                else if(tab === 'console' && btn.innerText.includes('Console')) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+        }
+
+        function switchConsoleView(view, filter) {
+            if(view === 'library') {
+                document.getElementById('dynamic-system-title').style.display = 'block';
+                document.getElementById('netplay-dashboard').classList.remove('active');
+                
+                document.querySelectorAll('.xmb-tab').forEach(b => {
+                    b.classList.remove('active');
+                    if(b.dataset.filter === filter) b.classList.add('active');
+                });
+                
+                window.currentViewerFilter = filter;
+                
+                // APPLY EXACT CSS THEME OR FALLBACK TO RETRO
+                const theme = THEMES[filter] || { bg: '#111', cBg: '#000', cBd: '2px solid #555', cRad: '12px', col: '#fff', font: 'sans-serif', lay: 'grid', fOut: '3px solid #fff', fShad: '0 0 15px #fff', fTrans: 'scale(1.05)', textShadow: '0 2px 4px #000' };
+                const wrapper = document.getElementById('console-dashboard-wrapper');
+                const grid = document.getElementById('full-library-grid');
+                
+                wrapper.style.setProperty('--theme-bg', theme.bg);
+                wrapper.style.setProperty('--theme-card-bg', theme.cBg);
+                wrapper.style.setProperty('--theme-card-border', theme.cBd);
+                wrapper.style.setProperty('--theme-card-radius', theme.cRad);
+                wrapper.style.setProperty('--theme-color', theme.col);
+                wrapper.style.setProperty('--theme-font', theme.font);
+                wrapper.style.setProperty('--theme-focus-outline', theme.fOut);
+                wrapper.style.setProperty('--theme-focus-shadow', theme.fShad);
+                wrapper.style.setProperty('--theme-focus-transform', theme.fTrans);
+                wrapper.style.setProperty('--theme-text-shadow', theme.textShadow || '0 2px 4px rgba(0,0,0,0.8)');
+                
+                grid.className = 'viewer-grid layout-' + theme.lay;
+                grid.style.display = (theme.lay === 'grid') ? 'grid' : 'flex';
+
+                renderDashboardGrid();
+            } else if (view === 'netplay') {
+                document.getElementById('full-library-grid').style.display = 'none';
+                document.getElementById('dynamic-system-title').style.display = 'none';
+                document.getElementById('netplay-dashboard').classList.add('active');
+                document.querySelectorAll('.xmb-tab').forEach(b => b.classList.remove('active'));
+            }
+        }
+
+        function closeGame() {
+            if(confirm("Exit game? Unsaved progress will be lost!")) {
+                const container = document.getElementById('console-screen');
+                container.innerHTML = '';
+                if (window.activeGameUrl) { URL.revokeObjectURL(window.activeGameUrl); window.activeGameUrl = null; }
+                document.getElementById('active-game-view').style.display = 'none';
+                document.getElementById('console-dashboard-wrapper').style.display = 'flex';
+                resetGamepadFocus();
+            }
+        }
+
+        function setDynamicTitle(title) {
+            const el = document.getElementById('dynamic-system-title');
+            if(el.innerText !== title) el.innerText = title;
+        }
+
+        function loadProfile() {
+            const storedName = localStorage.getItem('matrix_profile_name') || 'Player 1';
+            document.getElementById('header-username').innerText = storedName;
+            document.getElementById('netplay-identity').innerText = storedName;
+            document.getElementById('profile-name-input').value = storedName;
+        }
+
+        function saveProfile() {
+            let newName = document.getElementById('profile-name-input').value.trim() || "Player 1";
+            localStorage.setItem('matrix_profile_name', newName);
+            loadProfile();
+            document.getElementById('profile-modal').style.display = 'none';
+        }
+
+        function renderConsoleTabs() {
+            db.transaction("games", "readonly").objectStore("games").getAll().onsuccess = (e) => {
+                const games = e.target.result || [];
+                const cores = new Set();
+                games.forEach(g => { if(g.type === 'game') cores.add(g.core); });
+                
+                const container = document.getElementById('dynamic-tabs-container');
+                container.innerHTML = `
+                    <button class="xmb-tab ${window.currentViewerFilter==='all'?'active':''}" data-filter="all" onclick="switchConsoleView('library', 'all')">All Titles</button>
+                    <button class="xmb-tab fav-tab ${window.currentViewerFilter==='favorites'?'active':''}" data-filter="favorites" onclick="switchConsoleView('library', 'favorites')">⭐ Favorites</button>
+                `;
+                
+                Array.from(cores).sort().forEach(core => {
+                    const name = CORE_NAMES[core] || core.toUpperCase();
+                    const activeClass = window.currentViewerFilter === core ? 'active' : '';
+                    container.innerHTML += `<button class="xmb-tab ${activeClass}" data-filter="${core}" onclick="switchConsoleView('library', '${core}')">${name}</button>`;
+                });
+                
+                if(!cores.has(window.currentViewerFilter) && window.currentViewerFilter !== 'all' && window.currentViewerFilter !== 'favorites') {
+                    switchConsoleView('library', 'all');
+                } else {
+                    switchConsoleView('library', window.currentViewerFilter);
+                }
+            };
+        }
+
+        // BUG 1 FIX: Renders the grid strictly without asynchronous overlap.
+        function renderDashboardGrid() {
+            const grid = document.getElementById('full-library-grid'); 
+            const filter = window.currentViewerFilter;
+            
+            // Instantly clear out old games to prevent tab bleeding
+            grid.innerHTML = '';
+            let games = [];
+            
+            db.transaction("games", "readonly").objectStore("games").openCursor().onsuccess = (e) => {
+                const cursor = e.target.result;
+                if (cursor) {
+                    if (cursor.value.type === 'game') {
+                        // Strict filter enforcement
+                        if (filter === 'all' || (filter === 'favorites' && cursor.value.favorite) || cursor.value.core === filter) {
+                            games.push(cursor.value);
+                        }
+                    }
+                    cursor.continue();
+                } else {
+                    // Sorting
+                    games.sort((a, b) => {
+                        // Only force favorites to the top if we are actually inside the Favorites tab
+                        if (filter === 'favorites') {
+                            const aSort = a.sortIndex !== undefined ? a.sortIndex : a.id;
+                            const bSort = b.sortIndex !== undefined ? b.sortIndex : b.id;
+                            return bSort - aSort;
+                        } else {
+                            // Normal sorting everywhere else so things don't jump around
+                            const aSort = a.sortIndex !== undefined ? a.sortIndex : a.id;
+                            const bSort = b.sortIndex !== undefined ? b.sortIndex : b.id;
+                            return bSort - aSort;
+                        }
+                    });
+                    
+                    if(games.length === 0) {
+                        grid.innerHTML = `<div style="color:var(--theme-color, #aaa); text-align:center; width:100%; padding:50px; font-family:var(--theme-font); font-size:18px;">No titles installed for this category.</div>`;
+                        setDynamicTitle("Library Empty");
+                        return;
+                    }
+
+                    // Build the complete HTML string before injecting
+                    let htmlString = '';
+                    games.forEach((game, index) => {
+                        const favClass = game.favorite ? 'active' : '';
+                        const coverHtml = game.coverBase64 ? `<img src="${game.coverBase64}" class="viewer-cover" alt="Cover" loading="lazy">` : `<div class="viewer-cover" style="display:flex;align-items:center;justify-content:center;color:#444;font-size:50px;background:#1a1a1a;">🎮</div>`;
+                        const sizeMb = ((game.isChunked ? game.totalSize : (game.data.size || 0)) / 1048576).toFixed(1);
+                        const safeName = game.name.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+
+                        htmlString += `
+                            <div class="theme-card" draggable="true" data-id="${game.id}" data-index="${index}" 
+                                onclick="if(!window.isDragging) playFromLibrary(${game.id}, '${safeName}')" 
+                                onmouseenter="setDynamicTitle('${safeName}')"
+                                ondragstart="handleDragStart(event, ${game.id})"
+                                ondragover="handleDragOver(event)"
+                                ondrop="handleDrop(event, ${game.id})"
+                                ondragleave="handleDragLeave(event)">
+                                <button class="card-btn gear-btn" onclick="openGameManager(${game.id}, event)" title="Manage Title">⚙️</button>
+                                <button class="card-btn fav-btn ${favClass}" onclick="toggleFavorite(${game.id}, event)" title="Toggle Favorite">★</button>
+                                ${coverHtml}
+                                <h4>${game.name}</h4>
+                                <div class="card-meta">
+                                    <span>${(game.core || 'unknown').toUpperCase()}</span>
+                                    <span>${sizeMb} MB</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    grid.innerHTML = htmlString;
+                    resetGamepadFocus();
+                }
+            };
+        }
+
+        // --------------------------------------------------------
+        // DRAG AND DROP LIBRARY ORGANIZER
+        // --------------------------------------------------------
+        let draggedGameId = null;
+        window.isDragging = false;
+
+        window.handleDragStart = function(e, id) {
+            draggedGameId = id;
+            e.dataTransfer.effectAllowed = "move";
+            e.target.style.opacity = '0.5';
+            setTimeout(() => window.isDragging = true, 50);
+        };
+
+        window.handleDragOver = function(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+            const card = e.target.closest('.theme-card');
+            if (card && card.dataset.id != draggedGameId) card.classList.add('drag-over');
+        };
+
+        window.handleDragLeave = function(e) {
+            const card = e.target.closest('.theme-card');
+            if (card) card.classList.remove('drag-over');
+        };
+
+        window.handleDrop = function(e, targetId) {
+            e.preventDefault();
+            const card = e.target.closest('.theme-card');
+            if (card) card.classList.remove('drag-over');
+            
+            setTimeout(() => window.isDragging = false, 100);
+            if(draggedGameId === null || draggedGameId === targetId) return;
+
+            const tx = db.transaction("games", "readwrite");
+            const store = tx.objectStore("games");
+            
+            store.get(draggedGameId).onsuccess = (e1) => {
+                const sourceGame = e1.target.result;
+                store.get(targetId).onsuccess = (e2) => {
+                    const targetGame = e2.target.result;
+                    if(!sourceGame || !targetGame) return;
+
+                    // Swap Sort Indexes
+                    const srcIndex = sourceGame.sortIndex !== undefined ? sourceGame.sortIndex : sourceGame.id;
+                    const tgtIndex = targetGame.sortIndex !== undefined ? targetGame.sortIndex : targetGame.id;
+
+                    sourceGame.sortIndex = tgtIndex;
+                    targetGame.sortIndex = srcIndex;
+
+                    store.put(sourceGame);
+                    store.put(targetGame).onsuccess = () => renderDashboardGrid();
+                };
+            };
+            draggedGameId = null;
+        };
+
+        // --------------------------------------------------------
+        // INLINE GAME MANAGER (EDIT / DELETE)
+        // --------------------------------------------------------
+        let currentlyManagingId = null;
+        let currentlyManagingCover = null;
+
+        function getBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        window.openGameManager = function(id, event) {
+            if(event) event.stopPropagation();
+            currentlyManagingId = id;
+            db.transaction("games", "readonly").objectStore("games").get(id).onsuccess = (e) => {
+                const game = e.target.result;
+                if(!game) return;
+                
+                document.getElementById('manager-name-input').value = game.name;
+                currentlyManagingCover = game.coverBase64;
+                
+                const preview = document.getElementById('manager-cover-preview');
+                if(game.coverBase64) {
+                    preview.src = game.coverBase64;
+                    preview.style.display = 'block';
+                } else {
+                    preview.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" fill="%231a1a1a"><rect width="100%" height="100%"/></svg>';
+                }
+                document.getElementById('game-manager-modal').style.display = 'flex';
+            };
+        };
+
+        window.previewManagerCover = async function(input) {
+            if (input.files && input.files[0]) {
+                currentlyManagingCover = await getBase64(input.files[0]);
+                const preview = document.getElementById('manager-cover-preview');
+                preview.src = currentlyManagingCover;
+            }
+        };
+
+        window.saveGameManager = function() {
+            if(!currentlyManagingId) return;
+            const newName = document.getElementById('manager-name-input').value.trim();
+            if(!newName) return alert("Name cannot be empty.");
+            
+            const tx = db.transaction("games", "readwrite");
+            const store = tx.objectStore("games");
+            store.get(currentlyManagingId).onsuccess = (e) => {
+                const game = e.target.result;
+                if(!game) return;
+                game.name = newName;
+                game.coverBase64 = currentlyManagingCover;
+                store.put(game).onsuccess = () => {
+                    document.getElementById('game-manager-modal').style.display = 'none';
+                    renderDashboardGrid();
+                };
+            };
+        };
+
+        window.deleteFromManager = function() {
+            if(!currentlyManagingId) return;
+            if(!confirm("Are you sure you want to permanently delete this game?")) return;
+            
+            const id = currentlyManagingId;
+            document.getElementById('game-manager-modal').style.display = 'none';
+            
+            const txGet = db.transaction("games", "readonly");
+            txGet.objectStore("games").get(id).onsuccess = (e) => {
+                const game = e.target.result;
+                if (!game) return;
+                
+                if (game.isChunked) {
+                    const txChunks = db.transaction("chunks", "readwrite");
+                    txChunks.objectStore("chunks").openCursor().onsuccess = (ev) => {
+                        const cursor = ev.target.result;
+                        if (cursor) { 
+                            if (cursor.value.gameId === id) cursor.delete(); 
+                            cursor.continue(); 
+                        }
+                    };
+                }
+                const txDel = db.transaction("games", "readwrite");
+                txDel.objectStore("games").delete(id);
+                txDel.oncomplete = () => { 
+                    renderConsoleTabs(); // Auto re-renders grid inside
+                };
+            };
+        };
+
+        // BUG 2 FIX: Update the star status specifically for one game to avoid layout thrashing
+        window.toggleFavorite = function(id, event) {
+            event.stopPropagation();
+            const store = db.transaction("games", "readwrite").objectStore("games");
+            store.get(id).onsuccess = (e) => {
+                const item = e.target.result;
+                if(!item) return;
+                
+                item.favorite = !item.favorite;
+                store.put(item).onsuccess = () => {
+                    // Update only the star visually unless we are currently inside the "Favorites" tab. 
+                    // If we are in "Favorites", a removal means it should disappear, so we re-render entirely.
+                    if (window.currentViewerFilter === 'favorites') {
+                        renderDashboardGrid();
+                    } else {
+                        const btn = event.target;
+                        if(item.favorite) btn.classList.add('active');
+                        else btn.classList.remove('active');
+                    }
+                };
+            };
+        }
+
+        // Install & Play Engine
+        window.installAndBootConsole = async function() {
+            let core = document.getElementById('console-core').value;
+            const fileInput = document.getElementById('console-rom');
+            const coverInput = document.getElementById('console-cover');
+            
+            if (core === 'auto') {
+                window.autoDetectCore();
+                core = document.getElementById('console-core').value;
+                if (core === 'auto') return alert("Could not auto-detect the system core from the file extension. Please select the correct system manually from the dropdown.");
+            }
+            
+            if (!fileInput.files.length) return alert("Please select a ROM file first.");
+            
+            const file = fileInput.files[0]; 
+            const progressEl = document.getElementById('install-progress');
+            progressEl.innerText = "Processing & Installing...";
+
+            let coverBase64 = null;
+            if (coverInput.files.length) {
+                coverBase64 = await getBase64(coverInput.files[0]);
+            }
+
+            const tx = db.transaction("games", "readwrite");
+            tx.objectStore("games").put({ 
+                name: file.name, core: core, type: 'game', data: file, 
+                isChunked: false, coverBase64: coverBase64, favorite: false, sortIndex: Date.now() 
+            }).onsuccess = (e) => { 
+                document.getElementById('upload-modal').style.display = 'none';
+                progressEl.innerText = ""; fileInput.value = ''; coverInput.value = '';
+                
+                renderConsoleTabs();
+                switchConsoleView('library', core);
+                playFromLibrary(e.target.result, file.name);
+            };
+        }
+
+        window.playFromLibrary = function(id, name) {
+            document.getElementById('console-dashboard-wrapper').style.display = 'none';
+            document.getElementById('active-game-view').style.display = 'flex';
+            document.getElementById('active-game-title').innerText = name || "Emulation Running";
+
+            db.transaction("games", "readonly").objectStore("games").get(id).onsuccess = (e) => {
+                const game = e.target.result;
+                
+                if (window.activeGameUrl) URL.revokeObjectURL(window.activeGameUrl);
+                window.activeGameUrl = URL.createObjectURL(game.data);
+                
+                const cleanName = game.name.replace(/[^a-zA-Z0-9.\-_ ()]/g, '_'); 
+                const gameID = 'ejs_save_' + cleanName;
+                const profileName = localStorage.getItem('matrix_profile_name') || 'Player 1';
+                
+                let biosString = window.consoleBiosFile ? `window.EJS_biosUrl = '${URL.createObjectURL(window.consoleBiosFile)}';` : '';
+                
+                const iframe = document.createElement('iframe');
+                iframe.allow = "fullscreen *; gamepad *; autoplay *";
+                
+                const html = `
+                    <!DOCTYPE html><html><head><style>body,html{margin:0;padding:0;background:#000;width:100%;height:100%;}</style></head>
+                    <body><div id="game" style="width:100%;height:100%;"></div>
+                    <script>
+                        window.EJS_player = '#game'; 
+                        window.EJS_core = '${game.core}'; 
+                        window.EJS_gameUrl = '${window.activeGameUrl}';
+                        window.EJS_pathtodata = 'https://cdn.emulatorjs.org/latest/data/';
+                        window.EJS_gameID = '${gameID}';
+                        window.EJS_gameName = '${cleanName}';
+                        window.EJS_netplayName = '${profileName}';
+                        window.EJS_netplayIceServers = [
+                            { urls: ["stun:stun.l.google.com:19302"] },
+                            { urls: ["turn:openrelay.metered.ca:80"], username: "openrelayproject", credential: "openrelayproject" }
+                        ];
+                        ${biosString}
+                        window.EJS_mouse = true; window.EJS_gamepad = true; window.EJS_multitap = true;
+                    <\/script>
+                    <script src="https://cdn.emulatorjs.org/latest/data/loader.js"><\/script>
+                    </body></html>
+                `;
+                iframe.src = URL.createObjectURL(new Blob([html], {type: 'text/html'}));
+                document.getElementById('console-screen').innerHTML = '';
+                document.getElementById('console-screen').appendChild(iframe);
+                iframe.focus();
+            };
+        }
+
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('close-modal')) {
+                e.target.closest('.modal').style.display = 'none';
+            }
+        });
+
+        // --------------------------------------------------------
+        // RESTORED X86 WORKSTATION JAVASCRIPT
+        // --------------------------------------------------------
+        window.saveV86Core = function(type) {
+            const fileInput = document.getElementById(`v86-${type}`);
+            const file = fileInput.files[0]; 
+            if(!file) return alert("File parameter missing. Please select a file first.");
+            
+            let foundId = null;
+            db.transaction("games", "readonly").objectStore("games").openCursor().onsuccess = (e) => {
+                const cursor = e.target.result;
+                if (cursor) { 
+                    if(cursor.value.type === 'system' && cursor.value.coreType === type) {
+                        foundId = cursor.value.id;
+                    }
+                    cursor.continue(); 
+                } else {
+                    if (foundId) {
+                        if (!confirm(`You already have a ${type.toUpperCase()} file injected. Replace it?`)) { fileInput.value = ''; return; }
+                        db.transaction("games", "readwrite").objectStore("games").delete(foundId).onsuccess = () => insertCore();
+                    } else insertCore();
+                }
+            };
+            function insertCore() {
+                const tx = db.transaction("games", "readwrite");
+                tx.objectStore("games").put({ name: `v86_${type}_sys`, type: 'system', coreType: type, data: file, favorite: false });
+                tx.oncomplete = () => { alert(`${type.toUpperCase()} core injected successfully.`); checkV86Status(); fileInput.value = ''; };
+            }
+        };
+
+        window.checkV86Status = function() {
+            let found = {};
+            db.transaction("games", "readonly").objectStore("games").openCursor().onsuccess = (e) => {
+                const cursor = e.target.result;
+                if (cursor) { 
+                    if(cursor.value.type === 'system') found[cursor.value.coreType] = true;
+                    cursor.continue(); 
+                } else {
+                    ['wasm','bios','vga'].forEach(t => { 
+                        const el = document.getElementById(`stat-${t}`); 
+                        if(el) { 
+                            el.innerText = found[t] ? "🟢 READY" : "🔴 MISSING"; 
+                            el.className = found[t] ? "sys-status status-ready" : "sys-status status-missing"; 
+                        }
+                    });
+                }
+            };
+        };
+
+        window.bootOS = async function(snapshotHdaBlob = null, snapshotRamBlob = null) {
+            let coreFiles = {};
+            await new Promise(r => {
+                db.transaction("games", "readonly").objectStore("games").openCursor().onsuccess = (e) => {
+                    const c = e.target.result; 
+                    if(c) { if(c.value.type==='system') coreFiles[c.value.coreType] = c.value.data; c.continue(); } else r();
+                }
+            });
+            
+            if(!coreFiles.wasm || !coreFiles.bios || !coreFiles.vga) {
+                return alert("🛑 BOOT SEQUENCE HALTED 🛑\n\nThe x86 Workstation cannot boot because its physical hardware definitions are missing.\n\nYou MUST download and inject all three core files into the top grid before you can boot an OS.");
+            }
+
+            const file = document.getElementById('os-file').files[0]; 
+            const hddFile = document.getElementById('hdd-file').files[0];
+            
+            if(!file && !hddFile && !snapshotHdaBlob) return alert("You must select at least a Boot Media (ISO) or a Target HDD to boot.");
+            if (emulatorInstance) stopOS();
+            
+            document.getElementById('v86-loader').style.display = 'flex';
+            if (window.activeOsUrl) { URL.revokeObjectURL(window.activeOsUrl); window.activeOsUrl = null; }
+            if (window.activeHddUrl) { URL.revokeObjectURL(window.activeHddUrl); window.activeHddUrl = null; }
+
+            const biosBuffer = await coreFiles.bios.arrayBuffer();
+            const vgaBuffer = await coreFiles.vga.arrayBuffer();
+
+            if (!window.coreUrlsCache.wasm) window.coreUrlsCache.wasm = URL.createObjectURL(coreFiles.wasm);
+            if (file) window.activeOsUrl = URL.createObjectURL(file);
+            if (snapshotHdaBlob) window.activeHddUrl = URL.createObjectURL(snapshotHdaBlob);
+            else if (hddFile) window.activeHddUrl = URL.createObjectURL(hddFile);
+
+            const cfg = { 
+                wasm_path: window.coreUrlsCache.wasm, 
+                bios: { buffer: biosBuffer }, 
+                vga_bios: { buffer: vgaBuffer }, 
+                memory_size: 1024 * 1024 * 1024,      
+                vga_memory_size: 8 * 1024 * 1024,   
+                screen_container: document.getElementById("os-screen_container"), 
+                autostart: true, 
+                preserve_aspect_ratio: true, 
+                mouse_state: true, 
+                listen_to_mouse_clicks: true, 
+                fs_throttle_bad_ticks: true
+            };
+            
+            if (file) {
+                const ext = file.name.split('.').pop().toLowerCase();
+                if (ext === 'iso') cfg.cdrom = { url: window.activeOsUrl, async: true, size: file.size }; 
+                else if (['img','fd','dsk','raw'].includes(ext)) cfg.fda = { url: window.activeOsUrl, async: true, size: file.size }; 
+                else cfg.hda = { url: window.activeOsUrl, async: true, size: file.size };
+            }
+            if (window.activeHddUrl) {
+                cfg.hda = { url: window.activeHddUrl, async: true, size: snapshotHdaBlob ? snapshotHdaBlob.size : hddFile.size };
+            }
+            
+            try { emulatorInstance = new window.V86(cfg); } 
+            catch (err) { document.getElementById('v86-loader').style.display = 'none'; return alert("Fatal Hypervisor Crash."); }
+
+            emulatorInstance.add_listener("emulator-ready", async function() {
+                setTimeout(() => document.getElementById('v86-loader').style.display = 'none', 5000);
+                if (snapshotRamBlob) {
+                    try {
+                        let buf = await (snapshotRamBlob instanceof Blob ? snapshotRamBlob.arrayBuffer() : snapshotRamBlob);
+                        emulatorInstance.restore_state(buf);
+                    } catch (e) { alert("Failed to restore RAM state after reboot."); }
+                }
+            });
+        };
+
+        window.stopOS = function() { 
+            if (emulatorInstance && confirm("Power off the workstation?")) { 
+                emulatorInstance.stop(); emulatorInstance.destroy(); emulatorInstance = null;
+                if (window.activeOsUrl) { URL.revokeObjectURL(window.activeOsUrl); window.activeOsUrl = null; }
+                if (window.activeHddUrl) { URL.revokeObjectURL(window.activeHddUrl); window.activeHddUrl = null; }
+                const container = document.getElementById("os-screen_container");
+                container.innerHTML = '<div style="white-space: pre; font: 14px monospace; line-height: 14px; color:#fff;"></div><canvas style="display: none"></canvas>';
+                document.getElementById('v86-boot-status').innerText = "";
+                document.getElementById('v86-loader').style.display = 'none';
+            } 
+        };
+
+        window.renderSnapshots = function() {
+            const list = document.getElementById('snapshot-list'); 
+            if(!list) return;
+            list.innerHTML = '';
+            let items = [];
+            db.transaction("games", "readonly").objectStore("games").openCursor().onsuccess = (e) => {
+                const cursor = e.target.result;
+                if (cursor) {
+                    if (cursor.value.type === 'os_state') items.push(cursor.value);
+                    cursor.continue();
+                } else {
+                    items.sort((a, b) => (b.favorite === true) - (a.favorite === true));
+                    if (items.length === 0) return list.innerHTML = '<div style="color:#666; font-size:11px; text-align:center; margin-top:20px;">No snapshots captured.</div>';
+                    
+                    items.forEach(item => {
+                        let sizeMb = '0.00';
+                        if (item.data && item.data.ram) {
+                            let totalBytes = item.data.ram.byteLength || item.data.ram.size || 0;
+                            if (item.data.hda && item.data.hda.size) totalBytes += item.data.hda.size;
+                            sizeMb = (totalBytes / (1024*1024)).toFixed(2);
+                        }
+                        const isAutosave = (item.name === 'AUTOSAVE_X86');
+                        list.innerHTML += `
+                            <div class="lib-item" style="flex-direction: column; align-items: stretch; gap: 8px;">
+                                <div class="lib-item-info">
+                                    <span class="lib-title" style="color:${isAutosave?'var(--warn)':'var(--success)'}; font-size: 13px;">${item.name}</span>
+                                    <span class="lib-core" style="color:#aaa;">${sizeMb} MB SNAPSHOT</span>
+                                </div>
+                                <div class="lib-actions" style="display:flex; gap:5px; flex-wrap: wrap;">
+                                    <button class="lib-btn" style="background:var(--success); color:#000; flex:1;" onclick="loadOSState(${item.id})">▶ Load</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+            };
+        };
+
+        window.createNewOSState = async function() {
+            if (!emulatorInstance) return alert("You must Boot a machine before you can capture its state.");
+            customPrompt("Enter a name for this snapshot:", "", async (name) => {
+                if (!name) return;
+                document.getElementById('v86-loader').style.display = 'flex';
+                setTimeout(async () => {
+                    try {
+                        const ramState = await emulatorInstance.save_state();
+                        let hdaState = null;
+                        if (emulatorInstance.disk_images && emulatorInstance.disk_images.hda) {
+                            hdaState = await new Promise((resolve) => {
+                                emulatorInstance.get_disk_image("hda", (err, data) => { resolve(err ? null : new Blob([data], { type: "application/octet-stream" })); });
+                            });
+                        }
+                        const tx = db.transaction("games", "readwrite");
+                        tx.objectStore("games").put({ name: name, type: 'os_state', data: { ram: ramState, hda: hdaState }, favorite: false });
+                        tx.oncomplete = () => { renderSnapshots(); };
+                    } catch (e) { alert("Failed to capture snapshot."); } 
+                    finally { document.getElementById('v86-loader').style.display = 'none'; }
+                }, 100);
+            });
+        };
+
+        window.loadOSState = async function(id) {
+            try {
+                const item = await new Promise((resolve) => {
+                    db.transaction("games", "readonly").objectStore("games").get(id).onsuccess = (e) => resolve(e.target.result);
+                });
+                if (!item || !item.data) return;
+                
+                let ramData = item.data.ram !== undefined ? item.data.ram : item.data;
+                let hdaData = item.data.hda || null;
+
+                if (hdaData) {
+                    if (!confirm("This snapshot contains full Hard Drive data. Restoring it will REBOOT the system to this exact point in time. Continue?")) return;
+                    await bootOS(hdaData, ramData);
+                } else {
+                    if (!emulatorInstance) return alert("You must Boot the exact ISO/Drive first to establish hardware boundaries before injecting a RAM-only state.");
+                    let dataBuf = await (ramData instanceof Blob ? ramData.arrayBuffer() : ramData);
+                    emulatorInstance.restore_state(dataBuf);
+                    alert(`State '${item.name}' restored successfully.`);
+                }
+            } catch (err) { alert("Failed to restore state."); }
+        };
+
+        let promptCallback = null;
+        window.customPrompt = function(title, defaultText, callback) {
+            document.getElementById('prompt-title').innerText = title;
+            const input = document.getElementById('prompt-input');
+            input.value = defaultText || '';
+            document.getElementById('custom-prompt').style.display = 'flex';
+            input.focus();
+            promptCallback = callback;
+        };
+        window.closePrompt = function() {
+            document.getElementById('custom-prompt').style.display = 'none';
+            if(promptCallback) promptCallback(null);
+            promptCallback = null;
+        };
+        window.submitPrompt = function() {
+            const val = document.getElementById('prompt-input').value;
+            document.getElementById('custom-prompt').style.display = 'none';
+            if(promptCallback) promptCallback(val);
+            promptCallback = null;
+        };
+
+        // --------------------------------------------------------
+        // GAMEPAD FRONTEND NAVIGATION LOGIC
+        // --------------------------------------------------------
+        let gamepadIndex = null;
+        let focusedCardIndex = -1;
+        let lastGamepadEvent = 0;
+
+        window.addEventListener("gamepadconnected", (e) => { gamepadIndex = e.gamepad.index; requestAnimationFrame(gamepadLoop); });
+        window.addEventListener("gamepaddisconnected", (e) => { if(e.gamepad.index === gamepadIndex) gamepadIndex = null; });
+
+        function resetGamepadFocus() {
+            const cards = document.querySelectorAll('.theme-card');
+            cards.forEach(c => c.classList.remove('gamepad-focus'));
+            focusedCardIndex = cards.length > 0 ? 0 : -1;
+            if(focusedCardIndex === 0 && gamepadIndex !== null) {
+                cards[0].classList.add('gamepad-focus');
+                setDynamicTitle(cards[0].querySelector('h4').innerText);
+            }
+        }
+
+        function gamepadLoop() {
+            if (gamepadIndex === null) return;
+            
+            if (document.getElementById('console-dashboard-wrapper').style.display !== 'none' && 
+                document.getElementById('upload-modal').style.display === 'none' &&
+                document.getElementById('game-manager-modal').style.display === 'none' &&
+                document.getElementById('netplay-dashboard').classList.contains('active') === false) {
+                
+                const gp = navigator.getGamepads()[gamepadIndex];
+                const cards = document.querySelectorAll('.theme-card');
+                
+                if (gp && cards.length > 0 && Date.now() - lastGamepadEvent > 180) {
+                    let moved = false;
+                    const isHorizontal = document.getElementById('full-library-grid').classList.contains('layout-horizontal');
+                    const cols = isHorizontal ? 1 : (Math.floor(document.getElementById('full-library-grid').clientWidth / 220) || 1);
+                    
+                    const up = gp.buttons[12]?.pressed || gp.axes[1] < -0.5;
+                    const down = gp.buttons[13]?.pressed || gp.axes[1] > 0.5;
+                    const left = gp.buttons[14]?.pressed || gp.axes[0] < -0.5;
+                    const right = gp.buttons[15]?.pressed || gp.axes[0] > 0.5;
+                    const select = gp.buttons[0]?.pressed; 
+                    const manage = gp.buttons[3]?.pressed; // Y or Triangle
+
+                    if (isHorizontal) {
+                        if (left && focusedCardIndex > 0) { focusedCardIndex--; moved = true; }
+                        else if (right && focusedCardIndex < cards.length - 1) { focusedCardIndex++; moved = true; }
+                    } else {
+                        if (up && focusedCardIndex >= cols) { focusedCardIndex -= cols; moved = true; }
+                        else if (down && focusedCardIndex + cols < cards.length) { focusedCardIndex += cols; moved = true; }
+                        else if (left && focusedCardIndex > 0) { focusedCardIndex--; moved = true; }
+                        else if (right && focusedCardIndex < cards.length - 1) { focusedCardIndex++; moved = true; }
+                    }
+
+                    if (moved) {
+                        cards.forEach(c => c.classList.remove('gamepad-focus'));
+                        cards[focusedCardIndex].classList.add('gamepad-focus');
+                        setDynamicTitle(cards[focusedCardIndex].querySelector('h4').innerText);
+                        cards[focusedCardIndex].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'center' });
+                        lastGamepadEvent = Date.now();
+                    }
+
+                    if (select && focusedCardIndex >= 0) {
+                        if (!window.isDragging) {
+                            cards[focusedCardIndex].click();
+                            lastGamepadEvent = Date.now() + 500; 
+                        }
+                    }
+                    
+                    if (manage && focusedCardIndex >= 0) {
+                        openGameManager(Number(cards[focusedCardIndex].dataset.id));
+                        lastGamepadEvent = Date.now() + 500;
+                    }
+                }
+            }
+            requestAnimationFrame(gamepadLoop);
+        }
+
+    </script>
+</body>
+</html>
