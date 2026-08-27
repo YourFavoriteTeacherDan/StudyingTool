@@ -1,0 +1,149 @@
+.user-profile-page {
+  min-height: calc(100vh - 90px);
+  padding: 2rem 1rem;
+  color: #eef4ff;
+}
+
+.user-profile-shell {
+  width: min(100%, 900px);
+  margin: 0 auto;
+  background: rgba(8, 14, 28, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 1.1rem;
+}
+
+.user-profile-form {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.user-profile-form label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 600;
+}
+
+.user-profile-form input,
+.user-profile-form textarea {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #eef4ff;
+  padding: 0.6rem 0.7rem;
+  font: inherit;
+}
+
+.user-profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.user-profile-actions button,
+.danger-zone button {
+  border: 0;
+  border-radius: 10px;
+  padding: 0.55rem 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: #95f443;
+  color: #0d1406;
+}
+
+.user-profile-actions .ghost {
+  background: rgba(255, 255, 255, 0.14);
+  color: #eef4ff;
+}
+
+.user-profile-status {
+  margin: 0;
+  color: #a5f598;
+}
+
+.danger-zone {
+  margin-top: 1.1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 1rem;
+}
+
+.danger-zone button {
+  background: #e14c4c;
+  color: white;
+}
+
+.public-profile-card {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.public-profile-card img {
+  width: 96px;
+  height: 96px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.public-profile-card h1 {
+  margin: 0 0 0.35rem;
+}
+
+.profile-uid {
+  margin: 0 0 0.4rem;
+  opacity: 0.75;
+  font-size: 0.9rem;
+}
+
+
+.users-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.user-directory-card {
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+  background: rgba(13, 21, 37, 0.9);
+  border: 1px solid rgba(121, 141, 191, 0.25);
+  border-radius: 14px;
+  padding: 0.75rem;
+}
+
+.user-directory-card img {
+  width: 50px;
+  height: 50px;
+  border-radius: 999px;
+}
+
+.user-directory-name {
+  margin: 0;
+  font-weight: 700;
+}
+
+.user-directory-tag {
+  width: fit-content;
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+}
+
+.user-directory-tag.online {
+  background: rgba(53, 184, 121, 0.2);
+  color: #7ef0bc;
+  border: 1px solid rgba(53, 184, 121, 0.4);
+}
+
+.user-directory-tag.offline {
+  background: rgba(129, 146, 181, 0.2);
+  color: #d0dbf5;
+  border: 1px solid rgba(129, 146, 181, 0.38);
+}

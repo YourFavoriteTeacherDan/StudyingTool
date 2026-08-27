@@ -1,0 +1,218 @@
+.play-page {
+  min-height: calc(100vh - 90px);
+  padding: 1.2rem;
+  color: #f3f7ff;
+}
+
+.play-shell {
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.play-header {
+  background: rgba(8, 14, 28, 0.9);
+  border: 1px solid rgba(145, 171, 237, 0.25);
+  border-radius: 16px;
+  padding: 0.9rem 1rem;
+}
+
+.play-header h1,
+.play-header p {
+  margin: 0;
+}
+
+.play-header p {
+  margin-top: 0.35rem;
+  color: #c9d8fb;
+}
+
+.play-error-panel {
+  background: rgba(40, 14, 14, 0.9);
+  border: 2px solid rgba(255, 107, 107, 0.5);
+  border-radius: 16px;
+  padding: 1.2rem;
+  margin-bottom: 1rem;
+}
+
+.play-error-panel h3 {
+  margin: 0 0 0.8rem 0;
+  color: #ff6b6b;
+}
+
+.error-message {
+  color: #ffb3b3;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  padding: 0.8rem;
+  background: rgba(255, 107, 107, 0.1);
+  border-radius: 8px;
+  border-left: 4px solid #ff6b6b;
+}
+
+.troubleshooting {
+  background: rgba(20, 20, 35, 0.7);
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+.troubleshooting h4 {
+  margin: 0 0 0.8rem 0;
+  color: #89cff0;
+}
+
+.troubleshooting ul {
+  margin: 0;
+  padding-left: 1.5rem;
+  list-style: none;
+}
+
+.troubleshooting li {
+  margin-bottom: 0.6rem;
+  position: relative;
+  padding-left: 1.2rem;
+}
+
+.troubleshooting li:before {
+  content: "▸";
+  position: absolute;
+  left: 0;
+  color: #89cff0;
+}
+
+.troubleshooting a {
+  color: #89cff0;
+  text-decoration: underline;
+}
+
+.troubleshooting a:hover {
+  color: #b3e0ff;
+}
+
+.gpu-note {
+  background: rgba(255, 193, 7, 0.1);
+  border-left: 4px solid #ffc107;
+  padding: 0.8rem;
+  margin-top: 1rem;
+  border-radius: 4px;
+  color: #ffd54f;
+}
+
+.error-actions {
+  display: flex;
+  gap: 0.8rem;
+  margin: 1rem 0;
+}
+
+.retry-button,
+.reload-button {
+  padding: 0.7rem 1.2rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.retry-button {
+  background: #4caf50;
+  color: white;
+}
+
+.retry-button:hover:not(:disabled) {
+  background: #66bb6a;
+  transform: translateY(-2px);
+}
+
+.retry-button:disabled {
+  background: #666;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.reload-button {
+  background: #2196f3;
+  color: white;
+}
+
+.reload-button:hover {
+  background: #42a5f5;
+  transform: translateY(-2px);
+}
+
+.error-details {
+  margin-top: 1rem;
+  padding: 0.8rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+}
+
+.error-details summary {
+  cursor: pointer;
+  color: #89cff0;
+  font-weight: 600;
+  padding: 0.4rem;
+}
+
+.error-details summary:hover {
+  color: #b3e0ff;
+}
+
+.error-details pre {
+  margin: 0.8rem 0 0 0;
+  padding: 0.8rem;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 0.85rem;
+  color: #ffb3b3;
+}
+
+.play-canvas-wrap {
+  background: rgba(10, 16, 31, 0.95);
+  border: 1px solid rgba(121, 141, 191, 0.25);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.play-canvas {
+  display: block;
+  width: 100%;
+  height: min(70vh, 760px);
+  background: #000;
+}
+
+.play-console-wrap,
+.play-help {
+  background: rgba(13, 21, 37, 0.9);
+  border: 1px solid rgba(121, 141, 191, 0.25);
+  border-radius: 16px;
+  padding: 0.8rem 1rem;
+}
+
+.play-console-wrap label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-weight: 700;
+}
+
+.play-console-wrap input {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid rgba(146, 166, 209, 0.35);
+  background: #0a1222;
+  color: #f2f6ff;
+  padding: 0.6rem 0.75rem;
+}
+
+.play-help h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.play-help ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}

@@ -1,0 +1,275 @@
+:root {
+  color-scheme: dark;
+}
+
+.home {
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #111c34 0%, #090b12 55%, #06070b 100%);
+  color: #eef4ff;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+.topbar {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(8, 14, 28, 0.92);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.brand {
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #6fe7ff;
+}
+
+.topbar nav {
+  display: flex;
+  gap: 18px;
+}
+
+.topbar nav a {
+  color: rgba(238, 244, 255, 0.82);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.cta {
+  border: none;
+  background: #95f443;
+  color: #0d1406;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 9px 16px;
+}
+
+.cta.ghost {
+  background: rgba(255, 255, 255, 0.1);
+  color: #eef4ff;
+  margin-left: 8px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 260px 1fr 320px;
+  gap: 18px;
+  padding: 18px;
+}
+
+.sidebar,
+.identity-card,
+.content {
+  background: rgba(8, 14, 28, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+}
+
+.sidebar {
+  padding: 14px;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.sidebar h3 {
+  margin: 0 0 8px;
+  color: #86f2ff;
+}
+
+.sidebar button {
+  text-align: left;
+  background: rgba(255, 255, 255, 0.03);
+  color: #eef4ff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.sidebar button.active {
+  background: rgba(111, 231, 255, 0.18);
+  border-color: rgba(111, 231, 255, 0.65);
+}
+
+.content {
+  padding: 16px;
+}
+
+.page-block {
+  display: grid;
+  gap: 16px;
+}
+
+.hero-banner {
+  min-height: 280px;
+  border-radius: 16px;
+  background-image:
+    linear-gradient(to right, rgba(6, 10, 17, 0.35), rgba(6, 10, 17, 0.92)),
+    url("https://images.unsplash.com/photo-1542751110-97427bbecf20?auto=format&fit=crop&w=1600&q=80");
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 28px;
+}
+
+.hero-content {
+  max-width: 450px;
+}
+
+.hero-content h1 {
+  margin: 0;
+  font-size: 42px;
+}
+
+.hero-sub {
+  margin: 8px 0 0;
+  color: #77f3ff;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.hero-desc {
+  margin-top: 10px;
+  color: rgba(238, 244, 255, 0.86);
+}
+
+.hero-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.hero-actions button {
+  border: none;
+  background: #95f443;
+  color: #0d1406;
+  font-weight: 800;
+  padding: 10px 14px;
+  border-radius: 8px;
+}
+
+.hero-actions .ghost {
+  background: rgba(255, 255, 255, 0.1);
+  color: #eef4ff;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.stat-grid article {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.stat-grid span {
+  display: block;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.stat-grid strong {
+  font-size: 16px;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.card-grid article,
+.list-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.card-grid h3,
+.list-card h3,
+.page-block h2 {
+  margin: 0 0 8px;
+}
+
+.page-summary {
+  margin: 0;
+  color: rgba(238, 244, 255, 0.82);
+}
+
+.list-card ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+}
+
+.identity-card {
+  padding: 14px;
+  align-self: start;
+}
+
+.identity-card h3 {
+  margin-top: 0;
+}
+
+.mini-profile {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.mini-profile img {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  object-fit: cover;
+}
+
+.mini-profile p {
+  margin: 0;
+  font-size: 13px;
+}
+
+@media (max-width: 1180px) {
+  .layout {
+    grid-template-columns: 220px 1fr;
+  }
+
+  .identity-card {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 860px) {
+  .topbar {
+    height: auto;
+    padding: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-banner {
+    justify-content: center;
+  }
+
+  .hero-content h1 {
+    font-size: 34px;
+  }
+}

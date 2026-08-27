@@ -1,0 +1,92 @@
+.login-page {
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #1a2f57 0%, #090c14 55%, #07080c 100%);
+  color: #eef4ff;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+.login-header {
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(8, 14, 28, 0.85);
+}
+
+.login-brand {
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #73f1ff;
+}
+
+.login-get-started {
+  border: none;
+  padding: 9px 16px;
+  border-radius: 8px;
+  background: #95f443;
+  color: #0f1808;
+  font-weight: 700;
+}
+
+.login-main {
+  min-height: calc(100vh - 68px);
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.login-card {
+  width: min(520px, 100%);
+  background: rgba(8, 14, 28, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 26px;
+}
+
+.login-pill {
+  margin: 0 0 8px;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #89f4ff;
+}
+
+.login-card h1 {
+  margin: 0;
+}
+
+.login-sub {
+  color: rgba(238, 244, 255, 0.82);
+  margin: 10px 0 18px;
+}
+
+.login-error {
+  margin: 0 0 14px;
+  color: #ff9ca8;
+  font-weight: 600;
+}
+
+.login-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.login-provider {
+  border: none;
+  border-radius: 10px;
+  padding: 12px;
+  font-weight: 700;
+}
+
+.login-provider.google {
+  background: #fff;
+  color: #1a1a1a;
+}
+
+.login-provider.github {
+  background: #24292f;
+  color: #fff;
+}

@@ -1,0 +1,89 @@
+.admin-page {
+  min-height: calc(100vh - 90px);
+  padding: 1.5rem 1rem;
+  color: #eef4ff;
+}
+
+.admin-shell {
+  width: min(100%, 1100px);
+  margin: 0 auto;
+  background: rgba(8, 14, 28, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 1rem;
+}
+
+.admin-head-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.admin-head-row button,
+.admin-login-form button,
+.admin-item button {
+  border: 0;
+  border-radius: 10px;
+  padding: 0.5rem 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: #95f443;
+  color: #0d1406;
+}
+
+.admin-login-form {
+  margin-top: 0.75rem;
+  display: flex;
+  gap: 0.6rem;
+}
+
+.admin-login-form input {
+  flex: 1;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #eef4ff;
+  padding: 0.6rem 0.7rem;
+}
+
+.admin-grid {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.admin-card {
+  background: rgba(13, 21, 37, 0.88);
+  border: 1px solid rgba(121, 141, 191, 0.25);
+  border-radius: 12px;
+  padding: 0.75rem;
+}
+
+.admin-card h2 {
+  margin: 0 0 0.6rem;
+}
+
+.admin-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.55rem 0;
+}
+
+.admin-item p {
+  margin: 0.2rem 0 0;
+  color: #ccd9f8;
+}
+
+.admin-item .danger {
+  background: #e14c4c;
+  color: #fff;
+}
+
+.admin-status {
+  color: #f5b1b1;
+}
