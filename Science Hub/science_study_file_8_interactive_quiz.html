@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Quiz Engine | Middlanders Science</title>
+    <style>
+        :root {
+            --bg: #0d1117; --panel: #161b22; --panel-light: #21262d; --border: #30363d;
+            --accent: #58a6ff; --accent-hover: #3182ce;
+            --success: #2ea043; --danger: #da3633; --warn: #d29922; --text: #c9d1d9;
+            --font-code: 'Consolas', 'Courier New', monospace;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+        header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { margin: 0; color: var(--accent); font-size: 20px; }
+        .back-btn { text-decoration: none; color: var(--text); padding: 8px 16px; background: var(--panel-light); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-weight: bold; transition: 0.2s; }
+        .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .container { max-width: 800px; margin: 40px auto; padding: 0 20px; width: 100%; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+        .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 40px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; }
+        
+        /* Setup Screen */
+        #setup-screen h2 { margin-top: 0; color: #fff; font-size: 28px; }
+        #setup-screen p { color: #8b949e; font-size: 15px; margin-bottom: 30px; }
+        .btn-large { padding: 15px 30px; background: var(--success); color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; width: 100%; max-width: 300px; }
+        .btn-large:hover { filter: brightness(1.2); transform: translateY(-2px); }
+
+        /* Quiz Screen */
+        #quiz-screen { display: none; text-align: left; }
+        .progress-bar-container { width: 100%; height: 10px; background: #010409; border-radius: 5px; margin-bottom: 20px; overflow: hidden; border: 1px solid var(--border); }
+        .progress-bar { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s ease; }
+        
+        .quiz-header { display: flex; justify-content: space-between; color: #8b949e; font-size: 14px; font-weight: bold; margin-bottom: 20px; }
+        
+        #question-text { font-size: 22px; color: #fff; font-weight: bold; margin-bottom: 30px; line-height: 1.4; }
+        
+        .options-grid { display: flex; flex-direction: column; gap: 12px; }
+        .option-btn { padding: 16px 20px; background: var(--panel-light); border: 2px solid var(--border); color: var(--text); border-radius: 8px; cursor: pointer; font-size: 16px; text-align: left; transition: 0.2s; font-weight: 500; }
+        .option-btn:hover { border-color: var(--accent); background: #010409; }
+        .option-btn.correct { background: var(--success); border-color: var(--success); color: #fff; }
+        .option-btn.wrong { background: var(--danger); border-color: var(--danger); color: #fff; }
+
+        #next-btn { margin-top: 30px; padding: 12px 25px; background: var(--accent); color: #000; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; display: none; float: right; }
+        #next-btn:hover { filter: brightness(1.2); }
+
+        /* Results Screen */
+        #results-screen { display: none; }
+        .score-circle { width: 150px; height: 150px; border-radius: 50%; border: 8px solid var(--accent); display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: bold; color: #fff; margin: 0 auto 20px auto; }
+        .grade-text { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+        .feedback-text { color: #8b949e; margin-bottom: 30px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>📝 Master Quiz Engine</h1>
+        <a href="index.html" class="back-btn">← Back to Hub</a>
+    </header>
+
+    <div class="container">
+        
+        <!-- SETUP SCREEN -->
+        <div class="card" id="setup-screen">
+            <h2>Comprehensive Science Review</h2>
+            <p>Test your knowledge across Scientific Inquiry, Atoms, Forces, Cells, and Ecosystems. The engine will pull 10 random questions from the database.</p>
+            <button class="btn-large" onclick="startQuiz()">Start Mastery Quiz</button>
+        </div>
+
+        <!-- QUIZ SCREEN -->
+        <div class="card" id="quiz-screen">
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+            <div class="quiz-header">
+                <span id="question-counter">Question 1 of 10</span>
+                <span id="score-tracker">Score: 0</span>
+            </div>
+
+            <div id="question-text">Loading question...</div>
+            
+            <div class="options-grid" id="options-container">
+                <!-- Options injected here via JS -->
+            </div>
+
+            <div style="clear:both;">
+                <button id="next-btn" onclick="nextQuestion()">Next Question ▶</button>
+            </div>
+        </div>
+
+        <!-- RESULTS SCREEN -->
+        <div class="card" id="results-screen">
+            <h2>Quiz Complete!</h2>
+            <div class="score-circle" id="final-score-circle">0%</div>
+            <div class="grade-text" id="final-grade">Grade: --</div>
+            <div class="feedback-text" id="final-feedback">Calculating your results...</div>
+            <button class="btn-large" onclick="resetQuiz()">Try Another Round</button>
+        </div>
+
+    </div>
+
+    <script>
+        // MASTER QUESTION DATABASE
+        const questionBank = [
+            {
+                unit: "Scientific Inquiry",
+                question: "In an experiment testing how sunlight affects plant growth, what is the Manipulated Variable (MV)?",
+                options: ["The height of the plant", "The amount of sunlight", "The type of soil", "The amount of water"],
+                answer: 1
+            },
+            {
+                unit: "Scientific Inquiry",
+                question: "Why do scientists use Controlled Variables (CV) in experiments?",
+                options: ["To guarantee the hypothesis is correct", "To make the experiment look professional", "To ensure a fair test by keeping outside factors from affecting the results", "To give the responding variable something to react to"],
+                answer: 2
+            },
+            {
+                unit: "Matter & Atoms",
+                question: "Which subatomic particles are found INSIDE the nucleus of an atom?",
+                options: ["Protons and Electrons", "Neutrons and Electrons", "Protons and Neutrons", "Only Protons"],
+                answer: 2
+            },
+            {
+                unit: "Matter & Atoms",
+                question: "What happens to the particles of a liquid when you ADD thermal energy?",
+                options: ["They slow down and pack tightly together", "They speed up, spread out, and turn into a gas", "They stop moving entirely", "They lose their electrons and become plasma"],
+                answer: 1
+            },
+            {
+                unit: "Energy & Forces",
+                question: "A heavy boulder sitting at the very edge of a high cliff has a maximum amount of what type of energy?",
+                options: ["Kinetic Energy", "Thermal Energy", "Gravitational Potential Energy", "Chemical Energy"],
+                answer: 2
+            },
+            {
+                unit: "Energy & Forces",
+                question: "How does heat transfer when you burn your hand by touching a hot metal stove?",
+                options: ["Convection", "Radiation", "Insulation", "Conduction"],
+                answer: 3
+            },
+            {
+                unit: "Cells & Life",
+                question: "Which organelle is known as the 'powerhouse' because it performs cellular respiration to create ATP energy?",
+                options: ["Nucleus", "Chloroplast", "Mitochondria", "Cell Membrane"],
+                answer: 2
+            },
+            {
+                unit: "Cells & Life",
+                question: "What two structures do Plant Cells have that Animal Cells do NOT have?",
+                options: ["Nucleus and Mitochondria", "Cell Wall and Chloroplasts", "Cell Membrane and Cytoplasm", "DNA and Ribosomes"],
+                answer: 1
+            },
+            {
+                unit: "Ecosystems",
+                question: "According to the 10% Rule in an energy pyramid, what happens to the other 90% of the energy?",
+                options: ["It is destroyed completely", "It is passed down to the decomposers", "It is used by the organism to live or lost to the environment as heat", "It is turned back into sunlight"],
+                answer: 2
+            },
+            {
+                unit: "Ecosystems",
+                question: "Which of the following is an example of an ABIOTIC factor in a forest ecosystem?",
+                options: ["A pine tree", "A mushroom decomposing a log", "A wolf hunting a rabbit", "The temperature of the river water"],
+                answer: 3
+            }
+        ];
+
+        let currentQuiz = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        // Shuffle function to randomize questions
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function startQuiz() {
+            document.getElementById('setup-screen').style.display = 'none';
+            document.getElementById('quiz-screen').style.display = 'block';
+            
+            // Randomize questions and pick 10 (or however many are in the bank)
+            currentQuiz = shuffleArray([...questionBank]).slice(0, 10);
+            currentQuestionIndex = 0;
+            score = 0;
+            
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const q = currentQuiz[currentQuestionIndex];
+            
+            // Update UI
+            document.getElementById('question-counter').innerText = `Question ${currentQuestionIndex + 1} of ${currentQuiz.length}`;
+            document.getElementById('score-tracker').innerText = `Score: ${score}`;
+            document.getElementById('progress-bar').style.width = `${((currentQuestionIndex) / currentQuiz.length) * 100}%`;
+            
+            document.getElementById('question-text').innerText = q.question;
+            
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => selectAnswer(index, btn);
+                optionsContainer.appendChild(btn);
+            });
+
+            document.getElementById('next-btn').style.display = 'none';
+        }
+
+        function selectAnswer(selectedIndex, btnElement) {
+            const q = currentQuiz[currentQuestionIndex];
+            const allBtns = document.querySelectorAll('.option-btn');
+            
+            // Disable all buttons
+            allBtns.forEach(btn => {
+                btn.disabled = true;
+                btn.style.cursor = 'default';
+            });
+
+            // Check correct/wrong
+            if (selectedIndex === q.answer) {
+                btnElement.classList.add('correct');
+                score++;
+                document.getElementById('score-tracker').innerText = `Score: ${score}`;
+            } else {
+                btnElement.classList.add('wrong');
+                // Highlight the correct one
+                allBtns[q.answer].classList.add('correct');
+            }
+
+            document.getElementById('next-btn').style.display = 'block';
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex >= currentQuiz.length) {
+                showResults();
+            } else {
+                loadQuestion();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('results-screen').style.display = 'block';
+
+            const percentage = Math.round((score / currentQuiz.length) * 100);
+            const circle = document.getElementById('final-score-circle');
+            const gradeText = document.getElementById('final-grade');
+            const feedback = document.getElementById('final-feedback');
+
+            circle.innerText = `${percentage}%`;
+
+            if (percentage >= 90) {
+                circle.style.borderColor = "var(--success)";
+                gradeText.style.color = "var(--success)";
+                gradeText.innerText = "Grade: A";
+                feedback.innerText = "Outstanding! You have mastered these scientific concepts.";
+            } else if (percentage >= 80) {
+                circle.style.borderColor = "#bc8cff";
+                gradeText.style.color = "#bc8cff";
+                gradeText.innerText = "Grade: B";
+                feedback.innerText = "Great job! You have a solid grasp on the material.";
+            } else if (percentage >= 70) {
+                circle.style.borderColor = "var(--warn)";
+                gradeText.style.color = "var(--warn)";
+                gradeText.innerText = "Grade: C";
+                feedback.innerText = "Good effort, but there are a few concepts you should review in the encyclopedia.";
+            } else {
+                circle.style.borderColor = "var(--danger)";
+                gradeText.style.color = "var(--danger)";
+                gradeText.innerText = "Grade: Needs Review";
+                feedback.innerText = "Don't sweat it. Go back and re-read the core modules, then try again!";
+            }
+        }
+
+        function resetQuiz() {
+            document.getElementById('results-screen').style.display = 'none';
+            document.getElementById('setup-screen').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scientific Inquiry | Middlanders Science</title>
+    <style>
+        :root {
+            --bg: #0d1117; --panel: #161b22; --panel-light: #21262d; --border: #30363d;
+            --accent: #58a6ff; --accent-hover: #3182ce;
+            --success: #2ea043; --danger: #da3633; --warn: #d29922; --text: #c9d1d9;
+            --font-code: 'Consolas', 'Courier New', monospace;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; line-height: 1.6; }
+
+        header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        header h1 { margin: 0; color: var(--accent); font-size: 20px; display: flex; align-items: center; gap: 10px; }
+        .back-btn { text-decoration: none; color: var(--text); padding: 8px 16px; background: var(--panel-light); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-weight: bold; transition: 0.2s; }
+        .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .container { max-width: 900px; margin: 30px auto; padding: 0 20px; width: 100%; flex: 1; }
+
+        .content-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 30px; margin-bottom: 30px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+        .content-card h2 { margin-top: 0; color: #fff; font-size: 24px; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 20px; }
+        .content-card h3 { color: var(--accent); font-size: 18px; margin-top: 25px; margin-bottom: 10px; }
+        
+        .hero-img { width: 100%; max-height: 400px; object-fit: contain; background: #fff; border-radius: 8px; border: 2px solid var(--border); margin: 20px 0; padding: 10px; }
+        
+        .callout { background: #010409; border-left: 4px solid var(--accent); padding: 15px 20px; border-radius: 0 8px 8px 0; margin: 20px 0; font-style: italic; color: #8b949e; }
+        
+        .vocab-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .vocab-box { background: var(--panel-light); padding: 15px; border-radius: 8px; border: 1px solid var(--border); }
+        .vocab-box h4 { margin: 0 0 10px 0; color: var(--accent); font-size: 16px; text-align: center; }
+        .vocab-box p { margin: 0; font-size: 13px; color: #8b949e; }
+        .formula-box { background: #010409; border: 1px solid var(--border); padding: 12px; border-radius: 6px; font-family: var(--font-code); color: var(--success); font-size: 14px; font-weight: bold; text-align: center; margin-top: 15px; }
+
+        /* Interactive Quiz Styles */
+        .quiz-section { background: #010409; border: 1px solid var(--accent); border-radius: 12px; padding: 30px; margin-top: 40px; }
+        .quiz-section h2 { border-bottom: none; color: var(--accent); margin-bottom: 5px; }
+        .question-block { margin-top: 20px; }
+        .question-text { font-size: 16px; color: #fff; font-weight: bold; margin-bottom: 15px; }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .option-btn { padding: 12px; background: var(--panel); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 14px; text-align: left; transition: 0.2s; }
+        .option-btn:hover { border-color: var(--accent); background: var(--panel-light); }
+        .option-btn.correct { background: var(--success); color: #fff; border-color: var(--success); }
+        .option-btn.wrong { background: var(--danger); color: #fff; border-color: var(--danger); }
+        .feedback { margin-top: 10px; font-size: 13px; font-weight: bold; display: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🔬 Unit 1: Scientific Inquiry & Variables</h1>
+        <a href="index.html" class="back-btn">← Back to Hub</a>
+    </header>
+
+    <div class="container">
+        
+        <!-- SECTION 1: THE SCIENTIFIC METHOD -->
+        <div class="content-card">
+            <h2>1. The Scientific Method</h2>
+            <p>The scientific method is a logical process used to explore observations and answer questions. Whether you are figuring out why a Minecraft server crashed or testing how sunlight affects plants, you are using these steps.</p>
+            
+            <img src="image_agent_tag_14886062309761544445" alt="Scientific Method Steps Flowchart" class="hero-img">
+
+            <h3>The Core Steps:</h3>
+            <ol>
+                <li><strong>Ask a Question:</strong> Based on an observation (e.g., "Why does my custom scooter lose battery faster in the cold?").</li>
+                <li><strong>Research:</strong> Gather background information on the topic.</li>
+                <li><strong>Form a Hypothesis:</strong> An educated, testable prediction.</li>
+                <li><strong>Test with an Experiment:</strong> Design a fair test to check your hypothesis.</li>
+                <li><strong>Analyze Data:</strong> Look at the numbers, charts, and results.</li>
+                <li><strong>Draw a Conclusion:</strong> Was your hypothesis correct? If not, try again!</li>
+            </ol>
+        </div>
+
+        <!-- SECTION 2: VARIABLES (MV, RV, CV) -->
+        <div class="content-card">
+            <h2>2. Experimental Variables (MV, RV, CV)</h2>
+            <p>For an experiment to be valid and fair, you must tightly control what changes and what stays exactly the same. We organize these into three main categories of variables.</p>
+            
+            <img src="image_agent_tag_14886062309761547942" alt="Independent, Dependent, and Controlled Variables Diagram" class="hero-img" style="max-height: 350px;">
+
+            <div class="vocab-grid">
+                <div class="vocab-box">
+                    <h4>MV (Manipulated Variable)</h4>
+                    <p>Also known as the <strong>Independent Variable</strong>. This is the ONE thing the scientist changes on purpose to test it. <em>(Cause)</em></p>
+                </div>
+                <div class="vocab-box">
+                    <h4>RV (Responding Variable)</h4>
+                    <p>Also known as the <strong>Dependent Variable</strong>. This is the data you measure or observe. It "responds" to the MV. <em>(Effect)</em></p>
+                </div>
+                <div class="vocab-box">
+                    <h4>CV (Controlled Variables)</h4>
+                    <p>Also known as <strong>Constants</strong>. These are all the other factors you keep exactly the same so they don't mess up your results. <em>(Fair Test)</em></p>
+                </div>
+            </div>
+
+            <div class="callout">
+                <strong>Example Experiment:</strong> Testing if fertilizer makes plants grow taller.<br>
+                <strong>MV:</strong> Amount of fertilizer given.<br>
+                <strong>RV:</strong> Height of the plant (in cm).<br>
+                <strong>CV:</strong> Same type of plant, same amount of water, same sunlight, same dirt.
+            </div>
+        </div>
+
+        <!-- SECTION 3: WRITING A HYPOTHESIS -->
+        <div class="content-card">
+            <h2>3. Writing a Strong Hypothesis</h2>
+            <p>A hypothesis is not just a blind guess. It is a structured prediction linking your MV to your RV. In middle school science, we always format it using the <strong>"If... then... because..."</strong> structure.</p>
+
+            <div class="formula-box">
+                "If [MV changes this way], then [RV will do this], because [scientific reasoning]."
+            </div>
+
+            <p style="margin-top: 15px;"><strong>Example:</strong> "If I add 10 grams of fertilizer to the plant, then it will grow taller than the plant with no fertilizer, because fertilizer provides extra nutrients like nitrogen that support cellular growth."</p>
+        </div>
+
+        <!-- INTERACTIVE KNOWLEDGE CHECK -->
+        <div class="quiz-section">
+            <h2>🧠 Mini-Quiz: Test Your Knowledge</h2>
+            <p style="font-size: 13px; color: #8b949e; margin-bottom: 25px;">Select the correct answer to check your understanding of Unit 1.</p>
+
+            <!-- Question 1 -->
+            <div class="question-block" id="q1">
+                <div class="question-text">1. You are testing if the weight of a paper airplane affects how far it flies. What is the RV (Responding Variable)?</div>
+                <div class="options-grid">
+                    <button class="option-btn" onclick="checkAnswer('q1', this, false)">A) The weight of the airplane</button>
+                    <button class="option-btn" onclick="checkAnswer('q1', this, true)">B) The distance the airplane flies</button>
+                    <button class="option-btn" onclick="checkAnswer('q1', this, false)">C) The type of paper used</button>
+                    <button class="option-btn" onclick="checkAnswer('q1', this, false)">D) The person throwing the airplane</button>
+                </div>
+                <div class="feedback" id="q1-feedback"></div>
+            </div>
+
+            <!-- Question 2 -->
+            <div class="question-block" id="q2">
+                <div class="question-text">2. Why is it important to have Controlled Variables (CV) in an experiment?</div>
+                <div class="options-grid">
+                    <button class="option-btn" onclick="checkAnswer('q2', this, false)">A) So you have more data to graph.</button>
+                    <button class="option-btn" onclick="checkAnswer('q2', this, false)">B) To make sure the hypothesis is always correct.</button>
+                    <button class="option-btn" onclick="checkAnswer('q2', this, true)">C) To ensure a fair test by proving only the MV caused the change.</button>
+                    <button class="option-btn" onclick="checkAnswer('q2', this, false)">D) So you can test multiple things at once.</button>
+                </div>
+                <div class="feedback" id="q2-feedback"></div>
+            </div>
+
+            <!-- Question 3 -->
+            <div class="question-block" id="q3">
+                <div class="question-text">3. Which of the following is written as a proper middle school hypothesis?</div>
+                <div class="options-grid">
+                    <button class="option-btn" onclick="checkAnswer('q3', this, false)">A) I think the heavy car will go faster down the ramp.</button>
+                    <button class="option-btn" onclick="checkAnswer('q3', this, true)">B) If the mass of the car increases, then its speed will increase, because gravity pulls on more mass.</button>
+                    <button class="option-btn" onclick="checkAnswer('q3', this, false)">C) The car will go fast because it is heavy.</button>
+                    <button class="option-btn" onclick="checkAnswer('q3', this, false)">D) If I add weight, it goes fast.</button>
+                </div>
+                <div class="feedback" id="q3-feedback"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Interactive Quiz Logic
+        function checkAnswer(questionId, buttonElement, isCorrect) {
+            // Disable all buttons in this question block after a guess
+            const options = document.querySelectorAll(`#${questionId} .option-btn`);
+            options.forEach(btn => {
+                btn.disabled = true;
+                btn.style.cursor = 'not-allowed';
+            });
+
+            const feedbackEl = document.getElementById(`${questionId}-feedback`);
+            feedbackEl.style.display = 'block';
+
+            if (isCorrect) {
+                buttonElement.classList.add('correct');
+                feedbackEl.style.color = 'var(--success)';
+                feedbackEl.innerText = '✅ Correct! Great job.';
+            } else {
+                buttonElement.classList.add('wrong');
+                feedbackEl.style.color = 'var(--danger)';
+                feedbackEl.innerText = '❌ Incorrect. Review the reading sections above and try again later!';
+                
+                // Highlight the correct one
+                options.forEach(btn => {
+                    if (btn.getAttribute('onclick').includes('true')) {
+                        btn.style.border = '2px solid var(--success)';
+                        btn.style.color = 'var(--success)';
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>

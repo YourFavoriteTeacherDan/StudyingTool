@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Genetics & Punnett Squares | Middlanders Science</title>
+    <style>
+        :root {
+            --bg: #0d1117; --panel: #161b22; --panel-light: #21262d; --border: #30363d;
+            --accent: #d2a8ff; --accent-hover: #bc8cff;
+            --success: #2ea043; --danger: #da3633; --warn: #d29922; --text: #c9d1d9;
+            --font-code: 'Consolas', 'Courier New', monospace;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; line-height: 1.6; }
+
+        header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        header h1 { margin: 0; color: var(--accent); font-size: 20px; display: flex; align-items: center; gap: 10px; }
+        .back-btn { text-decoration: none; color: var(--text); padding: 8px 16px; background: var(--panel-light); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-weight: bold; transition: 0.2s; }
+        .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .container { max-width: 900px; margin: 30px auto; padding: 0 20px; width: 100%; flex: 1; }
+
+        .content-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 30px; margin-bottom: 30px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+        .content-card h2 { margin-top: 0; color: #fff; font-size: 24px; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 20px; }
+        .content-card h3 { color: var(--accent); font-size: 18px; margin-top: 25px; margin-bottom: 10px; }
+        
+        .hero-img { width: 100%; max-height: 350px; object-fit: contain; background: #fff; border-radius: 8px; border: 2px solid var(--border); margin: 20px 0; padding: 10px; }
+        
+        .callout { background: #010409; border-left: 4px solid var(--accent); padding: 15px 20px; border-radius: 0 8px 8px 0; margin: 20px 0; font-style: italic; color: #8b949e; }
+        
+        .vocab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .vocab-box { background: var(--panel-light); padding: 15px; border-radius: 8px; border: 1px solid var(--border); }
+        .vocab-box h4 { margin: 0 0 10px 0; color: var(--accent); font-size: 16px; }
+        .vocab-box p { margin: 0; font-size: 13px; color: #8b949e; }
+
+        /* Punnett Square App Styles */
+        .app-container { background: #010409; border: 1px solid var(--accent); border-radius: 12px; padding: 25px; margin-top: 20px; }
+        .app-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; }
+        .input-group { display: flex; flex-direction: column; gap: 8px; }
+        .input-group label { font-size: 13px; font-weight: bold; color: #8b949e; }
+        .input-group input { padding: 12px; background: var(--panel-light); border: 1px solid var(--border); color: #fff; border-radius: 6px; outline: none; font-size: 18px; text-align: center; font-family: var(--font-code); letter-spacing: 4px; }
+        
+        .btn { padding: 12px 20px; background: var(--accent); color: #000; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 15px; transition: 0.2s; width: 100%; margin-bottom: 25px; }
+        .btn:hover { filter: brightness(1.2); }
+
+        .punnett-layout { display: grid; grid-template-columns: 60px 1fr 1fr; grid-template-rows: 60px 1fr 1fr; gap: 10px; max-width: 400px; margin: 0 auto; text-align: center; }
+        
+        .p-empty { background: transparent; }
+        .p-header { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color: var(--accent); font-family: var(--font-code); }
+        .p-cell { background: var(--panel-light); border: 2px solid var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold; color: #fff; font-family: var(--font-code); min-height: 80px; transition: 0.3s; }
+        .p-cell.highlight { border-color: var(--success); background: rgba(46, 160, 67, 0.1); }
+
+        .results-box { margin-top: 30px; padding-top: 20px; border-top: 1px dashed var(--border); text-align: center; }
+        .results-box h4 { margin: 0 0 15px 0; color: #fff; }
+        .stats-row { display: flex; justify-content: space-around; font-family: var(--font-code); font-size: 16px; color: var(--success); font-weight: bold; }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🧬 Unit 20: Genetics & Heredity</h1>
+        <a href="index.html" class="back-btn">← Back to Hub</a>
+    </header>
+
+    <div class="container">
+        
+        <!-- SECTION 1: DNA & TRAITS -->
+        <div class="content-card">
+            <h2>1. DNA & The Genetic Code</h2>
+            <p>Deoxyribonucleic Acid (DNA) is the instruction manual for your body. It is shaped like a twisted ladder called a <strong>double helix</strong> and is stored tightly packed inside the nucleus of almost every cell.</p>
+            
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/DNA_Structure_and_Replication_en.svg/800px-DNA_Structure_and_Replication_en.svg.png" alt="DNA Double Helix and Base Pairs" class="hero-img">
+
+            <h3>The Base Pairs</h3>
+            <p>The "rungs" of the DNA ladder are made of four chemicals that pair up in a very specific way. The order of these pairs creates the code that makes you, you.</p>
+            <ul>
+                <li><strong>Adenine (A)</strong> ALWAYS pairs with <strong>Thymine (T)</strong>.</li>
+                <li><strong>Guanine (G)</strong> ALWAYS pairs with <strong>Cytosine (C)</strong>.</li>
+            </ul>
+        </div>
+
+        <!-- SECTION 2: GENOTYPE VS PHENOTYPE -->
+        <div class="content-card">
+            <h2>2. Dominant vs. Recessive Traits</h2>
+            <p>You inherit two versions (alleles) of every gene—one from your biological mother and one from your biological father. How they interact determines what traits you actually show.</p>
+
+            <div class="vocab-grid">
+                <div class="vocab-box">
+                    <h4>Dominant Allele (A)</h4>
+                    <p>The "stronger" trait. If you have even one dominant allele, this trait will show up. We write it as a <strong>capital letter</strong>.</p>
+                </div>
+                <div class="vocab-box">
+                    <h4>Recessive Allele (a)</h4>
+                    <p>The "hidden" trait. It only shows up if you inherit TWO recessive alleles. We write it as a <strong>lowercase letter</strong>.</p>
+                </div>
+                <div class="vocab-box">
+                    <h4>Genotype (The Code)</h4>
+                    <p>The actual combination of letters you inherit (e.g., AA, Aa, or aa).</p>
+                </div>
+                <div class="vocab-box">
+                    <h4>Phenotype (The Physical)</h4>
+                    <p>What the trait actually looks like on the outside (e.g., Brown eyes, blue eyes).</p>
+                </div>
+            </div>
+
+            <div class="callout">
+                <strong>Homozygous vs. Heterozygous:</strong><br>
+                <em>Homozygous</em> means the letters are the same (AA or aa).<br>
+                <em>Heterozygous</em> means the letters are different (Aa).
+            </div>
+        </div>
+
+        <!-- SECTION 3: PUNNETT SQUARE GENERATOR -->
+        <div class="content-card">
+            <h2>3. Interactive Punnett Square Studio</h2>
+            <p style="font-size: 13px; color: #8b949e; margin-bottom: 20px;">A Punnett Square is a visual tool used to predict the probability of an offspring's genotype. Enter a 2-letter genotype for Parent 1 and Parent 2 below to generate the cross.</p>
+
+            <div class="app-container">
+                <div class="app-controls">
+                    <div class="input-group">
+                        <label>Parent 1 Genotype (e.g., Aa):</label>
+                        <input type="text" id="p1-input" maxlength="2" value="Aa" oninput="validateInput(this)">
+                    </div>
+                    <div class="input-group">
+                        <label>Parent 2 Genotype (e.g., aa):</label>
+                        <input type="text" id="p2-input" maxlength="2" value="aa" oninput="validateInput(this)">
+                    </div>
+                </div>
+
+                <button class="btn" onclick="generateSquare()">Calculate Probabilities</button>
+
+                <!-- THE GRID -->
+                <div class="punnett-layout">
+                    <!-- Top Row -->
+                    <div class="p-empty"></div>
+                    <div class="p-header" id="h-p2-1">a</div>
+                    <div class="p-header" id="h-p2-2">a</div>
+                    
+                    <!-- Middle Row -->
+                    <div class="p-header" id="h-p1-1">A</div>
+                    <div class="p-cell" id="c1">Aa</div>
+                    <div class="p-cell" id="c2">Aa</div>
+
+                    <!-- Bottom Row -->
+                    <div class="p-header" id="h-p1-2">a</div>
+                    <div class="p-cell" id="c3">aa</div>
+                    <div class="p-cell" id="c4">aa</div>
+                </div>
+
+                <!-- RESULTS -->
+                <div class="results-box">
+                    <h4>Probability Breakdown</h4>
+                    <div class="stats-row" id="stats-output">
+                        <!-- Stats injected here -->
+                        <span>Aa: 50%</span>
+                        <span>aa: 50%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Force inputs to letters only
+        function validateInput(input) {
+            input.value = input.value.replace(/[^a-zA-Z]/g, '');
+        }
+
+        // Format allele pair so dominant (capital) is always first
+        function sortAlleles(allele1, allele2) {
+            if (allele1 === allele1.toUpperCase() && allele2 === allele2.toLowerCase()) {
+                return allele1 + allele2;
+            } else if (allele2 === allele2.toUpperCase() && allele1 === allele1.toLowerCase()) {
+                return allele2 + allele1;
+            } else {
+                return allele1 + allele2; // both same case
+            }
+        }
+
+        function generateSquare() {
+            const p1 = document.getElementById('p1-input').value;
+            const p2 = document.getElementById('p2-input').value;
+
+            if (p1.length !== 2 || p2.length !== 2) {
+                alert("Please enter exactly TWO letters for each parent (e.g., Aa, AA, or aa).");
+                return;
+            }
+
+            // Split into individual alleles
+            const p1_1 = p1.charAt(0);
+            const p1_2 = p1.charAt(1);
+            const p2_1 = p2.charAt(0);
+            const p2_2 = p2.charAt(1);
+
+            // Update headers
+            document.getElementById('h-p1-1').innerText = p1_1;
+            document.getElementById('h-p1-2').innerText = p1_2;
+            document.getElementById('h-p2-1').innerText = p2_1;
+            document.getElementById('h-p2-2').innerText = p2_2;
+
+            // Calculate crosses
+            const cross1 = sortAlleles(p1_1, p2_1);
+            const cross2 = sortAlleles(p1_1, p2_2);
+            const cross3 = sortAlleles(p1_2, p2_1);
+            const cross4 = sortAlleles(p1_2, p2_2);
+
+            // Update cells
+            document.getElementById('c1').innerText = cross1;
+            document.getElementById('c2').innerText = cross2;
+            document.getElementById('c3').innerText = cross3;
+            document.getElementById('c4').innerText = cross4;
+
+            // Calculate Probabilities
+            const crosses = [cross1, cross2, cross3, cross4];
+            const counts = {};
+            
+            crosses.forEach(c => {
+                counts[c] = (counts[c] || 0) + 1;
+            });
+
+            // Render Stats
+            const statsOutput = document.getElementById('stats-output');
+            statsOutput.innerHTML = ''; // clear old
+
+            for (const [genotype, count] of Object.entries(counts)) {
+                const percentage = (count / 4) * 100;
+                const span = document.createElement('span');
+                span.innerText = `${genotype}: ${percentage}%`;
+                statsOutput.appendChild(span);
+            }
+
+            // Visual flair
+            const cells = document.querySelectorAll('.p-cell');
+            cells.forEach(c => {
+                c.classList.remove('highlight');
+                void c.offsetWidth; // trigger reflow
+                c.classList.add('highlight');
+            });
+            setTimeout(() => {
+                cells.forEach(c => c.classList.remove('highlight'));
+            }, 600);
+        }
+
+        // Run once on load to populate defaults
+        window.addEventListener('DOMContentLoaded', generateSquare);
+    </script>
+</body>
+</html>

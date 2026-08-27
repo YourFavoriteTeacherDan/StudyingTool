@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Science Encyclopedia | Middlanders Study</title>
+    <style>
+        :root {
+            --bg: #0d1117; --panel: #161b22; --panel-light: #21262d; --border: #30363d;
+            --accent: #58a6ff; --accent-hover: #3182ce;
+            --success: #2ea043; --danger: #da3633; --warn: #d29922; --text: #c9d1d9;
+            --font-code: 'Consolas', 'Courier New', monospace;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+        header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { margin: 0; color: var(--accent); font-size: 20px; }
+
+        .main-content { max-width: 1200px; margin: 25px auto; padding: 0 20px; width: 100%; flex: 1; }
+
+        .search-box { width: 100%; padding: 12px 18px; background: #010409; border: 1px solid var(--border); color: #fff; border-radius: 8px; outline: none; margin-bottom: 20px; font-size: 14px; }
+
+        .encyclopedia-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+        .entry-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+        .entry-card h3 { margin: 0; color: var(--accent); font-size: 17px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        .entry-card p { font-size: 13px; color: #8b949e; line-height: 1.5; margin: 0; }
+        .formula-box { background: #010409; border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; font-family: var(--font-code); color: var(--success); font-size: 12px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>📖 Master Science Encyclopedia</h1>
+        <a href="index.html" style="text-decoration:none; color:var(--text); padding:6px 12px; background:var(--panel-light); border:1px solid var(--border); border-radius:6px; font-size:12px; font-weight:bold;">← Back to Hub</a>
+    </header>
+
+    <div class="main-content">
+        <input type="text" class="search-box" id="search" placeholder="🔍 Filter encyclopedia entries (e.g. Photosynthesis, Variables, Atoms, Newton)..." oninput="filterEncyclopedia()">
+
+        <div class="encyclopedia-grid" id="enc-grid">
+            <div class="entry-card">
+                <h3>Variables (MV, RV, CV)</h3>
+                <p>The foundation of scientific experiments. <strong>Manipulated (MV)</strong> is what you change, <strong>Responding (RV)</strong> is what you measure, and <strong>Controlled (CV)</strong> stays constant.</p>
+                <div class="formula-box">MV = Cause | RV = Effect | CV = Constant</div>
+            </div>
+
+            <div class="entry-card">
+                <h3>Atomic Structure</h3>
+                <p>Atoms consist of a central nucleus containing positively charged <strong>protons</strong> and neutral <strong>neutrons</strong>, surrounded by negatively charged <strong>electrons</strong> in energy orbits.</p>
+                <div class="formula-box">Mass Number = Protons + Neutrons</div>
+            </div>
+
+            <div class="entry-card">
+                <h3>Photosynthesis</h3>
+                <p>Process where plants capture solar energy in chloroplasts to convert carbon dioxide and water into glucose sugar and oxygen gas.</p>
+                <div class="formula-box">6CO₂ + 6H₂O + Light → C₆H₁₂O₆ + 6O₂</div>
+            </div>
+
+            <div class="entry-card">
+                <h3>Newton's 2nd Law of Motion</h3>
+                <p>The acceleration of an object depends directly on the net force applied and inversely on its mass.</p>
+                <div class="formula-box">Force (F) = Mass (m) × Acceleration (a)</div>
+            </div>
+
+            <div class="entry-card">
+                <h3>DNA & Heredity</h3>
+                <p>Deoxyribonucleic acid carries genetic code using four nitrogenous base pairs: Adenine (A), Thymine (T), Guanine (G), and Cytosine (C).</p>
+                <div class="formula-box">Base Pairs: A-T | G-C</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function filterEncyclopedia() {
+            const query = document.getElementById('search').value.toLowerCase();
+            document.querySelectorAll('.entry-card').forEach(card => {
+                const text = card.innerText.toLowerCase();
+                card.style.display = text.includes(query) ? 'flex' : 'none';
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics Problem Sandbox | Middlanders Science</title>
+    <style>
+        :root {
+            --bg: #0d1117; --panel: #161b22; --panel-light: #21262d; --border: #30363d;
+            --accent: #ff7b72; --accent-hover: #ff948d;
+            --success: #2ea043; --danger: #da3633; --warn: #d29922; --text: #c9d1d9;
+            --font-code: 'Consolas', 'Courier New', monospace;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+        header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        header h1 { margin: 0; color: var(--accent); font-size: 20px; display: flex; align-items: center; gap: 10px; }
+        .back-btn { text-decoration: none; color: var(--text); padding: 8px 16px; background: var(--panel-light); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-weight: bold; transition: 0.2s; }
+        .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; width: 100%; flex: 1; display: flex; flex-direction: column; gap: 30px; }
+
+        .sandbox-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 25px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+        .sandbox-card h2 { margin-top: 0; color: #fff; font-size: 22px; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .equation-badge { background: #010409; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--accent); font-family: var(--font-code); color: var(--accent); font-size: 16px; font-weight: bold; }
+
+        .sandbox-grid { display: grid; grid-template-columns: 1fr 300px; gap: 25px; }
+
+        /* Sliders / Inputs */
+        .controls-panel { display: flex; flex-direction: column; gap: 20px; }
+        .slider-group { background: #010409; border: 1px solid var(--border); padding: 15px; border-radius: 8px; }
+        .slider-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: bold; color: #8b949e; font-size: 14px; }
+        .slider-value { color: #fff; font-family: var(--font-code); font-size: 16px; background: var(--panel-light); padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border); min-width: 80px; text-align: center; }
+        
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%; background: var(--accent); cursor: pointer; margin-top: -8px; box-shadow: 0 0 10px rgba(255, 123, 114, 0.5); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: var(--panel-light); border-radius: 3px; border: 1px solid var(--border); }
+
+        /* Output Display */
+        .output-panel { background: #010409; border: 2px solid var(--border); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
+        .output-label { color: #8b949e; font-size: 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+        .output-value { font-family: var(--font-code); font-size: 36px; font-weight: bold; color: var(--success); text-shadow: 0 0 20px rgba(46, 160, 67, 0.4); }
+        .output-unit { font-size: 18px; color: #8b949e; margin-left: 5px; }
+
+        @media (max-width: 768px) {
+            .sandbox-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>⚙️ Physics Problem Sandbox</h1>
+        <a href="index.html" class="back-btn">← Back to Hub</a>
+    </header>
+
+    <div class="container">
+        
+        <p style="color: #8b949e; margin: 0; font-size: 15px;">Use these interactive solvers to verify your homework answers or to visualize how changing variables affects the physical outcome.</p>
+
+        <!-- SANDBOX 1: VELOCITY -->
+        <div class="sandbox-card">
+            <h2>
+                <span>1. Speed & Velocity Solver</span>
+                <span class="equation-badge">v = d / t</span>
+            </h2>
+            <div class="sandbox-grid">
+                <div class="controls-panel">
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <span>Distance (d)</span>
+                            <span class="slider-value" id="val-distance">50 m</span>
+                        </div>
+                        <input type="range" id="slide-distance" min="1" max="200" value="50" oninput="calculateVelocity()">
+                    </div>
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <span>Time (t)</span>
+                            <span class="slider-value" id="val-time">5 s</span>
+                        </div>
+                        <input type="range" id="slide-time" min="1" max="60" value="5" oninput="calculateVelocity()">
+                    </div>
+                </div>
+                <div class="output-panel">
+                    <div class="output-label">Resulting Velocity</div>
+                    <div>
+                        <span class="output-value" id="out-velocity">10.0</span>
+                        <span class="output-unit">m/s</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SANDBOX 2: FORCE (NEWTON'S 2ND LAW) -->
+        <div class="sandbox-card">
+            <h2>
+                <span>2. Force Solver (Newton's 2nd Law)</span>
+                <span class="equation-badge">F = m × a</span>
+            </h2>
+            <div class="sandbox-grid">
+                <div class="controls-panel">
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <span>Mass (m)</span>
+                            <span class="slider-value" id="val-mass">10 kg</span>
+                        </div>
+                        <input type="range" id="slide-mass" min="1" max="200" value="10" oninput="calculateForce()">
+                    </div>
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <span>Acceleration (a)</span>
+                            <span class="slider-value" id="val-accel">5 m/s²</span>
+                        </div>
+                        <input type="range" id="slide-accel" min="0" max="50" value="5" step="0.5" oninput="calculateForce()">
+                    </div>
+                </div>
+                <div class="output-panel">
+                    <div class="output-label">Net Force Applied</div>
+                    <div>
+                        <span class="output-value" id="out-force">50.0</span>
+                        <span class="output-unit">N (Newtons)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SANDBOX 3: MOMENTUM -->
+        <div class="sandbox-card">
+            <h2>
+                <span>3. Momentum Solver</span>
+                <span class="equation-badge">p = m × v</span>
+            </h2>
+            <div class="sandbox-grid">
+                <div class="controls-panel">
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <span>Mass (m)</span>
+                            <span class="slider-value" id="val-mom-mass">100 kg</span>
+                        </div>
+                        <input type="range" id="slide-mom-mass" min="1" max="1000" value="100" oninput="calculateMomentum()">
+                    </div>
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <span>Velocity (v)</span>
+                            <span class="slider-value" id="val-mom-vel">15 m/s</span>
+                        </div>
+                        <input type="range" id="slide-mom-vel" min="0" max="100" value="15" oninput="calculateMomentum()">
+                    </div>
+                </div>
+                <div class="output-panel">
+                    <div class="output-label">Total Momentum</div>
+                    <div>
+                        <span class="output-value" id="out-momentum">1500.0</span>
+                        <span class="output-unit">kg·m/s</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // VELOCITY CALCULATION
+        function calculateVelocity() {
+            const d = parseFloat(document.getElementById('slide-distance').value);
+            const t = parseFloat(document.getElementById('slide-time').value);
+            
+            document.getElementById('val-distance').innerText = d + " m";
+            document.getElementById('val-time').innerText = t + " s";
+            
+            const v = d / t;
+            document.getElementById('out-velocity').innerText = v.toFixed(1);
+        }
+
+        // FORCE CALCULATION
+        function calculateForce() {
+            const m = parseFloat(document.getElementById('slide-mass').value);
+            const a = parseFloat(document.getElementById('slide-accel').value);
+            
+            document.getElementById('val-mass').innerText = m + " kg";
+            document.getElementById('val-accel').innerText = a + " m/s²";
+            
+            const f = m * a;
+            document.getElementById('out-force').innerText = f.toFixed(1);
+        }
+
+        // MOMENTUM CALCULATION
+        function calculateMomentum() {
+            const m = parseFloat(document.getElementById('slide-mom-mass').value);
+            const v = parseFloat(document.getElementById('slide-mom-vel').value);
+            
+            document.getElementById('val-mom-mass').innerText = m + " kg";
+            document.getElementById('val-mom-vel').innerText = v + " m/s";
+            
+            const p = m * v;
+            
+            // Format with commas for large numbers
+            document.getElementById('out-momentum').innerText = p.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1});
+        }
+
+        // Initialize all on load
+        window.addEventListener('DOMContentLoaded', () => {
+            calculateVelocity();
+            calculateForce();
+            calculateMomentum();
+        });
+    </script>
+</body>
+</html>

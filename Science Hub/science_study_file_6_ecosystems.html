@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ecosystems & Food Webs | Middlanders Science</title>
+    <style>
+        :root {
+            --bg: #0d1117; --panel: #161b22; --panel-light: #21262d; --border: #30363d;
+            --accent: #58a6ff; --accent-hover: #3182ce;
+            --success: #2ea043; --danger: #da3633; --warn: #d29922; --text: #c9d1d9;
+            --font-code: 'Consolas', 'Courier New', monospace;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; line-height: 1.6; }
+
+        header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        header h1 { margin: 0; color: var(--success); font-size: 20px; display: flex; align-items: center; gap: 10px; }
+        .back-btn { text-decoration: none; color: var(--text); padding: 8px 16px; background: var(--panel-light); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-weight: bold; transition: 0.2s; }
+        .back-btn:hover { border-color: var(--success); color: var(--success); }
+
+        .container { max-width: 900px; margin: 30px auto; padding: 0 20px; width: 100%; flex: 1; }
+
+        .content-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 30px; margin-bottom: 30px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+        .content-card h2 { margin-top: 0; color: #fff; font-size: 24px; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 20px; }
+        .content-card h3 { color: var(--success); font-size: 18px; margin-top: 25px; margin-bottom: 10px; }
+        
+        .hero-img { width: 100%; max-height: 450px; object-fit: contain; background: #fff; border-radius: 8px; border: 2px solid var(--border); margin: 20px 0; padding: 10px; }
+        
+        .callout { background: #010409; border-left: 4px solid var(--success); padding: 15px 20px; border-radius: 0 8px 8px 0; margin: 20px 0; font-style: italic; color: #8b949e; }
+        
+        .vocab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .vocab-box { background: var(--panel-light); padding: 15px; border-radius: 8px; border: 1px solid var(--border); }
+        .vocab-box h4 { margin: 0 0 10px 0; color: var(--success); font-size: 16px; display: flex; align-items: center; gap: 8px; }
+        .vocab-box p { margin: 0; font-size: 13px; color: #8b949e; }
+
+        /* Interactive Quiz Styles */
+        .quiz-section { background: #010409; border: 1px solid var(--success); border-radius: 12px; padding: 30px; margin-top: 40px; }
+        .quiz-section h2 { border-bottom: none; color: var(--success); margin-bottom: 5px; }
+        .question-block { margin-top: 20px; }
+        .question-text { font-size: 16px; color: #fff; font-weight: bold; margin-bottom: 15px; }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .option-btn { padding: 12px; background: var(--panel); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 14px; text-align: left; transition: 0.2s; }
+        .option-btn:hover { border-color: var(--success); background: var(--panel-light); }
+        .option-btn.correct { background: var(--success); color: #fff; border-color: var(--success); }
+        .option-btn.wrong { background: var(--danger); color: #fff; border-color: var(--danger); }
+        .feedback { margin-top: 10px; font-size: 13px; font-weight: bold; display: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🌲 Unit 6: Ecosystems & Food Webs</h1>
+        <a href="index.html" class="back-btn">← Back to Hub</a>
+    </header>
+
+    <div class="container">
+        
+        <!-- SECTION 1: ORGANIZATION & FACTORS -->
+        <div class="content-card">
+            <h2>1. Organization of an Ecosystem</h2>
+            <p>An ecosystem includes all the living and non-living things interacting in a specific area. We organize environments into different levels of scale, from smallest to largest:</p>
+            
+            <ul>
+                <li><strong>Organism:</strong> A single living thing (e.g., one wolf).</li>
+                <li><strong>Population:</strong> A group of the same species living in the same area (e.g., a pack of wolves).</li>
+                <li><strong>Community:</strong> All the different populations living together (e.g., wolves, rabbits, trees, and birds in a forest).</li>
+                <li><strong>Ecosystem:</strong> The community PLUS the non-living environment (e.g., the forest, including the dirt, weather, and river).</li>
+            </ul>
+
+            <div class="callout">
+                <strong>Biotic vs. Abiotic:</strong> <br>
+                <strong>Biotic Factors</strong> are living things (plants, animals, bacteria). <br>
+                <strong>Abiotic Factors</strong> are non-living things that affect life (sunlight, temperature, water, rocks).
+            </div>
+        </div>
+
+        <!-- SECTION 2: FOOD CHAINS & WEBS -->
+        <div class="content-card">
+            <h2>2. Energy Flow: Food Chains & Webs</h2>
+            <p>Energy in almost every ecosystem originates from the Sun. It flows through the ecosystem as organisms eat one another.</p>
+            
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Marine_food_web.jpg/800px-Marine_food_web.jpg" alt="Marine Food Web" class="hero-img">
+
+            <div class="vocab-grid">
+                <div class="vocab-box">
+                    <h4>🌱 Producers (Autotrophs)</h4>
+                    <p>Organisms that make their own food using sunlight via photosynthesis (e.g., plants, algae, phytoplankton).</p>
+                </div>
+                <div class="vocab-box">
+                    <h4>🐇 Primary Consumers</h4>
+                    <p>Herbivores that eat producers to get their energy (e.g., rabbits, deer, grasshoppers).</p>
+                </div>
+                <div class="vocab-box">
+                    <h4>🦊 Secondary & Tertiary Consumers</h4>
+                    <p>Carnivores and omnivores that eat other consumers. Apex predators sit at the very top of this chain.</p>
+                </div>
+                <div class="vocab-box">
+                    <h4>🍄 Decomposers</h4>
+                    <p>The "recyclers" of the ecosystem. They break down dead matter and return nutrients to the soil (e.g., fungi, bacteria).</p>
+                </div>
+            </div>
+            
+            <p style="margin-top: 20px;"><em>Note: A food chain shows one single path of energy. A <strong>food web</strong> is much more realistic because it shows all the overlapping and interconnected food chains in an ecosystem.</em></p>
+        </div>
+
+        <!-- SECTION 3: ENERGY PYRAMID -->
+        <div class="content-card">
+            <h2>3. The Energy Pyramid & The 10% Rule</h2>
+            <p>As you move up the food chain, energy is lost. An energy pyramid shows how much energy is available at each trophic level.</p>
+            
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Ecological_Pyramid.svg/800px-Ecological_Pyramid.svg.png" alt="Ecological Energy Pyramid" class="hero-img" style="max-height: 350px;">
+
+            <h3>The 10% Rule</h3>
+            <p>Only about <strong>10% of the energy</strong> from one level is passed on to the next level up. The other 90% is used by the organism for living, growing, and escaping predators, or is lost to the environment as <strong>heat</strong>.</p>
+            
+            <div class="callout">
+                <strong>Why are apex predators so rare?</strong> Because so much energy is lost at each level, an ecosystem needs thousands of plants to support just a few herbivores, and hundreds of herbivores to support just one apex predator like an eagle or a bear!
+            </div>
+        </div>
+
+        <!-- INTERACTIVE KNOWLEDGE CHECK -->
+        <div class="quiz-section">
+            <h2>🧠 Mini-Quiz: Test Your Knowledge</h2>
+            <p style="font-size: 13px; color: #8b949e; margin-bottom: 25px;">Select the correct answer to check your understanding of Unit 6.</p>
+
+            <!-- Question 1 -->
+            <div class="question-block" id="q1">
+                <div class="question-text">1. Sunlight, water, and temperature are examples of what kind of factors in an ecosystem?</div>
+                <div class="options-grid">
+                    <button class="option-btn" onclick="checkAnswer('q1', this, false)">A) Biotic Factors</button>
+                    <button class="option-btn" onclick="checkAnswer('q1', this, true)">B) Abiotic Factors</button>
+                    <button class="option-btn" onclick="checkAnswer('q1', this, false)">C) Producers</button>
+                    <button class="option-btn" onclick="checkAnswer('q1', this, false)">D) Decomposers</button>
+                </div>
+                <div class="feedback" id="q1-feedback"></div>
+            </div>
+
+            <!-- Question 2 -->
+            <div class="question-block" id="q2">
+                <div class="question-text">2. What happens to 90% of the energy at each trophic level in an energy pyramid?</div>
+                <div class="options-grid">
+                    <button class="option-btn" onclick="checkAnswer('q2', this, false)">A) It is destroyed completely.</button>
+                    <button class="option-btn" onclick="checkAnswer('q2', this, false)">B) It is passed to the next consumer.</button>
+                    <button class="option-btn" onclick="checkAnswer('q2', this, true)">C) It is used by the organism or lost as heat.</button>
+                    <button class="option-btn" onclick="checkAnswer('q2', this, false)">D) It is turned back into sunlight.</button>
+                </div>
+                <div class="feedback" id="q2-feedback"></div>
+            </div>
+
+            <!-- Question 3 -->
+            <div class="question-block" id="q3">
+                <div class="question-text">3. Which group of organisms is responsible for breaking down dead matter and returning nutrients to the soil?</div>
+                <div class="options-grid">
+                    <button class="option-btn" onclick="checkAnswer('q3', this, false)">A) Producers</button>
+                    <button class="option-btn" onclick="checkAnswer('q3', this, false)">B) Primary Consumers</button>
+                    <button class="option-btn" onclick="checkAnswer('q3', this, false)">C) Apex Predators</button>
+                    <button class="option-btn" onclick="checkAnswer('q3', this, true)">D) Decomposers</button>
+                </div>
+                <div class="feedback" id="q3-feedback"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Interactive Quiz Logic
+        function checkAnswer(questionId, buttonElement, isCorrect) {
+            // Disable all buttons in this question block after a guess
+            const options = document.querySelectorAll(`#${questionId} .option-btn`);
+            options.forEach(btn => {
+                btn.disabled = true;
+                btn.style.cursor = 'not-allowed';
+            });
+
+            const feedbackEl = document.getElementById(`${questionId}-feedback`);
+            feedbackEl.style.display = 'block';
+
+            if (isCorrect) {
+                buttonElement.classList.add('correct');
+                feedbackEl.style.color = 'var(--success)';
+                feedbackEl.innerText = '✅ Correct! Great job.';
+            } else {
+                buttonElement.classList.add('wrong');
+                feedbackEl.style.color = 'var(--danger)';
+                feedbackEl.innerText = '❌ Incorrect. Review the reading sections above and try again later!';
+                
+                // Highlight the correct one
+                options.forEach(btn => {
+                    if (btn.getAttribute('onclick').includes('true')) {
+                        btn.style.border = '2px solid var(--success)';
+                        btn.style.color = 'var(--success)';
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>

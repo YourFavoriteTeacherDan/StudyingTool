@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Physics Labs | Middlanders Science</title>
+    <style>
+        :root {
+            --bg: #0d1117; --panel: #161b22; --panel-light: #21262d; --border: #30363d;
+            --accent: #00ced1; --accent-hover: #00e5e8;
+            --success: #2ea043; --danger: #da3633; --warn: #d29922; --text: #c9d1d9;
+            --font-code: 'Consolas', 'Courier New', monospace;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+        header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        header h1 { margin: 0; color: var(--accent); font-size: 20px; display: flex; align-items: center; gap: 10px; }
+        .back-btn { text-decoration: none; color: var(--text); padding: 8px 16px; background: var(--panel-light); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-weight: bold; transition: 0.2s; }
+        .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .container { max-width: 1100px; margin: 30px auto; padding: 0 20px; width: 100%; flex: 1; display: flex; flex-direction: column; gap: 40px; }
+
+        .lab-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 25px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+        .lab-card h2 { margin-top: 0; color: #fff; font-size: 22px; border-bottom: 2px solid var(--border); padding-bottom: 10px; }
+        .lab-desc { font-size: 14px; color: #8b949e; margin-bottom: 20px; line-height: 1.5; }
+
+        .lab-grid { display: grid; grid-template-columns: 320px 1fr; gap: 25px; }
+
+        /* Controls Panel */
+        .controls-panel { background: #010409; padding: 20px; border-radius: 8px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 20px; height: fit-content; }
+        
+        .slider-group { display: flex; flex-direction: column; gap: 8px; }
+        .slider-header { display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; color: #c9d1d9; }
+        .slider-val { font-family: var(--font-code); color: var(--accent); background: var(--panel-light); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border); }
+        
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 18px; width: 18px; border-radius: 50%; background: var(--accent); cursor: pointer; margin-top: -6px; box-shadow: 0 0 8px rgba(0, 206, 209, 0.5); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: var(--panel-light); border-radius: 3px; border: 1px solid var(--border); }
+
+        .btn-row { display: flex; gap: 10px; margin-top: 10px; }
+        .btn { flex: 1; padding: 12px; background: var(--panel-light); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; transition: 0.2s; text-align: center; }
+        .btn.primary { background: var(--accent); color: #000; border: none; }
+        .btn:hover { filter: brightness(1.2); }
+
+        /* Canvas Panel */
+        .canvas-container { background: #010409; border: 1px solid var(--border); border-radius: 8px; position: relative; overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 350px; }
+        canvas { display: block; width: 100%; height: 100%; }
+
+        .stats-overlay { position: absolute; top: 15px; left: 15px; background: rgba(1, 4, 9, 0.8); border: 1px solid var(--border); padding: 10px 15px; border-radius: 6px; font-family: var(--font-code); font-size: 13px; color: var(--success); pointer-events: none; }
+
+        @media (max-width: 850px) {
+            .lab-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🌌 Advanced 8th Grade Simulators</h1>
+        <a href="index.html" class="back-btn">← Back to Hub</a>
+    </header>
+
+    <div class="container">
+        
+        <!-- LAB 1: WAVE MECHANICS -->
+        <div class="lab-card">
+            <h2>Lab 1: Transverse Wave Mechanics</h2>
+            <p class="lab-desc">Adjust the amplitude (height) and frequency (speed/tightness) of the wave. Notice how high frequency creates a much shorter wavelength!</p>
+            
+            <div class="lab-grid">
+                <div class="controls-panel">
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <span>Amplitude (Energy)</span>
+                            <span class="slider-val" id="val-amp">50</span>
+                        </div>
+                        <input type="range" id="slide-amp" min="10" max="150" value="50">
+                    </div>
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <span>Frequency</span>
+                            <span class="slider-val" id="val-freq">0.05</span>
+                        </div>
+                        <input type="range" id="slide-freq" min="0.01" max="0.15" step="0.01" value="0.05">
+                    </div>
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <span>Wave Speed</span>
+                            <span class="slider-val" id="val-speed">2</span>
+                        </div>
+                        <input type="range" id="slide-speed" min="0" max="10" step="0.5" value="2">
+                    </div>
+                </div>
+
+                <div class="canvas-container" style="height: 300px;">
+                    <canvas id="waveCanvas" width="700" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- LAB 2: ORBITAL GRAVITY -->
+        <div class="lab-card">
+            <h2>Lab 2: Orbital Gravity Physics</h2>
+            <p class="lab-desc">Using Newton's Law of Universal Gravitation, try to get the blue planet into a stable orbit around the yellow star. If it goes too slow, it will crash. If it goes too fast, it will escape into deep space!</p>
+            
+            <div class="lab-grid">
+                <div class="controls-panel">
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <span>Star Mass (Gravity Force)</span>
+                            <span class="slider-val" id="val-mass">5000</span>
+                        </div>
+                        <input type="range" id="slide-mass" min="1000" max="15000" value="5000">
+                    </div>
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <span>Planet Starting Velocity</span>
+                            <span class="slider-val" id="val-vel">3.0</span>
+                        </div>
+                        <input type="range" id="slide-vel" min="0.5" max="8.0" step="0.1" value="3.0">
+                    </div>
+                    
+                    <div class="btn-row">
+                        <button class="btn primary" onclick="startOrbit()">Launch Planet</button>
+                        <button class="btn" onclick="resetOrbit()">Reset Space</button>
+                    </div>
+                </div>
+
+                <div class="canvas-container" style="height: 450px; background: #000;">
+                    <canvas id="orbitCanvas" width="700" height="450"></canvas>
+                    <div class="stats-overlay" id="orbit-stats">
+                        Status: Waiting for Launch<br>
+                        Velocity: 0.00 m/s
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // SIMULATOR 1: WAVE MECHANICS
+        // ==========================================
+        const waveCanvas = document.getElementById('waveCanvas');
+        const wCtx = waveCanvas.getContext('2d');
+        
+        let waveOffset = 0;
+
+        function drawWave() {
+            // Get slider values
+            const amplitude = parseFloat(document.getElementById('slide-amp').value);
+            const frequency = parseFloat(document.getElementById('slide-freq').value);
+            const speed = parseFloat(document.getElementById('slide-speed').value);
+            
+            // Update UI text
+            document.getElementById('val-amp').innerText = amplitude;
+            document.getElementById('val-freq').innerText = frequency.toFixed(2);
+            document.getElementById('val-speed').innerText = speed.toFixed(1);
+
+            wCtx.clearRect(0, 0, waveCanvas.width, waveCanvas.height);
+            
+            // Center line
+            wCtx.strokeStyle = '#30363d';
+            wCtx.lineWidth = 1;
+            wCtx.beginPath();
+            wCtx.moveTo(0, waveCanvas.height / 2);
+            wCtx.lineTo(waveCanvas.width, waveCanvas.height / 2);
+            wCtx.stroke();
+
+            // Draw Sine Wave
+            wCtx.strokeStyle = 'var(--accent)';
+            wCtx.lineWidth = 3;
+            wCtx.beginPath();
+
+            for (let x = 0; x < waveCanvas.width; x++) {
+                // y = A * sin(frequency * x + offset)
+                const y = waveCanvas.height / 2 + Math.sin(x * frequency + waveOffset) * amplitude;
+                if (x === 0) {
+                    wCtx.moveTo(x, y);
+                } else {
+                    wCtx.lineTo(x, y);
+                }
+            }
+            wCtx.stroke();
+
+            waveOffset -= (speed * 0.05); // Move wave to the right
+
+            requestAnimationFrame(drawWave);
+        }
+        drawWave(); // Start loop
+
+
+        // ==========================================
+        // SIMULATOR 2: ORBITAL GRAVITY
+        // ==========================================
+        const orbitCanvas = document.getElementById('orbitCanvas');
+        const oCtx = orbitCanvas.getContext('2d');
+        
+        // Physics state
+        let orbitReq;
+        let isOrbiting = false;
+        let trail = [];
+        const G = 1; // Simplified Gravitational Constant for sim
+
+        // Star (Center)
+        const star = { x: orbitCanvas.width / 2, y: orbitCanvas.height / 2, radius: 20 };
+        
+        // Planet (Movable)
+        let planet = { x: 0, y: 0, vx: 0, vy: 0, radius: 6 };
+
+        function drawSpace() {
+            oCtx.clearRect(0, 0, orbitCanvas.width, orbitCanvas.height);
+
+            // Draw Trail
+            if (trail.length > 1) {
+                oCtx.strokeStyle = 'rgba(0, 206, 209, 0.4)';
+                oCtx.lineWidth = 2;
+                oCtx.beginPath();
+                oCtx.moveTo(trail[0].x, trail[0].y);
+                for (let i = 1; i < trail.length; i++) {
+                    oCtx.lineTo(trail[i].x, trail[i].y);
+                }
+                oCtx.stroke();
+            }
+
+            // Draw Star
+            oCtx.fillStyle = '#f2cc60';
+            oCtx.shadowBlur = 20;
+            oCtx.shadowColor = '#f2cc60';
+            oCtx.beginPath();
+            oCtx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+            oCtx.fill();
+            oCtx.shadowBlur = 0; // reset
+
+            // Draw Planet
+            oCtx.fillStyle = '#58a6ff';
+            oCtx.beginPath();
+            oCtx.arc(planet.x, planet.y, planet.radius, 0, Math.PI * 2);
+            oCtx.fill();
+        }
+
+        function resetOrbit() {
+            cancelAnimationFrame(orbitReq);
+            isOrbiting = false;
+            trail = [];
+            
+            // Update UI
+            document.getElementById('val-mass').innerText = document.getElementById('slide-mass').value;
+            document.getElementById('val-vel').innerText = document.getElementById('slide-vel').value;
+            document.getElementById('orbit-stats').innerHTML = `Status: Waiting for Launch<br>Velocity: 0.00 m/s`;
+
+            // Reset Planet to starting position (left side of star)
+            planet.x = star.x - 150;
+            planet.y = star.y;
+            planet.vx = 0;
+            planet.vy = 0;
+            
+            drawSpace();
+        }
+
+        function startOrbit() {
+            if (isOrbiting) return;
+            isOrbiting = true;
+            trail = [];
+
+            // Get parameters
+            const initVel = parseFloat(document.getElementById('slide-vel').value);
+            
+            // Set initial downward velocity to create orbit
+            planet.vy = initVel; 
+
+            function updatePhysics() {
+                if (!isOrbiting) return;
+
+                const starMass = parseFloat(document.getElementById('slide-mass').value);
+                document.getElementById('val-mass').innerText = starMass;
+                document.getElementById('val-vel').innerText = document.getElementById('slide-vel').value;
+
+                // Calculate distance between planet and star
+                const dx = star.x - planet.x;
+                const dy = star.y - planet.y;
+                const distanceSq = (dx * dx) + (dy * dy);
+                const distance = Math.sqrt(distanceSq);
+
+                // Check collision
+                if (distance < star.radius + planet.radius) {
+                    document.getElementById('orbit-stats').innerHTML = `Status: <span style="color:var(--danger)">CRASHED INTO STAR</span><br>Velocity: 0.00 m/s`;
+                    isOrbiting = false;
+                    return;
+                }
+
+                // Check Escape (off screen by a lot)
+                if (planet.x < -1000 || planet.x > 2000 || planet.y < -1000 || planet.y > 2000) {
+                    document.getElementById('orbit-stats').innerHTML = `Status: <span style="color:var(--warn)">ESCAPED GRAVITY</span><br>Velocity: Deep Space`;
+                    isOrbiting = false;
+                    return;
+                }
+
+                // Calculate Gravity Force (Newton's Law)
+                // F = G * (M1*M2) / r^2. Since we only care about planet acceleration, a = F/M2 = G * M1 / r^2
+                const force = (G * starMass) / distanceSq;
+                
+                // Break force into X and Y vectors
+                const ax = force * (dx / distance);
+                const ay = force * (dy / distance);
+
+                // Update Velocity
+                planet.vx += ax;
+                planet.vy += ay;
+
+                // Update Position
+                planet.x += planet.vx;
+                planet.y += planet.vy;
+
+                // Record trail (every 3 frames to save memory)
+                if (Math.random() > 0.6) {
+                    trail.push({ x: planet.x, y: planet.y });
+                    if (trail.length > 300) trail.shift(); // Max trail length
+                }
+
+                // Update UI Stats
+                const currentVel = Math.sqrt((planet.vx * planet.vx) + (planet.vy * planet.vy));
+                document.getElementById('orbit-stats').innerHTML = `Status: Orbiting...<br>Velocity: ${currentVel.toFixed(2)} m/s`;
+
+                drawSpace();
+                orbitReq = requestAnimationFrame(updatePhysics);
+            }
+
+            updatePhysics();
+        }
+
+        // Event listeners for dynamic UI updates while not playing
+        document.getElementById('slide-mass').addEventListener('input', (e) => {
+            document.getElementById('val-mass').innerText = e.target.value;
+        });
+        document.getElementById('slide-vel').addEventListener('input', (e) => {
+            document.getElementById('val-vel').innerText = e.target.value;
+        });
+
+        // Initial Draw
+        resetOrbit();
+    </script>
+</body>
+</html>

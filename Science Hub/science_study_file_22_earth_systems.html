@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Earth Systems & Plate Tectonics | Middlanders Science</title>
+    <style>
+        :root {
+            --bg: #0d1117; --panel: #161b22; --panel-light: #21262d; --border: #30363d;
+            --accent: #f0883e; --accent-hover: #ffa657;
+            --success: #2ea043; --danger: #da3633; --warn: #d29922; --text: #c9d1d9;
+            --font-code: 'Consolas', 'Courier New', monospace;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; line-height: 1.6; }
+
+        header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        header h1 { margin: 0; color: var(--accent); font-size: 20px; display: flex; align-items: center; gap: 10px; }
+        .back-btn { text-decoration: none; color: var(--text); padding: 8px 16px; background: var(--panel-light); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-weight: bold; transition: 0.2s; }
+        .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .container { max-width: 900px; margin: 30px auto; padding: 0 20px; width: 100%; flex: 1; }
+
+        .content-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 30px; margin-bottom: 30px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+        .content-card h2 { margin-top: 0; color: #fff; font-size: 24px; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 20px; }
+        .content-card h3 { color: var(--accent); font-size: 18px; margin-top: 25px; margin-bottom: 10px; }
+        
+        .callout { background: #010409; border-left: 4px solid var(--accent); padding: 15px 20px; border-radius: 0 8px 8px 0; margin: 20px 0; font-style: italic; color: #8b949e; }
+        
+        .vocab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .vocab-box { background: var(--panel-light); padding: 15px; border-radius: 8px; border: 1px solid var(--border); }
+        .vocab-box h4 { margin: 0 0 10px 0; color: var(--accent); font-size: 16px; }
+        .vocab-box p { margin: 0; font-size: 13px; color: #8b949e; }
+
+        /* Interactive Quiz Styles */
+        .quiz-section { background: #010409; border: 1px solid var(--accent); border-radius: 12px; padding: 30px; margin-top: 40px; }
+        .quiz-section h2 { border-bottom: none; color: var(--accent); margin-bottom: 5px; }
+        .question-block { margin-top: 20px; }
+        .question-text { font-size: 16px; color: #fff; font-weight: bold; margin-bottom: 15px; }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .option-btn { padding: 12px; background: var(--panel); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 14px; text-align: left; transition: 0.2s; }
+        .option-btn:hover { border-color: var(--accent); background: var(--panel-light); }
+        .option-btn.correct { background: var(--success); color: #fff; border-color: var(--success); }
+        .option-btn.wrong { background: var(--danger); color: #fff; border-color: var(--danger); }
+        .feedback { margin-top: 10px; font-size: 13px; font-weight: bold; display: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🌍 Unit 22: Earth Systems & Plate Tectonics</h1>
+        <a href="index.html" class="back-btn">← Back to Hub</a>
+    </header>
+
+    <div class="container">
+        
+        <!-- SECTION 1: EARTH'S LAYERS -->
+        <div class="content-card">
+            <h2>1. Earth's Internal Structure</h2>
+            <p>Earth is composed of distinct layers categorized by chemical composition and physical properties:</p>
+            
+            <div class="vocab-grid">
+                <div class="vocab-box">
+                    <h4>🏔️ Crust & Lithosphere</h4>
+                    <p>The rigid outer shell comprising the continental and oceanic crust along with the uppermost solid mantle. Broken into tectonic plates.</p>
+                </div>
+                <div class="vocab-box">
+                    <h4>🌋 Asthenosphere & Mantle</h4>
+                    <p>The semi-fluid layer of hot rock directly beneath the lithosphere. Slow <strong>convection currents</strong> here drive tectonic plate movement.</p>
+                </div>
+                <div class="vocab-box">
+                    <h4>🌊 Outer Core</h4>
+                    <p>A liquid iron and nickel layer whose movement generates Earth's magnetic field.</p>
+                </div>
+                <div class="vocab-box">
+                    <h4>⚪ Inner Core</h4>
+                    <p>A dense, solid ball of iron and nickel under extreme pressure and high temperature.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: PLATE BOUNDARIES -->
+        <div class="content-card">
+            <h2>2. Plate Boundaries & Interactions</h2>
+            <p>Tectonic plates interact along three main types of boundaries, producing geological features like mountain ranges, ocean trenches, and earthquakes.</p>
+
+            <div class="vocab-grid">
+                <div class="vocab-box">
+                    <h4>💥 Convergent Boundaries</h4>
+                    <p>Plates collide. Subduction occurs when dense oceanic crust sinks beneath lighter continental crust (forming trenches and volcanic arcs). Continental collisions form high mountain ranges.</p>
+                </div>
+                <div class="vocab-box">
+                    <h4>🌋 Divergent Boundaries</h4>
+                    <p>Plates pull apart. Magma rises to fill the gap, creating new crust (e.g., Mid-Atlantic Ridge, continental rift valleys).</p>
+                </div>
+            </div>
+
+            <div class="callout">
+                <strong>Transform Boundaries:</strong> Plates slide horizontally past each other. Friction builds up until stress is suddenly released as earthquakes (e.g., California's San Andreas Fault).
+            </div>
+        </div>
+
+        <!-- SECTION 3: THE ROCK CYCLE -->
+        <div class="content-card">
+            <h2>3. The Rock Cycle</h2>
+            <p>Earth's crust is continuously recycled through geological processes over millions of years:</p>
+            <ul>
+                <li><strong>Igneous Rocks:</strong> Formed when molten rock (magma or lava) cools and crystallizes (e.g., basalt, granite).</li>
+                <li><strong>Sedimentary Rocks:</strong> Formed when weathered rock particles are compacted and cemented in layers (e.g., sandstone, limestone).</li>
+                <li><strong>Metamorphic Rocks:</strong> Formed when existing rocks are transformed by intense deep-earth heat and pressure (e.g., marble, slate).</li>
+            </ul>
+        </div>
+
+        <!-- INTERACTIVE KNOWLEDGE CHECK -->
+        <div class="quiz-section">
+            <h2>🧠 Mini-Quiz: Test Your Knowledge</h2>
+            <p style="font-size: 13px; color: #8b949e; margin-bottom: 25px;">Select the correct answer to check your understanding of Unit 22.</p>
+
+            <!-- Question 1 -->
+            <div class="question-block" id="q1">
+                <div class="question-text">1. What thermal energy transfer mechanism inside the mantle drives tectonic plate motion?</div>
+                <div class="options-grid">
+                    <button class="option-btn" onclick="checkAnswer('q1', this, false)">A) Conduction</button>
+                    <button class="option-btn" onclick="checkAnswer('q1', this, true)">B) Convection currents</button>
+                    <button class="option-btn" onclick="checkAnswer('q1', this, false)">C) Radiation</button>
+                    <button class="option-btn" onclick="checkAnswer('q1', this, false)">D) Solar absorption</button>
+                </div>
+                <div class="feedback" id="q1-feedback"></div>
+            </div>
+
+            <!-- Question 2 -->
+            <div class="question-block" id="q2">
+                <div class="question-text">2. What type of plate boundary is created when two tectonic plates slide horizontally past one another?</div>
+                <div class="options-grid">
+                    <button class="option-btn" onclick="checkAnswer('q2', this, false)">A) Convergent Boundary</button>
+                    <button class="option-btn" onclick="checkAnswer('q2', this, false)">B) Divergent Boundary</button>
+                    <button class="option-btn" onclick="checkAnswer('q2', this, true)">C) Transform Boundary</button>
+                    <button class="option-btn" onclick="checkAnswer('q2', this, false)">D) Subduction Zone</button>
+                </div>
+                <div class="feedback" id="q2-feedback"></div>
+            </div>
+
+            <!-- Question 3 -->
+            <div class="question-block" id="q3">
+                <div class="question-text">3. Which rock type forms when existing rocks undergo extreme deep-earth heat and pressure without fully melting?</div>
+                <div class="options-grid">
+                    <button class="option-btn" onclick="checkAnswer('q3', this, false)">A) Igneous Rock</button>
+                    <button class="option-btn" onclick="checkAnswer('q3', this, false)">B) Sedimentary Rock</button>
+                    <button class="option-btn" onclick="checkAnswer('q3', this, true)">C) Metamorphic Rock</button>
+                    <button class="option-btn" onclick="checkAnswer('q3', this, false)">D) Basaltic Lava</button>
+                </div>
+                <div class="feedback" id="q3-feedback"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function checkAnswer(questionId, buttonElement, isCorrect) {
+            const options = document.querySelectorAll(`#${questionId} .option-btn`);
+            options.forEach(btn => {
+                btn.disabled = true;
+                btn.style.cursor = 'not-allowed';
+            });
+
+            const feedbackEl = document.getElementById(`${questionId}-feedback`);
+            feedbackEl.style.display = 'block';
+
+            if (isCorrect) {
+                buttonElement.classList.add('correct');
+                feedbackEl.style.color = 'var(--success)';
+                feedbackEl.innerText = '✅ Correct! Great job.';
+            } else {
+                buttonElement.classList.add('wrong');
+                feedbackEl.style.color = 'var(--danger)';
+                feedbackEl.innerText = '❌ Incorrect. Review the reading sections above!';
+                
+                options.forEach(btn => {
+                    if (btn.getAttribute('onclick').includes('true')) {
+                        btn.style.border = '2px solid var(--success)';
+                        btn.style.color = 'var(--success)';
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>

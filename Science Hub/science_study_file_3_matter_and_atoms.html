@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matter & Atoms | Middlanders Science</title>
+    <style>
+        :root {
+            --bg: #0d1117; --panel: #161b22; --panel-light: #21262d; --border: #30363d;
+            --accent: #58a6ff; --accent-hover: #3182ce;
+            --success: #2ea043; --danger: #da3633; --warn: #d29922; --text: #c9d1d9;
+            --font-code: 'Consolas', 'Courier New', monospace;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; line-height: 1.6; }
+
+        header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        header h1 { margin: 0; color: var(--accent); font-size: 20px; display: flex; align-items: center; gap: 10px; }
+        .back-btn { text-decoration: none; color: var(--text); padding: 8px 16px; background: var(--panel-light); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-weight: bold; transition: 0.2s; }
+        .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .container { max-width: 900px; margin: 30px auto; padding: 0 20px; width: 100%; flex: 1; }
+
+        .content-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 30px; margin-bottom: 30px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+        .content-card h2 { margin-top: 0; color: #fff; font-size: 24px; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 20px; }
+        .content-card h3 { color: var(--accent); font-size: 18px; margin-top: 25px; margin-bottom: 10px; }
+        
+        .hero-img { width: 100%; max-height: 400px; object-fit: contain; background: #fff; border-radius: 8px; border: 2px solid var(--border); margin: 20px 0; padding: 10px; }
+        
+        .callout { background: #010409; border-left: 4px solid var(--accent); padding: 15px 20px; border-radius: 0 8px 8px 0; margin: 20px 0; font-style: italic; color: #8b949e; }
+        
+        .vocab-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .vocab-box { background: var(--panel-light); padding: 15px; border-radius: 8px; border: 1px solid var(--border); text-align: center; }
+        .vocab-box h4 { margin: 0 0 10px 0; color: var(--accent); font-size: 16px; }
+        .vocab-box p { margin: 0; font-size: 13px; color: #8b949e; }
+        .vocab-box .charge { font-family: var(--font-code); font-size: 16px; font-weight: bold; margin-top: 8px; display: inline-block; padding: 4px 10px; border-radius: 6px; background: #010409; }
+
+        /* Interactive Quiz Styles */
+        .quiz-section { background: #010409; border: 1px solid var(--accent); border-radius: 12px; padding: 30px; margin-top: 40px; }
+        .quiz-section h2 { border-bottom: none; color: var(--accent); margin-bottom: 5px; }
+        .question-block { margin-top: 20px; }
+        .question-text { font-size: 16px; color: #fff; font-weight: bold; margin-bottom: 15px; }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .option-btn { padding: 12px; background: var(--panel); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 14px; text-align: left; transition: 0.2s; }
+        .option-btn:hover { border-color: var(--accent); background: var(--panel-light); }
+        .option-btn.correct { background: var(--success); color: #fff; border-color: var(--success); }
+        .option-btn.wrong { background: var(--danger); color: #fff; border-color: var(--danger); }
+        .feedback { margin-top: 10px; font-size: 13px; font-weight: bold; display: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🧪 Unit 3: Matter & Atomic Structure</h1>
+        <a href="index.html" class="back-btn">← Back to Hub</a>
+    </header>
+
+    <div class="container">
+        
+        <!-- SECTION 1: STATES OF MATTER -->
+        <div class="content-card">
+            <h2>1. What is Matter?</h2>
+            <p>Matter is anything that has <strong>mass</strong> and takes up <strong>space (volume)</strong>. It makes up everything in the universe, from the device you are reading this on to the stars in the sky.</p>
+            
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/States_of_matter_En.svg/800px-States_of_matter_En.svg.png" alt="States of Matter Diagram" class="hero-img">
+
+            <h3>Phase Changes</h3>
+            <p>Matter shifts between phases when <strong>thermal energy (heat)</strong> is added or removed. This changes how fast the particles vibrate and how tightly they are bound together.</p>
+            <ul>
+                <li><strong>Solid:</strong> Particles are tightly packed and vibrate in place. Fixed shape and fixed volume.</li>
+                <li><strong>Liquid:</strong> Particles have more energy and can slide past each other. Fixed volume, but takes the shape of its container.</li>
+                <li><strong>Gas:</strong> Particles have high energy, move freely, and spread out to fill their entire container. No fixed shape or volume.</li>
+                <li><strong>Plasma:</strong> Superheated gas where electrons are ripped away from the nucleus (e.g., lightning, neon signs, the Sun).</li>
+            </ul>
+        </div>
+
+        <!-- SECTION 2: ATOMIC STRUCTURE -->
+        <div class="content-card">
+            <h2>2. The Structure of an Atom</h2>
+            <p>An atom is the smallest unit of ordinary matter that forms a chemical element. Every solid, liquid, gas, and plasma is composed of neutral or ionized atoms.</p>
+            
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Bohr_model_of_an_atom.svg/800px-Bohr_model_of_an_atom.svg.png" alt="Bohr Model of an Atom" class="hero-img" style="max-height: 350px;">
+
+            <div class="callout">
+                "The nucleus holds almost all of the atom's mass, but the electron cloud makes up almost all of the atom's volume. Atoms are 99.9999% empty space!"
+            </div>
+
+            <div class="vocab-grid">
+                <div class="vocab-box">
+                    <h4>Protons</h4>
+                    <p>Heavy particles found inside the nucleus. The number of protons determines what element the atom is (Atomic Number).</p>
+                    <span class="charge" style="color: var(--success);">+1 Charge</span>
+                </div>
+                <div class="vocab-box">
+                    <h4>Neutrons</h4>
+                    <p>Heavy particles found in the nucleus alongside protons. They act like glue to keep the nucleus from blowing apart.</p>
+                    <span class="charge" style="color: var(--warn);">0 Neutral</span>
+                </div>
+                <div class="vocab-box">
+                    <h4>Electrons</h4>
+                    <p>Tiny, nearly massless particles orbiting the nucleus in shells. They are responsible for all chemical reactions.</p>
+                    <span class="charge" style="color: var(--danger);">-1 Charge</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 3: PERIODIC TABLE -->
+        <div class="content-card">
+            <h2>3. The Periodic Table</h2>
+            <p>The Periodic Table organizes all known chemical elements based on their atomic number (number of protons) and chemical properties.</p>
+            
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Periodic_table_large.svg/1024px-Periodic_table_large.svg.png" alt="Periodic Table of Elements" class="hero-img">
+
+            <h3>How to Read It:</h3>
+            <ul>
+                <li><strong>Periods (Rows):</strong> Elements in the same row have the same number of electron orbital shells.</li>
+                <li><strong>Groups (Columns):</strong> Elements in the same vertical column have similar chemical behaviors and the same number of valence (outer) electrons.</li>
+                <li><strong>Atomic Number:</strong> The big number at the top of an element's square. It tells you exactly how many protons are in the nucleus.</li>
+                <li><strong>Atomic Mass:</strong> The number at the bottom. Subtract the Atomic Number from the Atomic Mass to find the number of neutrons!</li>
+            </ul>
+        </div>
+
+        <!-- INTERACTIVE KNOWLEDGE CHECK -->
+        <div class="quiz-section">
+            <h2>🧠 Mini-Quiz: Test Your Knowledge</h2>
+            <p style="font-size: 13px; color: #8b949e; margin-bottom: 25px;">Select the correct answer to check your understanding of Unit 3.</p>
+
+            <!-- Question 1 -->
+            <div class="question-block" id="q1">
+                <div class="question-text">1. Which subatomic particle determines the identity of an element (its atomic number)?</div>
+                <div class="options-grid">
+                    <button class="option-btn" onclick="checkAnswer('q1', this, false)">A) Electron</button>
+                    <button class="option-btn" onclick="checkAnswer('q1', this, false)">B) Neutron</button>
+                    <button class="option-btn" onclick="checkAnswer('q1', this, true)">C) Proton</button>
+                    <button class="option-btn" onclick="checkAnswer('q1', this, false)">D) Nucleus</button>
+                </div>
+                <div class="feedback" id="q1-feedback"></div>
+            </div>
+
+            <!-- Question 2 -->
+            <div class="question-block" id="q2">
+                <div class="question-text">2. What happens to the particles in a liquid when thermal energy (heat) is added?</div>
+                <div class="options-grid">
+                    <button class="option-btn" onclick="checkAnswer('q2', this, false)">A) They slow down and lock into a solid structure.</button>
+                    <button class="option-btn" onclick="checkAnswer('q2', this, true)">B) They speed up, spread out, and turn into a gas.</button>
+                    <button class="option-btn" onclick="checkAnswer('q2', this, false)">C) They lose their electrons and become a plasma.</button>
+                    <button class="option-btn" onclick="checkAnswer('q2', this, false)">D) They shrink in size and disappear.</button>
+                </div>
+                <div class="feedback" id="q2-feedback"></div>
+            </div>
+
+            <!-- Question 3 -->
+            <div class="question-block" id="q3">
+                <div class="question-text">3. If Carbon has an Atomic Number of 6 and an Atomic Mass of 12, how many neutrons does it have?</div>
+                <div class="options-grid">
+                    <button class="option-btn" onclick="checkAnswer('q3', this, true)">A) 6 Neutrons</button>
+                    <button class="option-btn" onclick="checkAnswer('q3', this, false)">B) 12 Neutrons</button>
+                    <button class="option-btn" onclick="checkAnswer('q3', this, false)">C) 18 Neutrons</button>
+                    <button class="option-btn" onclick="checkAnswer('q3', this, false)">D) 0 Neutrons</button>
+                </div>
+                <div class="feedback" id="q3-feedback"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Interactive Quiz Logic
+        function checkAnswer(questionId, buttonElement, isCorrect) {
+            // Disable all buttons in this question block after a guess
+            const options = document.querySelectorAll(`#${questionId} .option-btn`);
+            options.forEach(btn => {
+                btn.disabled = true;
+                btn.style.cursor = 'not-allowed';
+            });
+
+            const feedbackEl = document.getElementById(`${questionId}-feedback`);
+            feedbackEl.style.display = 'block';
+
+            if (isCorrect) {
+                buttonElement.classList.add('correct');
+                feedbackEl.style.color = 'var(--success)';
+                feedbackEl.innerText = '✅ Correct! Great job.';
+            } else {
+                buttonElement.classList.add('wrong');
+                feedbackEl.style.color = 'var(--danger)';
+                feedbackEl.innerText = '❌ Incorrect. Review the reading sections above and try again later!';
+                
+                // Highlight the correct one
+                options.forEach(btn => {
+                    if (btn.getAttribute('onclick').includes('true')) {
+                        btn.style.border = '2px solid var(--success)';
+                        btn.style.color = 'var(--success)';
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Science & Astronomy | Middlanders Science</title>
+    <style>
+        :root {
+            --bg: #0d1117; --panel: #161b22; --panel-light: #21262d; --border: #30363d;
+            --accent: #d2a8ff; --accent-hover: #bc8cff;
+            --success: #2ea043; --danger: #da3633; --warn: #d29922; --text: #c9d1d9;
+            --font-code: 'Consolas', 'Courier New', monospace;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; line-height: 1.6; }
+
+        header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        header h1 { margin: 0; color: var(--accent); font-size: 20px; display: flex; align-items: center; gap: 10px; }
+        .back-btn { text-decoration: none; color: var(--text); padding: 8px 16px; background: var(--panel-light); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-weight: bold; transition: 0.2s; }
+        .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .container { max-width: 900px; margin: 30px auto; padding: 0 20px; width: 100%; flex: 1; }
+
+        .content-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 30px; margin-bottom: 30px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+        .content-card h2 { margin-top: 0; color: #fff; font-size: 24px; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 20px; }
+        .content-card h3 { color: var(--accent); font-size: 18px; margin-top: 25px; margin-bottom: 10px; }
+        
+        .callout { background: #010409; border-left: 4px solid var(--accent); padding: 15px 20px; border-radius: 0 8px 8px 0; margin: 20px 0; font-style: italic; color: #8b949e; }
+        
+        .vocab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .vocab-box { background: var(--panel-light); padding: 15px; border-radius: 8px; border: 1px solid var(--border); }
+        .vocab-box h4 { margin: 0 0 10px 0; color: var(--accent); font-size: 16px; }
+        .vocab-box p { margin: 0; font-size: 13px; color: #8b949e; }
+        .formula-box { background: #010409; border: 1px solid var(--border); padding: 12px; border-radius: 6px; font-family: var(--font-code); color: var(--success); font-size: 14px; font-weight: bold; text-align: center; margin-top: 15px; }
+
+        /* Interactive Quiz Styles */
+        .quiz-section { background: #010409; border: 1px solid var(--accent); border-radius: 12px; padding: 30px; margin-top: 40px; }
+        .quiz-section h2 { border-bottom: none; color: var(--accent); margin-bottom: 5px; }
+        .question-block { margin-top: 20px; }
+        .question-text { font-size: 16px; color: #fff; font-weight: bold; margin-bottom: 15px; }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .option-btn { padding: 12px; background: var(--panel); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 14px; text-align: left; transition: 0.2s; }
+        .option-btn:hover { border-color: var(--accent); background: var(--panel-light); }
+        .option-btn.correct { background: var(--success); color: #fff; border-color: var(--success); }
+        .option-btn.wrong { background: var(--danger); color: #fff; border-color: var(--danger); }
+        .feedback { margin-top: 10px; font-size: 13px; font-weight: bold; display: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🪐 Unit 21: Space Science & Astronomy</h1>
+        <a href="index.html" class="back-btn">← Back to Hub</a>
+    </header>
+
+    <div class="container">
+        
+        <!-- SECTION 1: SEASONS & EARTH'S TILT -->
+        <div class="content-card">
+            <h2>1. Earth's Tilt & The Seasons</h2>
+            <p>Seasons are NOT caused by Earth getting closer to or farther from the Sun in its orbit. Instead, seasons occur because Earth's axis is tilted at <strong>23.5 degrees</strong> relative to its orbital plane.</p>
+            
+            <div class="vocab-grid">
+                <div class="vocab-box">
+                    <h4>☀️ Summer Solstice</h4>
+                    <p>Occurs when a hemisphere is tilted directly <strong>toward</strong> the Sun, receiving direct sunlight and experiencing longer daylight hours.</p>
+                </div>
+                <div class="vocab-box">
+                    <h4>❄️ Winter Solstice</h4>
+                    <p>Occurs when a hemisphere is tilted <strong>away</strong> from the Sun, receiving indirect sunlight spread over a larger surface area.</p>
+                </div>
+            </div>
+
+            <div class="callout">
+                <strong>Equinox:</strong> Twice per year (Spring and Autumn), neither hemisphere is tilted toward or away from the Sun, resulting in equal 12-hour days and 12-hour nights everywhere on Earth.
+            </div>
+        </div>
+
+        <!-- SECTION 2: MOON PHASES & TIDES -->
+        <div class="content-card">
+            <h2>2. Moon Phases & Gravity Tides</h2>
+            <p>The Moon orbits Earth roughly every 27.3 days. As it moves, the portion of its sunlit side visible from Earth changes continuously, creating the 8 distinct <strong>lunar phases</strong>.</p>
+
+            <h3>Tidal Forces</h3>
+            <p>Gravitational pulls from the Moon and Sun distort Earth's oceans, creating ocean tides twice daily.</p>
+            <ul>
+                <li><strong>Spring Tides:</strong> Occur during New Moon and Full Moon when Sun, Earth, and Moon align in a straight line. High tides are extra high, low tides extra low.</li>
+                <li><strong>Neap Tides:</strong> Occur during 1st and 3rd Quarter moons when Sun and Moon pull at 90-degree right angles, producing moderate tide differences.</li>
+            </ul>
+        </div>
+
+        <!-- SECTION 3: GRAVITY & SOLAR SYSTEM SCALE -->
+        <div class="content-card">
+            <h2>3. Gravity & Planetary Motion</h2>
+            <p>Gravity holds planets in orbit around stars and galaxies together. According to Newton's Law of Universal Gravitation, gravitational attraction depends on two key factors:</p>
+
+            <div class="formula-box">
+                Gravity = (Mass 1 × Mass 2) / (Distance)²
+            </div>
+
+            <ul style="margin-top: 15px;">
+                <li><strong>Mass:</strong> Objects with greater mass exert stronger gravitational pull.</li>
+                <li><strong>Distance:</strong> Increasing distance between objects rapidly weakens gravitational pull (inverse-square relationship).</li>
+            </ul>
+        </div>
+
+        <!-- INTERACTIVE KNOWLEDGE CHECK -->
+        <div class="quiz-section">
+            <h2>🧠 Mini-Quiz: Test Your Knowledge</h2>
+            <p style="font-size: 13px; color: #8b949e; margin-bottom: 25px;">Select the correct answer to check your understanding of Unit 21.</p>
+
+            <!-- Question 1 -->
+            <div class="question-block" id="q1">
+                <div class="question-text">1. What is the primary cause of Earth's changing seasons throughout the year?</div>
+                <div class="options-grid">
+                    <button class="option-btn" onclick="checkAnswer('q1', this, false)">A) Earth's distance changing as it orbits the Sun in an oval.</button>
+                    <button class="option-btn" onclick="checkAnswer('q1', this, true)">B) Earth's 23.5-degree axis tilt as it revolves around the Sun.</button>
+                    <button class="option-btn" onclick="checkAnswer('q1', this, false)">C) Fluctuations in solar flares produced by the Sun.</button>
+                    <button class="option-btn" onclick="checkAnswer('q1', this, false)">D) Gravitational pull exerted by the Moon.</button>
+                </div>
+                <div class="feedback" id="q1-feedback"></div>
+            </div>
+
+            <!-- Question 2 -->
+            <div class="question-block" id="q2">
+                <div class="question-text">2. During which moon phases do SPRING TIDES produce the largest high tide differences?</div>
+                <div class="options-grid">
+                    <button class="option-btn" onclick="checkAnswer('q2', this, true)">A) New Moon and Full Moon</button>
+                    <button class="option-btn" onclick="checkAnswer('q2', this, false)">B) 1st Quarter and 3rd Quarter Moons</button>
+                    <button class="option-btn" onclick="checkAnswer('q2', this, false)">C) Waxing Crescent and Waning Gibbous</button>
+                    <button class="option-btn" onclick="checkAnswer('q2', this, false)">D) Solar Eclipses only</button>
+                </div>
+                <div class="feedback" id="q2-feedback"></div>
+            </div>
+
+            <!-- Question 3 -->
+            <div class="question-block" id="q3">
+                <div class="question-text">3. If the distance between two planets is doubled, what happens to the gravitational force between them?</div>
+                <div class="options-grid">
+                    <button class="option-btn" onclick="checkAnswer('q3', this, false)">A) The force doubles.</button>
+                    <button class="option-btn" onclick="checkAnswer('q3', this, false)">B) The force cuts in half.</button>
+                    <button class="option-btn" onclick="checkAnswer('q3', this, true)">C) The force decreases to 1/4 of its original strength.</button>
+                    <button class="option-btn" onclick="checkAnswer('q3', this, false)">D) The force remains completely unchanged.</button>
+                </div>
+                <div class="feedback" id="q3-feedback"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function checkAnswer(questionId, buttonElement, isCorrect) {
+            const options = document.querySelectorAll(`#${questionId} .option-btn`);
+            options.forEach(btn => {
+                btn.disabled = true;
+                btn.style.cursor = 'not-allowed';
+            });
+
+            const feedbackEl = document.getElementById(`${questionId}-feedback`);
+            feedbackEl.style.display = 'block';
+
+            if (isCorrect) {
+                buttonElement.classList.add('correct');
+                feedbackEl.style.color = 'var(--success)';
+                feedbackEl.innerText = '✅ Correct! Great job.';
+            } else {
+                buttonElement.classList.add('wrong');
+                feedbackEl.style.color = 'var(--danger)';
+                feedbackEl.innerText = '❌ Incorrect. Review the reading sections above!';
+                
+                options.forEach(btn => {
+                    if (btn.getAttribute('onclick').includes('true')) {
+                        btn.style.border = '2px solid var(--success)';
+                        btn.style.color = 'var(--success)';
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html> 

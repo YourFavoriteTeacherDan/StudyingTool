@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Analysis & Graphing Lab | Middlanders Science</title>
+    <style>
+        :root {
+            --bg: #0d1117; --panel: #161b22; --panel-light: #21262d; --border: #30363d;
+            --accent: #58a6ff; --accent-hover: #3182ce;
+            --success: #2ea043; --danger: #da3633; --warn: #d29922; --text: #c9d1d9;
+            --font-code: 'Consolas', 'Courier New', monospace;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+        header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        header h1 { margin: 0; color: #f0883e; font-size: 20px; display: flex; align-items: center; gap: 10px; }
+        .back-btn { text-decoration: none; color: var(--text); padding: 8px 16px; background: var(--panel-light); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-weight: bold; transition: 0.2s; }
+        .back-btn:hover { border-color: #f0883e; color: #f0883e; }
+
+        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; width: 100%; flex: 1; display: grid; grid-template-columns: 350px 1fr; gap: 30px; }
+
+        /* Left Panel: Data Entry */
+        .data-panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 25px; display: flex; flex-direction: column; gap: 15px; height: fit-content; }
+        .data-panel h2 { margin: 0 0 10px 0; color: #fff; font-size: 18px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        
+        .control-group { display: flex; flex-direction: column; gap: 6px; }
+        .control-group label { font-size: 13px; font-weight: bold; color: #8b949e; }
+        .control-group input, .control-group select { padding: 10px; background: #010409; border: 1px solid var(--border); color: #fff; border-radius: 6px; outline: none; font-family: inherit; }
+        
+        .data-table-container { max-height: 300px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; background: #010409; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: var(--panel-light); padding: 10px; font-size: 13px; text-align: left; color: #8b949e; border-bottom: 1px solid var(--border); position: sticky; top: 0; }
+        td { padding: 8px 10px; border-bottom: 1px solid #161b22; }
+        td input { width: 100%; background: transparent; border: none; color: #fff; font-family: var(--font-code); outline: none; }
+        
+        .btn-row { display: flex; gap: 10px; margin-top: 10px; }
+        .btn { flex: 1; padding: 12px; background: var(--panel-light); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; text-align: center; }
+        .btn.primary { background: #f0883e; color: #000; border: none; }
+        .btn:hover { filter: brightness(1.2); }
+
+        /* Right Panel: Canvas Renderer */
+        .graph-panel { background: #010409; border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; min-height: 500px; }
+        canvas { background: var(--panel); border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 100%; max-width: 800px; height: auto; }
+        
+        .graph-title { position: absolute; top: 30px; font-size: 20px; font-weight: bold; color: #fff; }
+        .y-label { position: absolute; left: -10px; top: 50%; transform: translateY(-50%) rotate(-90deg); color: #8b949e; font-size: 14px; font-weight: bold; }
+        .x-label { position: absolute; bottom: 30px; color: #8b949e; font-size: 14px; font-weight: bold; }
+
+        @media (max-width: 900px) {
+            .container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>📊 Data Analysis & Graphing Lab</h1>
+        <a href="index.html" class="back-btn">← Back to Hub</a>
+    </header>
+
+    <div class="container">
+        
+        <!-- Left: Data Entry -->
+        <div class="data-panel">
+            <h2>Lab Data Setup</h2>
+            
+            <div class="control-group">
+                <label>Graph Title:</label>
+                <input type="text" id="g-title" value="Plant Growth Over Time">
+            </div>
+            
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="control-group">
+                    <label>X-Axis (MV):</label>
+                    <input type="text" id="x-axis-lbl" value="Days">
+                </div>
+                <div class="control-group">
+                    <label>Y-Axis (RV):</label>
+                    <input type="text" id="y-axis-lbl" value="Height (cm)">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>Graph Type:</label>
+                <select id="graph-type">
+                    <option value="bar">Bar Chart (Comparisons)</option>
+                    <option value="line">Line Graph (Change over time)</option>
+                </select>
+            </div>
+
+            <div class="data-table-container">
+                <table id="data-table">
+                    <thead>
+                        <tr>
+                            <th>X Value</th>
+                            <th>Y Value (Number)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        <!-- Rows injected via JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn" onclick="addRow()">+ Add Row</button>
+                <button class="btn" onclick="clearData()">Clear</button>
+            </div>
+            <button class="btn primary" onclick="renderGraph()">Render Graph</button>
+        </div>
+
+        <!-- Right: Graph Render -->
+        <div class="graph-panel">
+            <div class="graph-title" id="render-title">Plant Growth Over Time</div>
+            <div class="y-label" id="render-y-label">Height (cm)</div>
+            
+            <canvas id="graphCanvas" width="700" height="400"></canvas>
+            
+            <div class="x-label" id="render-x-label">Days</div>
+        </div>
+
+    </div>
+
+    <script>
+        let rowCount = 0;
+
+        // Initialize table with default data
+        function initTable() {
+            const defaults = [
+                {x: "Day 1", y: "2"},
+                {x: "Day 3", y: "5"},
+                {x: "Day 5", y: "9"},
+                {x: "Day 7", y: "14"},
+                {x: "Day 9", y: "22"}
+            ];
+            
+            defaults.forEach(d => addRow(d.x, d.y));
+            renderGraph(); // Initial render
+        }
+
+        function addRow(xVal = "", yVal = "") {
+            const tbody = document.getElementById("table-body");
+            const tr = document.createElement("tr");
+            
+            tr.innerHTML = `
+                <td><input type="text" class="x-input" value="${xVal}" placeholder="Label"></td>
+                <td><input type="number" class="y-input" value="${yVal}" placeholder="0"></td>
+            `;
+            tbody.appendChild(tr);
+            rowCount++;
+        }
+
+        function clearData() {
+            document.getElementById("table-body").innerHTML = "";
+            rowCount = 0;
+            for(let i=0; i<3; i++) addRow(); // Add 3 blank rows
+            renderGraph();
+        }
+
+        function renderGraph() {
+            // 1. Gather Data
+            document.getElementById('render-title').innerText = document.getElementById('g-title').value;
+            document.getElementById('render-x-label').innerText = document.getElementById('x-axis-lbl').value;
+            document.getElementById('render-y-label').innerText = document.getElementById('y-axis-lbl').value;
+            const type = document.getElementById('graph-type').value;
+
+            const xInputs = document.querySelectorAll('.x-input');
+            const yInputs = document.querySelectorAll('.y-input');
+            
+            let labels = [];
+            let data = [];
+            let maxY = 0;
+
+            for (let i = 0; i < xInputs.length; i++) {
+                if (xInputs[i].value.trim() !== "" || yInputs[i].value !== "") {
+                    labels.push(xInputs[i].value || `Pt ${i+1}`);
+                    const yVal = parseFloat(yInputs[i].value) || 0;
+                    data.push(yVal);
+                    if (yVal > maxY) maxY = yVal;
+                }
+            }
+
+            if (data.length === 0) return; // Nothing to draw
+
+            // Add 20% padding to top of Y axis
+            maxY = Math.ceil(maxY * 1.2); 
+            if (maxY === 0) maxY = 10; // Failsafe
+
+            // 2. Setup Canvas
+            const canvas = document.getElementById('graphCanvas');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = 50;
+
+            // Clear Canvas
+            ctx.clearRect(0, 0, width, height);
+
+            // Draw Background Grid
+            ctx.strokeStyle = '#30363d';
+            ctx.lineWidth = 1;
+            const gridLines = 5;
+            ctx.fillStyle = '#8b949e';
+            ctx.font = '12px "Consolas"';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+
+            for (let i = 0; i <= gridLines; i++) {
+                const y = padding + (i * (height - (padding * 2)) / gridLines);
+                const yValue = (maxY - (i * (maxY / gridLines))).toFixed(1);
+                
+                // Horizontal Line
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(width - padding, y);
+                ctx.stroke();
+
+                // Y-Axis Labels
+                ctx.fillText(yValue, padding - 10, y);
+            }
+
+            // Draw Axes
+            ctx.strokeStyle = '#c9d1d9';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            // Y Axis
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, height - padding);
+            // X Axis
+            ctx.lineTo(width - padding, height - padding);
+            ctx.stroke();
+
+            // 3. Render Data
+            const graphWidth = width - (padding * 2);
+            const graphHeight = height - (padding * 2);
+            const step = graphWidth / data.length;
+
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+
+            if (type === 'bar') {
+                const barWidth = (step * 0.6);
+                
+                for (let i = 0; i < data.length; i++) {
+                    const x = padding + (i * step) + (step / 2) - (barWidth / 2);
+                    const barHeight = (data[i] / maxY) * graphHeight;
+                    const y = height - padding - barHeight;
+
+                    // Draw Bar
+                    ctx.fillStyle = '#f0883e';
+                    ctx.fillRect(x, y, barWidth, barHeight);
+
+                    // X-Axis Labels
+                    ctx.fillStyle = '#8b949e';
+                    ctx.fillText(labels[i], x + (barWidth / 2), height - padding + 10);
+                }
+            } else if (type === 'line') {
+                ctx.strokeStyle = '#f0883e';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+
+                for (let i = 0; i < data.length; i++) {
+                    const x = padding + (i * step) + (step / 2);
+                    const ptHeight = (data[i] / maxY) * graphHeight;
+                    const y = height - padding - ptHeight;
+
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+
+                // Draw Data Points & Labels
+                for (let i = 0; i < data.length; i++) {
+                    const x = padding + (i * step) + (step / 2);
+                    const ptHeight = (data[i] / maxY) * graphHeight;
+                    const y = height - padding - ptHeight;
+
+                    // Point Circle
+                    ctx.fillStyle = '#f0883e';
+                    ctx.beginPath();
+                    ctx.arc(x, y, 5, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // X-Axis Labels
+                    ctx.fillStyle = '#8b949e';
+                    ctx.fillText(labels[i], x, height - padding + 10);
+                }
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', initTable);
+    </script>
+</body>
+</html>

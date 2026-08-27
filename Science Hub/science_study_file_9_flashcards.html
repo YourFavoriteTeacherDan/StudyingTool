@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcard Studio | Middlanders Science</title>
+    <style>
+        :root {
+            --bg: #0d1117; --panel: #161b22; --panel-light: #21262d; --border: #30363d;
+            --accent: #58a6ff; --accent-hover: #3182ce;
+            --success: #2ea043; --danger: #da3633; --warn: #d29922; --text: #c9d1d9;
+            --font-code: 'Consolas', 'Courier New', monospace;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+        header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        header h1 { margin: 0; color: var(--accent); font-size: 20px; display: flex; align-items: center; gap: 10px; }
+        .back-btn { text-decoration: none; color: var(--text); padding: 8px 16px; background: var(--panel-light); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-weight: bold; transition: 0.2s; }
+        .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; width: 100%; flex: 1; display: grid; grid-template-columns: 300px 1fr; gap: 30px; }
+
+        /* Sidebar: Deck Management */
+        .sidebar { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 15px; height: fit-content; }
+        .sidebar h2 { margin: 0; font-size: 16px; color: #fff; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        
+        .deck-list { display: flex; flex-direction: column; gap: 8px; max-height: 300px; overflow-y: auto; }
+        .deck-btn { background: #010409; border: 1px solid var(--border); color: var(--text); padding: 10px; border-radius: 6px; cursor: pointer; text-align: left; font-size: 14px; transition: 0.2s; }
+        .deck-btn:hover { border-color: var(--accent); }
+        .deck-btn.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: bold; }
+
+        .input-group { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+        .input-group input { padding: 10px; background: #010409; border: 1px solid var(--border); color: #fff; border-radius: 6px; outline: none; }
+        .btn { padding: 10px; background: var(--panel-light); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; transition: 0.2s; text-align: center; }
+        .btn.primary { background: var(--success); color: #fff; border: none; }
+        .btn:hover { filter: brightness(1.2); }
+
+        /* Main Area: Flashcard Viewer */
+        .main-workspace { display: flex; flex-direction: column; gap: 20px; }
+        
+        .flashcard-container { perspective: 1000px; width: 100%; height: 350px; cursor: pointer; }
+        .flashcard { width: 100%; height: 100%; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); transform-style: preserve-3d; position: relative; }
+        .flashcard.flipped { transform: rotateY(180deg); }
+        
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; text-align: center; padding: 40px; border-radius: 16px; border: 2px solid var(--border); font-size: 24px; font-weight: bold; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .card-front { background: var(--panel); color: var(--accent); }
+        .card-back { background: var(--panel-light); color: var(--success); transform: rotateY(180deg); }
+        
+        .card-hint { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); font-size: 12px; color: #8b949e; font-weight: normal; }
+
+        .controls { display: flex; justify-content: space-between; align-items: center; background: var(--panel); padding: 15px 20px; border-radius: 10px; border: 1px solid var(--border); }
+        .nav-btn { padding: 10px 20px; background: #010409; border: 1px solid var(--border); color: #fff; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .nav-btn:hover { border-color: var(--accent); }
+        .nav-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .progress { font-family: var(--font-code); font-size: 14px; color: #8b949e; }
+
+        /* Add Card Form */
+        .add-card-box { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: none; flex-direction: column; gap: 15px; }
+        .add-card-box h3 { margin: 0; color: #fff; font-size: 16px; }
+        .add-card-box textarea { width: 100%; padding: 10px; background: #010409; border: 1px solid var(--border); color: #fff; border-radius: 6px; outline: none; resize: vertical; min-height: 60px; font-family: inherit; }
+
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>📇 Flashcard Studio</h1>
+        <a href="index.html" class="back-btn">← Back to Hub</a>
+    </header>
+
+    <div class="container">
+        
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h2>📚 My Study Decks</h2>
+            <div class="deck-list" id="deck-list">
+                <!-- Decks injected here -->
+            </div>
+            
+            <div style="border-top: 1px solid var(--border); padding-top: 15px; margin-top: 5px;">
+                <div class="input-group">
+                    <input type="text" id="new-deck-name" placeholder="New Deck Name...">
+                    <button class="btn" onclick="createNewDeck()">+ Create Deck</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Workspace -->
+        <div class="main-workspace">
+            
+            <div id="no-deck-msg" style="text-align:center; padding:50px; background:var(--panel); border-radius:12px; border:1px solid var(--border); color:#8b949e;">
+                Select or create a study deck to begin.
+            </div>
+
+            <div id="deck-workspace" style="display:none; flex-direction:column; gap:20px;">
+                
+                <div class="controls" style="margin-bottom: 0;">
+                    <h2 id="active-deck-title" style="margin:0; font-size:18px; color:var(--accent);">Deck Title</h2>
+                    <button class="btn primary" style="margin:0; padding:8px 16px;" onclick="toggleAddCardBox()">+ Add Card</button>
+                </div>
+
+                <div class="add-card-box" id="add-card-box">
+                    <h3>Create New Flashcard</h3>
+                    <textarea id="card-front-input" placeholder="Front of card (Question / Term)"></textarea>
+                    <textarea id="card-back-input" placeholder="Back of card (Answer / Definition)"></textarea>
+                    <button class="btn primary" onclick="saveNewCard()">Save Card to Deck</button>
+                </div>
+
+                <div class="flashcard-container" onclick="flipCard()">
+                    <div class="flashcard" id="flashcard">
+                        <div class="card-face card-front">
+                            <span id="card-front-text">Loading...</span>
+                            <div class="card-hint">Click to reveal answer</div>
+                        </div>
+                        <div class="card-face card-back">
+                            <span id="card-back-text">Loading...</span>
+                            <div class="card-hint">Click to see question</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button class="nav-btn" id="btn-prev" onclick="prevCard()">◀ Previous</button>
+                    <div class="progress" id="card-progress">0 / 0</div>
+                    <button class="nav-btn" id="btn-next" onclick="nextCard()">Next ▶</button>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let db;
+        let currentDeckId = null;
+        let currentCards = [];
+        let currentIndex = 0;
+
+        // --- IndexedDB Setup ---
+        const request = indexedDB.open("ScienceFlashcardsDB", 1);
+
+        request.onupgradeneeded = function(event) {
+            db = event.target.result;
+            if (!db.objectStoreNames.contains("decks")) {
+                let deckStore = db.createObjectStore("decks", { keyPath: "id", autoIncrement: true });
+                deckStore.createIndex("name", "name", { unique: false });
+            }
+            if (!db.objectStoreNames.contains("cards")) {
+                let cardStore = db.createObjectStore("cards", { keyPath: "id", autoIncrement: true });
+                cardStore.createIndex("deckId", "deckId", { unique: false });
+            }
+        };
+
+        request.onsuccess = function(event) {
+            db = event.target.result;
+            loadDecks();
+            checkAndSeedInitialData();
+        };
+
+        request.onerror = function(event) {
+            console.error("Database error: " + event.target.errorCode);
+        };
+
+        // --- Seed Initial Data if Empty ---
+        function checkAndSeedInitialData() {
+            const tx = db.transaction("decks", "readonly");
+            const store = tx.objectStore("decks");
+            const countReq = store.count();
+            
+            countReq.onsuccess = function() {
+                if (countReq.result === 0) {
+                    seedStarterDecks();
+                }
+            };
+        }
+
+        function seedStarterDecks() {
+            const tx = db.transaction(["decks", "cards"], "readwrite");
+            const deckStore = tx.objectStore("decks");
+            const cardStore = tx.objectStore("cards");
+
+            // Seed Deck 1: Scientific Variables
+            const deck1Req = deckStore.add({ name: "Unit 1: Scientific Variables" });
+            deck1Req.onsuccess = function(e) {
+                const d1Id = e.target.result;
+                cardStore.add({ deckId: d1Id, front: "Independent Variable (MV)", back: "The ONE thing the scientist changes in an experiment." });
+                cardStore.add({ deckId: d1Id, front: "Dependent Variable (RV)", back: "The data or result that is measured in the experiment." });
+                cardStore.add({ deckId: d1Id, front: "Controlled Variables (CV)", back: "Everything kept exactly the same to ensure a fair test." });
+                loadDecks();
+            };
+
+            // Seed Deck 2: Cell Biology
+            const deck2Req = deckStore.add({ name: "Unit 5: Cell Biology" });
+            deck2Req.onsuccess = function(e) {
+                const d2Id = e.target.result;
+                cardStore.add({ deckId: d2Id, front: "Mitochondria", back: "The powerhouse of the cell; performs cellular respiration to make ATP." });
+                cardStore.add({ deckId: d2Id, front: "Chloroplast", back: "Found in plant cells; performs photosynthesis to make glucose." });
+                cardStore.add({ deckId: d2Id, front: "Nucleus", back: "The control center of the cell that holds DNA." });
+            };
+        }
+
+        // --- Deck Management ---
+        function loadDecks() {
+            const tx = db.transaction("decks", "readonly");
+            const store = tx.objectStore("decks");
+            const req = store.getAll();
+
+            req.onsuccess = function() {
+                const decks = req.result;
+                const list = document.getElementById("deck-list");
+                list.innerHTML = "";
+                
+                decks.forEach(deck => {
+                    const btn = document.createElement("button");
+                    btn.className = `deck-btn ${deck.id === currentDeckId ? 'active' : ''}`;
+                    btn.innerText = `📁 ${deck.name}`;
+                    btn.onclick = () => selectDeck(deck.id, deck.name);
+                    list.appendChild(btn);
+                });
+            };
+        }
+
+        function createNewDeck() {
+            const nameInput = document.getElementById("new-deck-name");
+            const name = nameInput.value.trim();
+            if (!name) return;
+
+            const tx = db.transaction("decks", "readwrite");
+            const store = tx.objectStore("decks");
+            store.add({ name: name }).onsuccess = function() {
+                nameInput.value = "";
+                loadDecks();
+            };
+        }
+
+        function selectDeck(id, name) {
+            currentDeckId = id;
+            document.getElementById("active-deck-title").innerText = name;
+            document.getElementById("no-deck-msg").style.display = "none";
+            document.getElementById("deck-workspace").style.display = "flex";
+            document.getElementById("add-card-box").style.display = "none";
+            loadDecks(); // to update active class
+            loadCardsForDeck(id);
+        }
+
+        // --- Card Management ---
+        function loadCardsForDeck(deckId) {
+            const tx = db.transaction("cards", "readonly");
+            const store = tx.objectStore("cards");
+            const index = store.index("deckId");
+            const req = index.getAll(deckId);
+
+            req.onsuccess = function() {
+                currentCards = req.result;
+                currentIndex = 0;
+                
+                // Force card to front side if it was flipped
+                document.getElementById("flashcard").classList.remove("flipped");
+                
+                updateCardDisplay();
+            };
+        }
+
+        function toggleAddCardBox() {
+            const box = document.getElementById("add-card-box");
+            box.style.display = box.style.display === "flex" ? "none" : "flex";
+        }
+
+        function saveNewCard() {
+            const front = document.getElementById("card-front-input").value.trim();
+            const back = document.getElementById("card-back-input").value.trim();
+            
+            if (!front || !back || !currentDeckId) {
+                alert("Please fill out both the front and back of the card.");
+                return;
+            }
+
+            const tx = db.transaction("cards", "readwrite");
+            const store = tx.objectStore("cards");
+            
+            store.add({ deckId: currentDeckId, front: front, back: back }).onsuccess = function() {
+                document.getElementById("card-front-input").value = "";
+                document.getElementById("card-back-input").value = "";
+                document.getElementById("add-card-box").style.display = "none";
+                loadCardsForDeck(currentDeckId);
+            };
+        }
+
+        // --- Flashcard Viewer ---
+        function updateCardDisplay() {
+            const frontEl = document.getElementById("card-front-text");
+            const backEl = document.getElementById("card-back-text");
+            const progressEl = document.getElementById("card-progress");
+            const btnPrev = document.getElementById("btn-prev");
+            const btnNext = document.getElementById("btn-next");
+
+            if (currentCards.length === 0) {
+                frontEl.innerText = "This deck is empty!";
+                backEl.innerText = "Add some cards above to start studying.";
+                progressEl.innerText = "0 / 0";
+                btnPrev.disabled = true;
+                btnNext.disabled = true;
+                return;
+            }
+
+            const card = currentCards[currentIndex];
+            frontEl.innerText = card.front;
+            backEl.innerText = card.back;
+            progressEl.innerText = `${currentIndex + 1} / ${currentCards.length}`;
+
+            btnPrev.disabled = currentIndex === 0;
+            btnNext.disabled = currentIndex === currentCards.length - 1;
+        }
+
+        function flipCard() {
+            if (currentCards.length > 0) {
+                document.getElementById("flashcard").classList.toggle("flipped");
+            }
+        }
+
+        function prevCard() {
+            if (currentIndex > 0) {
+                document.getElementById("flashcard").classList.remove("flipped");
+                setTimeout(() => {
+                    currentIndex--;
+                    updateCardDisplay();
+                }, 150); // slight delay to let it flip back before changing text
+            }
+        }
+
+        function nextCard() {
+            if (currentIndex < currentCards.length - 1) {
+                document.getElementById("flashcard").classList.remove("flipped");
+                setTimeout(() => {
+                    currentIndex++;
+                    updateCardDisplay();
+                }, 150);
+            }
+        }
+
+        // Allow arrow keys for navigation
+        window.addEventListener('keydown', (e) => {
+            if (document.getElementById("deck-workspace").style.display === "flex") {
+                // Ignore if typing in textareas
+                if (document.activeElement.tagName === "TEXTAREA" || document.activeElement.tagName === "INPUT") return;
+                
+                if (e.code === 'ArrowRight') nextCard();
+                if (e.code === 'ArrowLeft') prevCard();
+                if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'ArrowDown') {
+                    e.preventDefault();
+                    flipCard();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

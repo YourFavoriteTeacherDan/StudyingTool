@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Chemistry | Middlanders Science</title>
+    <style>
+        :root {
+            --bg: #0d1117; --panel: #161b22; --panel-light: #21262d; --border: #30363d;
+            --accent: #f0883e; --accent-hover: #ffa657;
+            --success: #2ea043; --danger: #da3633; --warn: #d29922; --text: #c9d1d9;
+            --font-code: 'Consolas', 'Courier New', monospace;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; line-height: 1.6; }
+
+        header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        header h1 { margin: 0; color: var(--accent); font-size: 20px; display: flex; align-items: center; gap: 10px; }
+        .back-btn { text-decoration: none; color: var(--text); padding: 8px 16px; background: var(--panel-light); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-weight: bold; transition: 0.2s; }
+        .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .container { max-width: 900px; margin: 30px auto; padding: 0 20px; width: 100%; flex: 1; }
+
+        .content-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 30px; margin-bottom: 30px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+        .content-card h2 { margin-top: 0; color: #fff; font-size: 24px; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 20px; }
+        .content-card h3 { color: var(--accent); font-size: 18px; margin-top: 25px; margin-bottom: 10px; }
+        
+        .callout { background: #010409; border-left: 4px solid var(--accent); padding: 15px 20px; border-radius: 0 8px 8px 0; margin: 20px 0; font-style: italic; color: #8b949e; }
+        
+        .vocab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .vocab-box { background: var(--panel-light); padding: 15px; border-radius: 8px; border: 1px solid var(--border); }
+        .vocab-box h4 { margin: 0 0 10px 0; color: var(--accent); font-size: 16px; }
+        .vocab-box p { margin: 0; font-size: 13px; color: #8b949e; }
+        .formula-box { background: #010409; border: 1px solid var(--border); padding: 12px; border-radius: 6px; font-family: var(--font-code); color: var(--success); font-size: 14px; font-weight: bold; text-align: center; margin-top: 15px; }
+
+        /* Interactive Quiz Styles */
+        .quiz-section { background: #010409; border: 1px solid var(--accent); border-radius: 12px; padding: 30px; margin-top: 40px; }
+        .quiz-section h2 { border-bottom: none; color: var(--accent); margin-bottom: 5px; }
+        .question-block { margin-top: 20px; }
+        .question-text { font-size: 16px; color: #fff; font-weight: bold; margin-bottom: 15px; }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .option-btn { padding: 12px; background: var(--panel); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 14px; text-align: left; transition: 0.2s; }
+        .option-btn:hover { border-color: var(--accent); background: var(--panel-light); }
+        .option-btn.correct { background: var(--success); color: #fff; border-color: var(--success); }
+        .option-btn.wrong { background: var(--danger); color: #fff; border-color: var(--danger); }
+        .feedback { margin-top: 10px; font-size: 13px; font-weight: bold; display: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🧪 Unit 18: Advanced Chemistry & Reactions</h1>
+        <a href="index.html" class="back-btn">← Back to Hub</a>
+    </header>
+
+    <div class="container">
+        
+        <!-- SECTION 1: PHYSICAL VS CHEMICAL CHANGES -->
+        <div class="content-card">
+            <h2>1. Physical vs. Chemical Changes</h2>
+            <p>Matter is constantly changing, but there is a fundamental difference between changing an object's appearance and changing its chemical identity.</p>
+            
+            <div class="vocab-grid">
+                <div class="vocab-box">
+                    <h4>🧊 Physical Change</h4>
+                    <p>Alters the form or appearance of matter without creating a new chemical substance. Usually reversible. Examples: Melting ice, tearing paper, dissolving salt in water.</p>
+                </div>
+                <div class="vocab-box">
+                    <h4>🔥 Chemical Change (Reaction)</h4>
+                    <p>Occurs when chemical bonds break and form new arrangements, creating entirely new chemical substances with new properties. Examples: Rusting iron, burning wood, baking bread.</p>
+                </div>
+            </div>
+
+            <div class="callout">
+                <strong>Signs of a Chemical Reaction:</strong> Unexpected color change, temperature change (exothermic or endothermic), gas production (bubbles), or formation of a precipitate (solid settling out of a liquid).
+            </div>
+        </div>
+
+        <!-- SECTION 2: CONSERVATION OF MASS -->
+        <div class="content-card">
+            <h2>2. The Law of Conservation of Mass</h2>
+            <p>Formulated by Antoine Lavoisier, this law states that <strong>matter cannot be created or destroyed</strong> in a chemical reaction. The total mass of the reactants MUST equal the total mass of the products.</p>
+
+            <div class="formula-box">
+                Total Mass of Reactants = Total Mass of Products
+            </div>
+
+            <h3>Reactants vs. Products</h3>
+            <p>In a chemical equation, the starting ingredients are called <strong>Reactants</strong> (left side of the arrow), and the resulting substances are called <strong>Products</strong> (right side of the arrow).</p>
+        </div>
+
+        <!-- SECTION 3: BALANCING EQUATIONS -->
+        <div class="content-card">
+            <h2>3. Balancing Chemical Equations</h2>
+            <p>Because mass is conserved, a written chemical equation must have the exact same number of each type of atom on both sides of the arrow.</p>
+
+            <div class="formula-box">
+                2H₂ + O₂ → 2H₂O
+            </div>
+
+            <p style="margin-top: 15px;"><strong>Atom Count:</strong></p>
+            <ul>
+                <li><strong>Left Side (Reactants):</strong> 4 Hydrogen atoms, 2 Oxygen atoms</li>
+                <li><strong>Right Side (Products):</strong> 4 Hydrogen atoms, 2 Oxygen atoms</li>
+            </ul>
+            <p><em>Note: You can change the big numbers in front (<strong>coefficients</strong>), but you can NEVER change the tiny bottom numbers (<strong>subscripts</strong>)!</em></p>
+        </div>
+
+        <!-- INTERACTIVE KNOWLEDGE CHECK -->
+        <div class="quiz-section">
+            <h2>🧠 Mini-Quiz: Test Your Knowledge</h2>
+            <p style="font-size: 13px; color: #8b949e; margin-bottom: 25px;">Select the correct answer to check your understanding of Unit 18.</p>
+
+            <!-- Question 1 -->
+            <div class="question-block" id="q1">
+                <div class="question-text">1. Which of the following is a clear indicator that a CHEMICAL change has taken place?</div>
+                <div class="options-grid">
+                    <button class="option-btn" onclick="checkAnswer('q1', this, false)">A) A ice cube melting into water.</button>
+                    <button class="option-btn" onclick="checkAnswer('q1', this, true)">B) A piece of wood burning and turning into ash and smoke.</button>
+                    <button class="option-btn" onclick="checkAnswer('q1', this, false)">C) Cutting a piece of cardboard into small squares.</button>
+                    <button class="option-btn" onclick="checkAnswer('q1', this, false)">D) Dissolving sugar into warm tea.</button>
+                </div>
+                <div class="feedback" id="q1-feedback"></div>
+            </div>
+
+            <!-- Question 2 -->
+            <div class="question-block" id="q2">
+                <div class="question-text">2. If 10 grams of vinegar reacts completely with 5 grams of baking soda in a sealed container, what will be the total mass of the products?</div>
+                <div class="options-grid">
+                    <button class="option-btn" onclick="checkAnswer('q2', this, false)">A) 10 grams</button>
+                    <button class="option-btn" onclick="checkAnswer('q2', this, false)">B) 5 grams</button>
+                    <button class="option-btn" onclick="checkAnswer('q2', this, true)">C) 15 grams</button>
+                    <button class="option-btn" onclick="checkAnswer('q2', this, false)">D) 20 grams</button>
+                </div>
+                <div class="feedback" id="q2-feedback"></div>
+            </div>
+
+            <!-- Question 3 -->
+            <div class="question-block" id="q3">
+                <div class="question-text">3. What are you allowed to change when balancing a chemical equation?</div>
+                <div class="options-grid">
+                    <button class="option-btn" onclick="checkAnswer('q3', this, true)">A) Coefficients (the numbers in front of molecules)</button>
+                    <button class="option-btn" onclick="checkAnswer('q3', this, false)">B) Subscripts (the tiny numbers inside chemical formulas)</button>
+                    <button class="option-btn" onclick="checkAnswer('q3', this, false)">C) The types of elements involved in the reaction</button>
+                    <button class="option-btn" onclick="checkAnswer('q3', this, false)">D) The direction of the reaction arrow</button>
+                </div>
+                <div class="feedback" id="q3-feedback"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function checkAnswer(questionId, buttonElement, isCorrect) {
+            const options = document.querySelectorAll(`#${questionId} .option-btn`);
+            options.forEach(btn => {
+                btn.disabled = true;
+                btn.style.cursor = 'not-allowed';
+            });
+
+            const feedbackEl = document.getElementById(`${questionId}-feedback`);
+            feedbackEl.style.display = 'block';
+
+            if (isCorrect) {
+                buttonElement.classList.add('correct');
+                feedbackEl.style.color = 'var(--success)';
+                feedbackEl.innerText = '✅ Correct! Great job.';
+            } else {
+                buttonElement.classList.add('wrong');
+                feedbackEl.style.color = 'var(--danger)';
+                feedbackEl.innerText = '❌ Incorrect. Review the reading sections above!';
+                
+                options.forEach(btn => {
+                    if (btn.getAttribute('onclick').includes('true')) {
+                        btn.style.border = '2px solid var(--success)';
+                        btn.style.color = 'var(--success)';
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>

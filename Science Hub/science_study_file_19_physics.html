@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>8th Grade Physics | Middlanders Science</title>
+    <style>
+        :root {
+            --bg: #0d1117; --panel: #161b22; --panel-light: #21262d; --border: #30363d;
+            --accent: #58a6ff; --accent-hover: #3182ce;
+            --success: #2ea043; --danger: #da3633; --warn: #d29922; --text: #c9d1d9;
+            --font-code: 'Consolas', 'Courier New', monospace;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; line-height: 1.6; }
+
+        header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        header h1 { margin: 0; color: #bc8cff; font-size: 20px; display: flex; align-items: center; gap: 10px; }
+        .back-btn { text-decoration: none; color: var(--text); padding: 8px 16px; background: var(--panel-light); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-weight: bold; transition: 0.2s; }
+        .back-btn:hover { border-color: #bc8cff; color: #bc8cff; }
+
+        .container { max-width: 900px; margin: 30px auto; padding: 0 20px; width: 100%; flex: 1; }
+
+        .content-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 30px; margin-bottom: 30px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+        .content-card h2 { margin-top: 0; color: #fff; font-size: 24px; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 20px; }
+        .content-card h3 { color: #bc8cff; font-size: 18px; margin-top: 25px; margin-bottom: 10px; }
+        
+        .hero-img { width: 100%; max-height: 350px; object-fit: contain; background: #fff; border-radius: 8px; border: 2px solid var(--border); margin: 20px 0; padding: 10px; }
+        
+        .callout { background: #010409; border-left: 4px solid #bc8cff; padding: 15px 20px; border-radius: 0 8px 8px 0; margin: 20px 0; font-style: italic; color: #8b949e; }
+        
+        .vocab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .vocab-box { background: var(--panel-light); padding: 15px; border-radius: 8px; border: 1px solid var(--border); }
+        .vocab-box h4 { margin: 0 0 10px 0; color: #bc8cff; font-size: 16px; }
+        .vocab-box p { margin: 0; font-size: 13px; color: #8b949e; }
+        .formula-box { background: #010409; border: 1px solid var(--border); padding: 12px; border-radius: 6px; font-family: var(--font-code); color: #bc8cff; font-size: 14px; font-weight: bold; text-align: center; margin-top: 15px; }
+
+        /* Interactive Quiz Styles */
+        .quiz-section { background: #010409; border: 1px solid #bc8cff; border-radius: 12px; padding: 30px; margin-top: 40px; }
+        .quiz-section h2 { border-bottom: none; color: #bc8cff; margin-bottom: 5px; }
+        .question-block { margin-top: 20px; }
+        .question-text { font-size: 16px; color: #fff; font-weight: bold; margin-bottom: 15px; }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .option-btn { padding: 12px; background: var(--panel); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 14px; text-align: left; transition: 0.2s; }
+        .option-btn:hover { border-color: #bc8cff; background: var(--panel-light); }
+        .option-btn.correct { background: var(--success); color: #fff; border-color: var(--success); }
+        .option-btn.wrong { background: var(--danger); color: #fff; border-color: var(--danger); }
+        .feedback { margin-top: 10px; font-size: 13px; font-weight: bold; display: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🚀 Unit 19: 8th Grade Physics & Motion</h1>
+        <a href="index.html" class="back-btn">← Back to Hub</a>
+    </header>
+
+    <div class="container">
+        
+        <!-- SECTION 1: VELOCITY & ACCELERATION -->
+        <div class="content-card">
+            <h2>1. Velocity vs. Acceleration</h2>
+            <p>In physics, describing how things move requires specific terminology. Speed is just how fast you are going, but science requires more detail.</p>
+            
+            <img src="image_agent_tag_7911536189431616991" alt="Diagram showing the difference between velocity and acceleration directions" class="hero-img">
+
+            <div class="vocab-grid">
+                <div class="vocab-box">
+                    <h4>🏎️ Velocity</h4>
+                    <p>Speed in a <strong>specific direction</strong>. If you are riding your custom scooter at 15 MPH, that's your speed. If you are riding 15 MPH <em>North</em>, that's your velocity.</p>
+                </div>
+                <div class="vocab-box">
+                    <h4>📈 Acceleration</h4>
+                    <p>The rate at which velocity changes. You are accelerating if you <strong>speed up</strong>, <strong>slow down</strong> (deceleration), or <strong>change direction</strong>.</p>
+                </div>
+            </div>
+
+            <div class="callout">
+                <strong>Did you know?</strong> Moving in a perfect circle at a constant speed means you are constantly accelerating, because your direction is constantly changing!
+            </div>
+        </div>
+
+        <!-- SECTION 2: NEWTON's LAWS -->
+        <div class="content-card">
+            <h2>2. Newton's Three Laws of Motion</h2>
+            <p>Sir Isaac Newton formulated three rules that govern how absolutely everything in the universe moves. You will use these laws constantly in 8th grade.</p>
+            
+            <img src="image_agent_tag_7911536189431616042" alt="Venn diagram of Newton's Three Laws of Motion" class="hero-img" style="max-height: 280px;">
+
+            <h3>The Three Laws:</h3>
+            <ul>
+                <li><strong>1st Law (Inertia):</strong> An object at rest stays at rest, and an object in motion stays in motion with the same speed and in the same direction unless acted upon by an unbalanced force.</li>
+                <li><strong>2nd Law (F = ma):</strong> The acceleration of an object depends on the mass of the object and the amount of force applied. Heavier objects require more force to accelerate!</li>
+                <li><strong>3rd Law (Action/Reaction):</strong> For every action, there is an equal and opposite reaction. (If you push a wall, the wall pushes back on you with the exact same amount of force).</li>
+            </ul>
+            
+            <div class="formula-box">
+                Force (N) = mass (kg) × acceleration (m/s²)
+            </div>
+        </div>
+
+        <!-- SECTION 3: MOMENTUM -->
+        <div class="content-card">
+            <h2>3. Momentum & Collisions</h2>
+            <p>Momentum is a measurement of how hard it is to stop a moving object. It depends entirely on two things: how heavy the object is (mass) and how fast it's going (velocity).</p>
+
+            <img src="image_agent_tag_7911536189431619189" alt="Diagram showing conservation of momentum during collisions between spheres" class="hero-img">
+            
+            <div class="formula-box">
+                Momentum (p) = mass (m) × velocity (v)
+            </div>
+
+            <h3>Conservation of Momentum</h3>
+            <p>When two objects collide (like two carts crashing into each other), the total momentum before the crash is exactly equal to the total momentum after the crash. The momentum just transfers from one object to the other!</p>
+        </div>
+
+        <!-- INTERACTIVE KNOWLEDGE CHECK -->
+        <div class="quiz-section">
+            <h2>🧠 Mini-Quiz: Test Your Knowledge</h2>
+            <p style="font-size: 13px; color: #8b949e; margin-bottom: 25px;">Select the correct answer to check your understanding of 8th Grade Physics.</p>
+
+            <!-- Question 1 -->
+            <div class="question-block" id="q1">
+                <div class="question-text">1. Which of the following is an example of Acceleration?</div>
+                <div class="options-grid">
+                    <button class="option-btn" onclick="checkAnswer('q1', this, false)">A) A car parked in a driveway.</button>
+                    <button class="option-btn" onclick="checkAnswer('q1', this, false)">B) A train moving straight at exactly 60 MPH.</button>
+                    <button class="option-btn" onclick="checkAnswer('q1', this, true)">C) A skateboarder turning a corner at a constant speed.</button>
+                    <button class="option-btn" onclick="checkAnswer('q1', this, false)">D) A bird sitting on a branch.</button>
+                </div>
+                <div class="feedback" id="q1-feedback"></div>
+            </div>
+
+            <!-- Question 2 -->
+            <div class="question-block" id="q2">
+                <div class="question-text">2. According to Newton's 2nd Law (F=ma), what happens if you apply the same exact force to a golf ball and a bowling ball?</div>
+                <div class="options-grid">
+                    <button class="option-btn" onclick="checkAnswer('q2', this, true)">A) The golf ball will accelerate much faster because it has less mass.</button>
+                    <button class="option-btn" onclick="checkAnswer('q2', this, false)">B) The bowling ball will accelerate faster because it is heavier.</button>
+                    <button class="option-btn" onclick="checkAnswer('q2', this, false)">C) They will both accelerate at the exact same rate.</button>
+                    <button class="option-btn" onclick="checkAnswer('q2', this, false)">D) Neither will move.</button>
+                </div>
+                <div class="feedback" id="q2-feedback"></div>
+            </div>
+
+            <!-- Question 3 -->
+            <div class="question-block" id="q3">
+                <div class="question-text">3. Which of the following defines Velocity?</div>
+                <div class="options-grid">
+                    <button class="option-btn" onclick="checkAnswer('q3', this, false)">A) Speed multiplied by mass.</button>
+                    <button class="option-btn" onclick="checkAnswer('q3', this, true)">B) Speed in a specific direction.</button>
+                    <button class="option-btn" onclick="checkAnswer('q3', this, false)">C) The total distance an object travels.</button>
+                    <button class="option-btn" onclick="checkAnswer('q3', this, false)">D) A push or a pull on an object.</button>
+                </div>
+                <div class="feedback" id="q3-feedback"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Interactive Quiz Logic
+        function checkAnswer(questionId, buttonElement, isCorrect) {
+            // Disable all buttons in this question block after a guess
+            const options = document.querySelectorAll(`#${questionId} .option-btn`);
+            options.forEach(btn => {
+                btn.disabled = true;
+                btn.style.cursor = 'not-allowed';
+            });
+
+            const feedbackEl = document.getElementById(`${questionId}-feedback`);
+            feedbackEl.style.display = 'block';
+
+            if (isCorrect) {
+                buttonElement.classList.add('correct');
+                feedbackEl.style.color = 'var(--success)';
+                feedbackEl.innerText = '✅ Correct! Great job.';
+            } else {
+                buttonElement.classList.add('wrong');
+                feedbackEl.style.color = 'var(--danger)';
+                feedbackEl.innerText = '❌ Incorrect. Review the reading sections above and try again later!';
+                
+                // Highlight the correct one
+                options.forEach(btn => {
+                    if (btn.getAttribute('onclick').includes('true')) {
+                        btn.style.border = '2px solid var(--success)';
+                        btn.style.color = 'var(--success)';
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>

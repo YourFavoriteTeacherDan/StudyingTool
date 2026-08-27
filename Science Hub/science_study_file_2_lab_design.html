@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Design & Experimental Setup | Middlanders Science</title>
+    <style>
+        :root {
+            --bg: #0d1117; --panel: #161b22; --panel-light: #21262d; --border: #30363d;
+            --accent: #58a6ff; --accent-hover: #3182ce;
+            --success: #2ea043; --danger: #da3633; --warn: #d29922; --text: #c9d1d9;
+            --font-code: 'Consolas', 'Courier New', monospace;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; line-height: 1.6; }
+
+        header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        header h1 { margin: 0; color: var(--accent); font-size: 20px; display: flex; align-items: center; gap: 10px; }
+        .back-btn { text-decoration: none; color: var(--text); padding: 8px 16px; background: var(--panel-light); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-weight: bold; transition: 0.2s; }
+        .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .container { max-width: 900px; margin: 30px auto; padding: 0 20px; width: 100%; flex: 1; }
+
+        .content-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 30px; margin-bottom: 30px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+        .content-card h2 { margin-top: 0; color: #fff; font-size: 24px; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 20px; }
+        .content-card h3 { color: var(--accent); font-size: 18px; margin-top: 25px; margin-bottom: 10px; }
+        
+        .callout { background: #010409; border-left: 4px solid var(--accent); padding: 15px 20px; border-radius: 0 8px 8px 0; margin: 20px 0; font-style: italic; color: #8b949e; }
+        
+        .vocab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .vocab-box { background: var(--panel-light); padding: 15px; border-radius: 8px; border: 1px solid var(--border); }
+        .vocab-box h4 { margin: 0 0 10px 0; color: var(--accent); font-size: 16px; }
+        .vocab-box p { margin: 0; font-size: 13px; color: #8b949e; }
+        .formula-box { background: #010409; border: 1px solid var(--border); padding: 12px; border-radius: 6px; font-family: var(--font-code); color: var(--success); font-size: 14px; font-weight: bold; text-align: center; margin-top: 15px; }
+
+        /* Interactive Quiz Styles */
+        .quiz-section { background: #010409; border: 1px solid var(--accent); border-radius: 12px; padding: 30px; margin-top: 40px; }
+        .quiz-section h2 { border-bottom: none; color: var(--accent); margin-bottom: 5px; }
+        .question-block { margin-top: 20px; }
+        .question-text { font-size: 16px; color: #fff; font-weight: bold; margin-bottom: 15px; }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .option-btn { padding: 12px; background: var(--panel); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 14px; text-align: left; transition: 0.2s; }
+        .option-btn:hover { border-color: var(--accent); background: var(--panel-light); }
+        .option-btn.correct { background: var(--success); color: #fff; border-color: var(--success); }
+        .option-btn.wrong { background: var(--danger); color: #fff; border-color: var(--danger); }
+        .feedback { margin-top: 10px; font-size: 13px; font-weight: bold; display: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🔬 Unit 2: Experimental Lab Design</h1>
+        <a href="index.html" class="back-btn">← Back to Hub</a>
+    </header>
+
+    <div class="container">
+        
+        <!-- SECTION 1: EXPERIMENTAL DESIGN GROUPS -->
+        <div class="content-card">
+            <h2>1. Control Group vs. Experimental Group</h2>
+            <p>To determine whether a specific variable actually causes a change, scientists compare test subjects against a baseline standard.</p>
+            
+            <div class="vocab-grid">
+                <div class="vocab-box">
+                    <h4>⚖️ Control Group</h4>
+                    <p>The baseline group that receives <strong>no special treatment</strong> or 0 units of the Manipulated Variable (MV). Used for direct comparison.</p>
+                </div>
+                <div class="vocab-box">
+                    <h4>🧪 Experimental Group</h4>
+                    <p>The test group (or groups) that receives the Manipulated Variable (MV) treatment being evaluated.</p>
+                </div>
+            </div>
+
+            <div class="callout">
+                <strong>Example:</strong> Testing a battery-cooling heatsink on an electric motor.<br>
+                <strong>Control Group:</strong> Motor running without any heatsink attached.<br>
+                <strong>Experimental Group:</strong> Identical motor running with the custom heatsink attached.
+            </div>
+        </div>
+
+        <!-- SECTION 2: QUALITATIVE VS QUANTITATIVE -->
+        <div class="content-card">
+            <h2>2. Types of Scientific Data</h2>
+            <p>Data recorded during an experiment falls into two distinct categories depending on how it is measured.</p>
+
+            <div class="vocab-grid">
+                <div class="vocab-box">
+                    <h4>📊 Quantitative Data</h4>
+                    <p>Numerical measurements made with tools (rulers, stopwatches, thermometers, scales). Always includes numbers and units! (e.g., 24.5 m/s, 12.0 Volts).</p>
+                </div>
+                <div class="vocab-box">
+                    <h4>👁️ Qualitative Data</h4>
+                    <p>Descriptive observations captured using senses (color shifts, texture, smell, sound differences). (e.g., solution turned dark blue, motor vibrated loudly).</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 3: REPEATABILITY & ERROR -->
+        <div class="content-card">
+            <h2>3. Multiple Trials & Sources of Error</h2>
+            <p>A single test run is never enough to prove a conclusion. Scientists perform <strong>multiple trials</strong> (repeat measurements) and calculate averages to minimize random measurement errors.</p>
+
+            <h3>Key Reliability Factors:</h3>
+            <ul>
+                <li><strong>Sample Size:</strong> Testing a larger group reduces the impact of outliers or unusual individual variations.</li>
+                <li><strong>Systematic Errors:</strong> Calibration mistakes in instruments that shift all readings off by the same amount.</li>
+                <li><strong>Random Errors:</strong> Unpredictable environmental fluctuations (slight draft in room, slight reaction time delay).</li>
+            </ul>
+            
+            <div class="formula-box">
+                Average = (Trial 1 + Trial 2 + Trial 3) / Total Number of Trials
+            </div>
+        </div>
+
+        <!-- INTERACTIVE KNOWLEDGE CHECK -->
+        <div class="quiz-section">
+            <h2>🧠 Mini-Quiz: Test Your Knowledge</h2>
+            <p style="font-size: 13px; color: #8b949e; margin-bottom: 25px;">Select the correct answer to check your understanding of Unit 2.</p>
+
+            <!-- Question 1 -->
+            <div class="question-block" id="q1">
+                <div class="question-text">1. What is the main purpose of having a Control Group in an experiment?</div>
+                <div class="options-grid">
+                    <button class="option-btn" onclick="checkAnswer('q1', this, false)">A) To make sure the experiment runs faster.</button>
+                    <button class="option-btn" onclick="checkAnswer('q1', this, true)">B) To provide a baseline standard to compare results against.</button>
+                    <button class="option-btn" onclick="checkAnswer('q1', this, false)">C) To test multiple manipulated variables at the same time.</button>
+                    <button class="option-btn" onclick="checkAnswer('q1', this, false)">D) To increase qualitative observations.</button>
+                </div>
+                <div class="feedback" id="q1-feedback"></div>
+            </div>
+
+            <!-- Question 2 -->
+            <div class="question-block" id="q2">
+                <div class="question-text">2. Which of the following is an example of QUANTITATIVE data?</div>
+                <div class="options-grid">
+                    <button class="option-btn" onclick="checkAnswer('q2', this, false)">A) The liquid turned bright orange.</button>
+                    <button class="option-btn" onclick="checkAnswer('q2', this, false)">B) The motor produced a high-pitched whine.</button>
+                    <button class="option-btn" onclick="checkAnswer('q2', this, true)">C) The scooter accelerated at 3.2 m/s².</button>
+                    <button class="option-btn" onclick="checkAnswer('q2', this, false)">D) The exhaust smelled like sulfur.</button>
+                </div>
+                <div class="feedback" id="q2-feedback"></div>
+            </div>
+
+            <!-- Question 3 -->
+            <div class="question-block" id="q3">
+                <div class="question-text">3. Why do scientists repeat experiments for multiple trials?</div>
+                <div class="options-grid">
+                    <button class="option-btn" onclick="checkAnswer('q3', this, true)">A) To reduce random errors and verify the consistency of results.</button>
+                    <button class="option-btn" onclick="checkAnswer('q3', this, false)">B) To change the hypothesis after seeing the outcome.</button>
+                    <button class="option-btn" onclick="checkAnswer('q3', this, false)">C) To change controlled variables halfway through.</button>
+                    <button class="option-btn" onclick="checkAnswer('q3', this, false)">D) To convert qualitative data into qualitative graphs.</button>
+                </div>
+                <div class="feedback" id="q3-feedback"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function checkAnswer(questionId, buttonElement, isCorrect) {
+            const options = document.querySelectorAll(`#${questionId} .option-btn`);
+            options.forEach(btn => {
+                btn.disabled = true;
+                btn.style.cursor = 'not-allowed';
+            });
+
+            const feedbackEl = document.getElementById(`${questionId}-feedback`);
+            feedbackEl.style.display = 'block';
+
+            if (isCorrect) {
+                buttonElement.classList.add('correct');
+                feedbackEl.style.color = 'var(--success)';
+                feedbackEl.innerText = '✅ Correct! Great job.';
+            } else {
+                buttonElement.classList.add('wrong');
+                feedbackEl.style.color = 'var(--danger)';
+                feedbackEl.innerText = '❌ Incorrect. Review the sections above!';
+                
+                options.forEach(btn => {
+                    if (btn.getAttribute('onclick').includes('true')) {
+                        btn.style.border = '2px solid var(--success)';
+                        btn.style.color = 'var(--success)';
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>

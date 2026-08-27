@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Middlanders Science Hub | Complete Master Directory</title>
+    <style>
+        :root {
+            --bg: #0d1117; 
+            --panel: #161b22; 
+            --panel-light: #21262d; 
+            --border: #30363d;
+            --accent: #58a6ff; 
+            --accent-hover: #3182ce;
+            --success: #2ea043; 
+            --danger: #da3633; 
+            --warn: #d29922; 
+            --purple: #bc8cff; 
+            --orange: #f0883e;
+            --teal: #39c5bb;
+            --text: #c9d1d9;
+            --font-code: 'Consolas', 'Courier New', monospace;
+        }
+
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+        
+        body { 
+            margin: 0; 
+            background: var(--bg); 
+            color: var(--text); 
+            min-height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            line-height: 1.6; 
+        }
+
+        header { 
+            background: var(--panel); 
+            border-bottom: 1px solid var(--border); 
+            padding: 25px 30px; 
+            position: sticky; 
+            top: 0; 
+            z-index: 100; 
+            text-align: center; 
+            box-shadow: 0 4px 16px rgba(0,0,0,0.6); 
+        }
+
+        header h1 { 
+            margin: 0; 
+            color: #fff; 
+            font-size: 28px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 12px; 
+        }
+
+        header p { 
+            margin: 6px 0 0 0; 
+            color: #8b949e; 
+            font-size: 14px; 
+        }
+
+        .controls-bar {
+            max-width: 1200px;
+            margin: 25px auto 0 auto;
+            padding: 0 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 280px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 18px;
+            background: var(--panel-light);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 15px;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .search-box input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 10px rgba(88, 166, 255, 0.2);
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--accent);
+            color: #000;
+            border-color: var(--accent);
+        }
+
+        .container { 
+            max-width: 1200px; 
+            margin: 20px auto 40px auto; 
+            padding: 0 20px; 
+            width: 100%; 
+            flex: 1; 
+        }
+
+        .section-title { 
+            border-bottom: 2px solid var(--border); 
+            padding-bottom: 10px; 
+            margin: 35px 0 20px 0; 
+            color: #fff; 
+            font-size: 22px; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+        }
+
+        .section-title.g7 { color: var(--success); border-color: var(--success); }
+        .section-title.g8 { color: var(--purple); border-color: var(--purple); }
+        .section-title.tools { color: var(--orange); border-color: var(--orange); }
+        .section-title.ref { color: var(--teal); border-color: var(--teal); }
+
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+            gap: 20px; 
+        }
+
+        .card { 
+            background: var(--panel); 
+            border: 1px solid var(--border); 
+            border-radius: 10px; 
+            padding: 22px; 
+            display: flex; 
+            flex-direction: column; 
+            transition: all 0.25s ease; 
+            text-decoration: none; 
+            color: inherit; 
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover { 
+            transform: translateY(-4px); 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5); 
+            border-color: #8b949e; 
+        }
+
+        .card-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 12px; 
+        }
+
+        .card-icon { font-size: 26px; }
+
+        .badge { 
+            background: #010409; 
+            border: 1px solid var(--border); 
+            font-size: 11px; 
+            padding: 3px 10px; 
+            border-radius: 12px; 
+            font-weight: 700; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px;
+        }
+
+        /* Category Styling */
+        .card[data-category="g7"]:hover { border-color: var(--success); }
+        .card[data-category="g7"] .badge { color: var(--success); border-color: var(--success); }
+
+        .card[data-category="g8"]:hover { border-color: var(--purple); }
+        .card[data-category="g8"] .badge { color: var(--purple); border-color: var(--purple); }
+
+        .card[data-category="tools"]:hover { border-color: var(--orange); }
+        .card[data-category="tools"] .badge { color: var(--orange); border-color: var(--orange); }
+
+        .card[data-category="ref"]:hover { border-color: var(--teal); }
+        .card[data-category="ref"] .badge { color: var(--teal); border-color: var(--teal); }
+
+        .card-title { 
+            font-size: 18px; 
+            font-weight: 700; 
+            color: #fff; 
+            margin-bottom: 8px; 
+        }
+
+        .card-desc { 
+            font-size: 13.5px; 
+            color: #8b949e; 
+            flex: 1; 
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .card-footer {
+            font-size: 12px;
+            font-family: var(--font-code);
+            color: #6e7681;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px dashed var(--border);
+            padding-top: 10px;
+        }
+
+        .card-footer span { color: var(--accent); font-weight: bold; }
+
+        .no-results {
+            text-align: center;
+            padding: 50px 20px;
+            color: #8b949e;
+            font-size: 18px;
+            display: none;
+        }
+
+        footer {
+            text-align: center;
+            padding: 25px;
+            border-top: 1px solid var(--border);
+            background: var(--panel);
+            color: #6e7681;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🧪 Middlanders Science Study & Encyclopedia Hub</h1>
+        <p>Master Directory — 25 Integrated 7th & 8th Grade Science Modules (sorry images dont work)</p>
+    </header>
+
+    <div class="controls-bar">
+        <div class="search-box">
+            <input type="text" id="search-input" placeholder="🔍 Search topics, units, or tools (e.g. Newton, DNA, Quiz)..." oninput="filterCards()">
+        </div>
+        <div class="filter-tabs">
+            <button class="filter-btn active" onclick="setFilter('all', this)">All (25)</button>
+            <button class="filter-btn" onclick="setFilter('g7', this)">7th Grade</button>
+            <button class="filter-btn" onclick="setFilter('g8', this)">8th Grade</button>
+            <button class="filter-btn" onclick="setFilter('tools', this)">Simulators & Tools</button>
+            <button class="filter-btn" onclick="setFilter('ref', this)">Reference & Prep</button>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <div class="no-results" id="no-results">
+            No matching study modules found. Try searching for a different keyword!
+        </div>
+
+        <!-- 7TH GRADE CORE -->
+        <div class="section-block" id="block-g7">
+            <h2 class="section-title g7">📗 7th Grade Core Curriculum</h2>
+            <div class="grid">
+                
+                <a href="science_study_file_1_scientific_inquiry.html" class="card" data-category="g7">
+                    <div class="card-header"><span class="card-icon">🔬</span><span class="badge">File #1</span></div>
+                    <div class="card-title">1. Scientific Inquiry</div>
+                    <div class="card-desc">Master MV (Independent), RV (Dependent), and CV (Controlled) variables for lab testing and hypothesis formulation.</div>
+                    <div class="card-footer"><span>7th Grade</span> <code>file_1</code></div>
+                </a>
+
+                <a href="science_study_file_2_lab_design.html" class="card" data-category="g7">
+                    <div class="card-header"><span class="card-icon">📊</span><span class="badge">File #2</span></div>
+                    <div class="card-title">2. Lab Design & Data</div>
+                    <div class="card-desc">Control vs. Experimental groups, qualitative/quantitative data, sources of error, and multiple trials.</div>
+                    <div class="card-footer"><span>7th Grade</span> <code>file_2</code></div>
+                </a>
+
+                <a href="science_study_file_3_matter_and_atoms.html" class="card" data-category="g7">
+                    <div class="card-header"><span class="card-icon">⚛️</span><span class="badge">File #3</span></div>
+                    <div class="card-title">3. Matter & Atoms</div>
+                    <div class="card-desc">Explore subatomic particles (protons, neutrons, electrons), atomic structure, periodic trends, and states of matter.</div>
+                    <div class="card-footer"><span>7th Grade</span> <code>file_3</code></div>
+                </a>
+
+                <a href="science_study_file_4_energy_and_forces.html" class="card" data-category="g7">
+                    <div class="card-header"><span class="card-icon">⚡</span><span class="badge">File #4</span></div>
+                    <div class="card-title">4. Energy & Forces</div>
+                    <div class="card-desc">Potential vs. kinetic energy, thermal heat transfer (conduction, convection, radiation), and balanced/unbalanced forces.</div>
+                    <div class="card-footer"><span>7th Grade</span> <code>file_4</code></div>
+                </a>
+
+                <a href="science_study_file_5_cells_and_life.html" class="card" data-category="g7">
+                    <div class="card-header"><span class="card-icon">🦠</span><span class="badge">File #5</span></div>
+                    <div class="card-title">5. Cell Biology & Organelles</div>
+                    <div class="card-desc">Cell theory, organelle functions (nucleus, mitochondria, chloroplasts), photosynthesis, cellular respiration, and fungi.</div>
+                    <div class="card-footer"><span>7th Grade</span> <code>file_5</code></div>
+                </a>
+
+                <a href="science_study_file_6_ecosystems.html" class="card" data-category="g7">
+                    <div class="card-header"><span class="card-icon">🦅</span><span class="badge">File #6</span></div>
+                    <div class="card-title">6. Ecosystems & Food Webs</div>
+                    <div class="card-desc">Food chains, food webs, trophic energy pyramids, biotic/abiotic factors, and the 10% energy transfer rule.</div>
+                    <div class="card-footer"><span>7th Grade</span> <code>file_6</code></div>
+                </a>
+
+                <a href="science_study_file_7_environmental_science.html" class="card" data-category="g7">
+                    <div class="card-header"><span class="card-icon">🌲</span><span class="badge">File #7</span></div>
+                    <div class="card-title">7. Environmental Science</div>
+                    <div class="card-desc">Renewable vs. non-renewable energy resources, ocean acidification, deforestation, and sustainability engineering.</div>
+                    <div class="card-footer"><span>7th Grade</span> <code>file_7</code></div>
+                </a>
+
+            </div>
+        </div>
+
+        <!-- 8TH GRADE EXPANSION -->
+        <div class="section-block" id="block-g8">
+            <h2 class="section-title g8">📘 8th Grade Expansion Curriculum</h2>
+            <div class="grid">
+
+                <a href="science_study_file_17_8th_grade_dashboard.html" class="card" data-category="g8">
+                    <div class="card-header"><span class="card-icon">🚀</span><span class="badge">File #17</span></div>
+                    <div class="card-title">17. 8th Grade Dashboard</div>
+                    <div class="card-desc">Central hub for 8th-grade physical sciences with formula cheat sheets and module roadmaps.</div>
+                    <div class="card-footer"><span>8th Grade Hub</span> <code>file_17</code></div>
+                </a>
+
+                <a href="science_study_file_18_chemistry.html" class="card" data-category="g8">
+                    <div class="card-header"><span class="card-icon">🧪</span><span class="badge">File #18</span></div>
+                    <div class="card-title">18. Advanced Chemistry</div>
+                    <div class="card-desc">Physical vs. chemical changes, Law of Conservation of Mass, reactants, products, and balancing chemical equations.</div>
+                    <div class="card-footer"><span>8th Grade</span> <code>file_18</code></div>
+                </a>
+
+                <a href="science_study_file_19_physics.html" class="card" data-category="g8">
+                    <div class="card-header"><span class="card-icon">🏎️</span><span class="badge">File #19</span></div>
+                    <div class="card-title">19. Physics & Laws of Motion</div>
+                    <div class="card-desc">Velocity vs. acceleration, Newton's 3 Laws of Motion, momentum equations, and wave mechanics.</div>
+                    <div class="card-footer"><span>8th Grade</span> <code>file_19</code></div>
+                </a>
+
+                <a href="science_study_file_20_genetics.html" class="card" data-category="g8">
+                    <div class="card-header"><span class="card-icon">🧬</span><span class="badge">File #20</span></div>
+                    <div class="card-title">20. Genetics & Heredity</div>
+                    <div class="card-desc">DNA double helix structure, base pairing rules, dominant/recessive alleles, and interactive Punnett Squares.</div>
+                    <div class="card-footer"><span>8th Grade</span> <code>file_20</code></div>
+                </a>
+
+                <a href="science_study_file_21_space_science.html" class="card" data-category="g8">
+                    <div class="card-header"><span class="card-icon">🪐</span><span class="badge">File #21</span></div>
+                    <div class="card-title">21. Space Science & Astronomy</div>
+                    <div class="card-desc">Earth's 23.5° axis tilt, seasons, moon phases, spring/neap ocean tides, and Universal Gravitation.</div>
+                    <div class="card-footer"><span>8th Grade</span> <code>file_21</code></div>
+                </a>
+
+                <a href="science_study_file_22_earth_systems.html" class="card" data-category="g8">
+                    <div class="card-header"><span class="card-icon">🌋</span><span class="badge">File #22</span></div>
+                    <div class="card-title">22. Earth Systems & Tectonics</div>
+                    <div class="card-desc">Earth's internal layers, mantle convection currents, convergent/divergent/transform plate boundaries, and the rock cycle.</div>
+                    <div class="card-footer"><span>8th Grade</span> <code>file_22</code></div>
+                </a>
+
+            </div>
+        </div>
+
+        <!-- INTERACTIVE TOOLS & SIMULATORS -->
+        <div class="section-block" id="block-tools">
+            <h2 class="section-title tools">⚙️ Interactive Tools & Simulators</h2>
+            <div class="grid">
+
+                <a href="science_study_file_8_interactive_quiz.html" class="card" data-category="tools">
+                    <div class="card-header"><span class="card-icon">📝</span><span class="badge">File #8</span></div>
+                    <div class="card-title">8. Master Quiz Studio</div>
+                    <div class="card-desc">Self-grading quiz engine featuring instant feedback and randomized question sets across all units.</div>
+                    <div class="card-footer"><span>Interactive App</span> <code>file_8</code></div>
+                </a>
+
+                <a href="science_study_file_9_flashcards.html" class="card" data-category="tools">
+                    <div class="card-header"><span class="card-icon">🗂️</span><span class="badge">File #9</span></div>
+                    <div class="card-title">9. Flashcard Studio</div>
+                    <div class="card-desc">Interactive flashcard engine backed by browser IndexedDB for custom vocabulary decks.</div>
+                    <div class="card-footer"><span>Interactive App</span> <code>file_9</code></div>
+                </a>
+
+                <a href="science_study_file_10_virtual_lab.html" class="card" data-category="tools">
+                    <div class="card-header"><span class="card-icon">🥽</span><span class="badge">File #10</span></div>
+                    <div class="card-title">10. Virtual Science Lab</div>
+                    <div class="card-desc">Dual simulator featuring planetary gravity drop kinematics and chemical pH indicator beaker tests.</div>
+                    <div class="card-footer"><span>Virtual Lab</span> <code>file_10</code></div>
+                </a>
+
+                <a href="science_study_file_12_achievement_system.html" class="card" data-category="tools">
+                    <div class="card-header"><span class="card-icon">🏆</span><span class="badge">File #12</span></div>
+                    <div class="card-title">12. Gamification Dashboard</div>
+                    <div class="card-desc">Tracks study streaks, calculates experience points (XP), advances levels, and unlocks digital achievements.</div>
+                    <div class="card-footer"><span>Interactive App</span> <code>file_12</code></div>
+                </a>
+
+                <a href="science_study_file_13_data_analysis_lab.html" class="card" data-category="tools">
+                    <div class="card-header"><span class="card-icon">📉</span><span class="badge">File #13</span></div>
+                    <div class="card-title">13. Data Graphing Workbench</div>
+                    <div class="card-desc">Native HTML5 Canvas rendering tool for generating custom line and bar graphs from experimental data.</div>
+                    <div class="card-footer"><span>Canvas Tool</span> <code>file_13</code></div>
+                </a>
+
+                <a href="science_study_file_14_science_challenges.html" class="card" data-category="tools">
+                    <div class="card-header"><span class="card-icon">⚙️</span><span class="badge">File #14</span></div>
+                    <div class="card-title">14. Physics Problem Sandbox</div>
+                    <div class="card-desc">Interactive slider-driven math solvers for Velocity (v=d/t), Force (F=ma), and Momentum (p=mv).</div>
+                    <div class="card-footer"><span>Calculator</span> <code>file_14</code></div>
+                </a>
+
+                <a href="science_study_file_15_ai_tutor.html" class="card" data-category="tools">
+                    <div class="card-header"><span class="card-icon">🤖</span><span class="badge">File #15</span></div>
+                    <div class="card-title">15. Julian AI Study Assistant</div>
+                    <div class="card-desc">Offline, prompt-assisted science tutor simulating interactive chat help for key concepts.</div>
+                    <div class="card-footer"><span>AI Helper</span> <code>file_15</code></div>
+                </a>
+
+                <a href="science_study_file_23_advanced_labs.html" class="card" data-category="tools">
+                    <div class="card-header"><span class="card-icon">🌌</span><span class="badge">File #23</span></div>
+                    <div class="card-title">23. Advanced Physics Simulators</div>
+                    <div class="card-desc">High-performance Canvas simulation engines for transverse wave mechanics and 2D orbital gravity.</div>
+                    <div class="card-footer"><span>Canvas Sims</span> <code>file_23</code></div>
+                </a>
+
+            </div>
+        </div>
+
+        <!-- REFERENCE & EXAM PREP -->
+        <div class="section-block" id="block-ref">
+            <h2 class="section-title ref">📖 Reference & State Exam Prep</h2>
+            <div class="grid">
+
+                <a href="science_study_file_11_science_encyclopedia.html" class="card" data-category="ref">
+                    <div class="card-header"><span class="card-icon">📖</span><span class="badge">File #11</span></div>
+                    <div class="card-title">11. Science Encyclopedia</div>
+                    <div class="card-desc">Visual encyclopedia compiling key science definitions, diagrams, and cross-disciplinary concepts.</div>
+                    <div class="card-footer"><span>Reference</span> <code>file_11</code></div>
+                </a>
+
+                <a href="science_study_file_16_app_launcher.html" class="card" data-category="ref">
+                    <div class="card-header"><span class="card-icon">📱</span><span class="badge">File #16</span></div>
+                    <div class="card-title">16. App Launcher Portal</div>
+                    <div class="card-desc">Quick-access utility launcher designed for quick tab switching across all interactive tools.</div>
+                    <div class="card-footer"><span>Utility</span> <code>file_16</code></div>
+                </a>
+
+                <a href="science_study_file_24_final_review_cheat_sheet.html" class="card" data-category="ref">
+                    <div class="card-header"><span class="card-icon">⚡</span><span class="badge">File #24</span></div>
+                    <div class="card-title">24. WCAS State Test Cheat Sheet</div>
+                    <div class="card-desc">High-yield cram review sheet summarizing essential formulas, variables, and rules for state testing.</div>
+                    <div class="card-footer"><span>Exam Prep</span> <code>file_24</code></div>
+                </a>
+
+                <a href="science_study_file_25_quiz_database.html" class="card" data-category="ref">
+                    <div class="card-header"><span class="card-icon">🗄️</span><span class="badge">File #25</span></div>
+                    <div class="card-title">25. Master Quiz Question Bank</div>
+                    <div class="card-desc">Structured question and answer data repository powering assessment engines across the suite.</div>
+                    <div class="card-footer"><span>Database</span> <code>file_25</code></div>
+                </a>
+
+            </div>
+        </div>
+
+    </div>
+
+    <footer>
+        Middlanders Science Study Suite — Configured for GitHub Pages & Offline Use
+    </footer>
+
+    <script>
+        let currentFilter = 'all';
+
+        function setFilter(category, btnElement) {
+            currentFilter = category;
+            
+            // Toggle active button state
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            if (btnElement) btnElement.classList.add('active');
+
+            filterCards();
+        }
+
+        function filterCards() {
+            const query = document.getElementById('search-input').value.toLowerCase().trim();
+            const cards = document.querySelectorAll('.card');
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const category = card.getAttribute('data-category');
+                const title = card.querySelector('.card-title').innerText.toLowerCase();
+                const desc = card.querySelector('.card-desc').innerText.toLowerCase();
+                const footer = card.querySelector('.card-footer').innerText.toLowerCase();
+
+                const matchesCategory = (currentFilter === 'all' || category === currentFilter);
+                const matchesSearch = (title.includes(query) || desc.includes(query) || footer.includes(query));
+
+                if (matchesCategory && matchesSearch) {
+                    card.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Handle Section Block visibility
+            document.querySelectorAll('.section-block').forEach(block => {
+                const visibleCards = block.querySelectorAll('.card[style="display: flex;"]');
+                if (visibleCards.length === 0 && (query !== '' || currentFilter !== 'all')) {
+                    block.style.display = 'none';
+                } else {
+                    block.style.display = 'block';
+                }
+            });
+
+            // Show "No Results" message if empty
+            const noResults = document.getElementById('no-results');
+            noResults.style.display = (visibleCount === 0) ? 'block' : 'none';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>8th Grade Science Dashboard | Middlanders Science</title>
+    <style>
+        :root {
+            --bg: #0d1117; --panel: #161b22; --panel-light: #21262d; --border: #30363d;
+            --accent: #bc8cff; --accent-hover: #d2a8ff;
+            --success: #2ea043; --danger: #da3633; --warn: #d29922; --text: #c9d1d9;
+            --font-code: 'Consolas', 'Courier New', monospace;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; line-height: 1.6; }
+
+        header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        header h1 { margin: 0; color: var(--accent); font-size: 20px; display: flex; align-items: center; gap: 10px; }
+        .back-btn { text-decoration: none; color: var(--text); padding: 8px 16px; background: var(--panel-light); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-weight: bold; transition: 0.2s; }
+        .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; width: 100%; flex: 1; }
+
+        .hero-banner { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 30px; margin-bottom: 30px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); border-left: 6px solid var(--accent); }
+        .hero-banner h2 { margin-top: 0; color: #fff; font-size: 26px; }
+        .hero-banner p { color: #8b949e; margin-bottom: 0; font-size: 15px; }
+
+        .modules-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        
+        .module-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; justify-space-between; transition: 0.2s; text-decoration: none; color: inherit; }
+        .module-card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,0.4); }
+        
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .card-icon { font-size: 28px; }
+        .badge { background: #010409; border: 1px solid var(--border); color: var(--accent); font-size: 11px; padding: 2px 8px; border-radius: 12px; font-weight: bold; text-transform: uppercase; }
+        
+        .card-title { font-size: 17px; font-weight: bold; color: #fff; margin-bottom: 8px; }
+        .card-desc { font-size: 13px; color: #8b949e; flex: 1; margin-bottom: 15px; }
+        .card-link { font-size: 13px; font-weight: bold; color: var(--accent); display: flex; align-items: center; gap: 5px; }
+
+        .formulas-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 25px; margin-bottom: 30px; }
+        .formulas-card h3 { margin-top: 0; color: #fff; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 20px; }
+        
+        .formula-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; }
+        .formula-item { background: #010409; border: 1px solid var(--border); padding: 12px 16px; border-radius: 8px; }
+        .formula-item .title { font-size: 12px; color: #8b949e; font-weight: bold; text-transform: uppercase; }
+        .formula-item .eq { font-family: var(--font-code); color: var(--success); font-weight: bold; font-size: 16px; margin-top: 4px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🚀 8th Grade Science Hub</h1>
+        <a href="index.html" class="back-btn">← Back to Main Hub</a>
+    </header>
+
+    <div class="container">
+        
+        <!-- HERO BANNER -->
+        <div class="hero-banner">
+            <h2>8th Grade Science Curriculum Overview</h2>
+            <p>Welcome to the 8th Grade prep hub! Select any unit below to access study modules, interactive lab simulators, and practice materials covering Physics, Chemistry, Genetics, Space Science, and Earth Systems.</p>
+        </div>
+
+        <!-- MODULES GRID -->
+        <div class="modules-grid">
+            
+            <a href="science_study_file_19_physics.html" class="module-card">
+                <div class="card-header">
+                    <span class="card-icon">⚡</span>
+                    <span class="badge">Unit 19</span>
+                </div>
+                <div class="card-title">Physics & Motion</div>
+                <div class="card-desc">Velocity vs. acceleration, Newton's 3 Laws of Motion, and conservation of momentum.</div>
+                <div class="card-link">Open Module →</div>
+            </a>
+
+            <a href="science_study_file_18_chemistry.html" class="module-card">
+                <div class="card-header">
+                    <span class="card-icon">🧪</span>
+                    <span class="badge">Unit 18</span>
+                </div>
+                <div class="card-title">Advanced Chemistry</div>
+                <div class="card-desc">Physical vs. chemical changes, Law of Conservation of Mass, and balancing equations.</div>
+                <div class="card-link">Open Module →</div>
+            </a>
+
+            <a href="science_study_file_20_genetics.html" class="module-card">
+                <div class="card-header">
+                    <span class="card-icon">🧬</span>
+                    <span class="badge">Unit 20</span>
+                </div>
+                <div class="card-title">Genetics & Heredity</div>
+                <div class="card-desc">DNA structure, base pairing rules, dominant vs. recessive traits, and Punnett squares.</div>
+                <div class="card-link">Open Module →</div>
+            </a>
+
+            <a href="science_study_file_21_space_science.html" class="module-card">
+                <div class="card-header">
+                    <span class="card-icon">🪐</span>
+                    <span class="badge">Unit 21</span>
+                </div>
+                <div class="card-title">Space & Astronomy</div>
+                <div class="card-desc">Earth's 23.5° tilt, seasons, moon phases, ocean tides, and gravity mechanics.</div>
+                <div class="card-link">Open Module →</div>
+            </a>
+
+            <a href="science_study_file_22_earth_systems.html" class="module-card">
+                <div class="card-header">
+                    <span class="card-icon">🌍</span>
+                    <span class="badge">Unit 22</span>
+                </div>
+                <div class="card-title">Earth Systems</div>
+                <div class="card-desc">Earth's layers, mantle convection, plate tectonics, and the rock cycle.</div>
+                <div class="card-link">Open Module →</div>
+            </a>
+
+            <a href="science_study_file_23_advanced_labs.html" class="module-card">
+                <div class="card-header">
+                    <span class="card-icon">🥽</span>
+                    <span class="badge">Unit 23</span>
+                </div>
+                <div class="card-title">Advanced Sim Labs</div>
+                <div class="card-desc">Interactive wave mechanics and 2D orbital gravity physics simulators.</div>
+                <div class="card-link">Launch Simulators →</div>
+            </a>
+
+        </div>
+
+        <!-- FORMULA CHEAT SHEET -->
+        <div class="formulas-card">
+            <h3>📐 Essential 8th Grade Science Formulas</h3>
+            <div class="formula-list">
+                <div class="formula-item">
+                    <div class="title">Velocity</div>
+                    <div class="eq">v = d / t</div>
+                </div>
+                <div class="formula-item">
+                    <div class="title">Force (Newton's 2nd Law)</div>
+                    <div class="eq">F = m × a</div>
+                </div>
+                <div class="formula-item">
+                    <div class="title">Momentum</div>
+                    <div class="eq">p = m × v</div>
+                </div>
+                <div class="formula-item">
+                    <div class="title">Law of Conservation of Mass</div>
+                    <div class="eq">Mass_reactants = Mass_products</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

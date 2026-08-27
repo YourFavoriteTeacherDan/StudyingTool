@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cells & Life | Middlanders Science</title>
+    <style>
+        :root {
+            --bg: #0d1117; --panel: #161b22; --panel-light: #21262d; --border: #30363d;
+            --accent: #58a6ff; --accent-hover: #3182ce;
+            --success: #2ea043; --danger: #da3633; --warn: #d29922; --text: #c9d1d9;
+            --font-code: 'Consolas', 'Courier New', monospace;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; line-height: 1.6; }
+
+        header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        header h1 { margin: 0; color: var(--success); font-size: 20px; display: flex; align-items: center; gap: 10px; }
+        .back-btn { text-decoration: none; color: var(--text); padding: 8px 16px; background: var(--panel-light); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-weight: bold; transition: 0.2s; }
+        .back-btn:hover { border-color: var(--success); color: var(--success); }
+
+        .container { max-width: 900px; margin: 30px auto; padding: 0 20px; width: 100%; flex: 1; }
+
+        .content-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 30px; margin-bottom: 30px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+        .content-card h2 { margin-top: 0; color: #fff; font-size: 24px; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 20px; }
+        .content-card h3 { color: var(--success); font-size: 18px; margin-top: 25px; margin-bottom: 10px; }
+        
+        .hero-img { width: 100%; max-height: 450px; object-fit: contain; background: #fff; border-radius: 8px; border: 2px solid var(--border); margin: 20px 0; padding: 10px; }
+        .img-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .img-row img { width: 100%; max-height: 350px; object-fit: contain; background: #fff; border-radius: 8px; border: 2px solid var(--border); padding: 10px; }
+        
+        .callout { background: #010409; border-left: 4px solid var(--success); padding: 15px 20px; border-radius: 0 8px 8px 0; margin: 20px 0; font-style: italic; color: #8b949e; }
+        
+        .vocab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .vocab-box { background: var(--panel-light); padding: 15px; border-radius: 8px; border: 1px solid var(--border); }
+        .vocab-box h4 { margin: 0 0 10px 0; color: var(--success); font-size: 16px; display: flex; align-items: center; gap: 8px; }
+        .vocab-box p { margin: 0; font-size: 13px; color: #8b949e; }
+
+        /* Interactive Quiz Styles */
+        .quiz-section { background: #010409; border: 1px solid var(--success); border-radius: 12px; padding: 30px; margin-top: 40px; }
+        .quiz-section h2 { border-bottom: none; color: var(--success); margin-bottom: 5px; }
+        .question-block { margin-top: 20px; }
+        .question-text { font-size: 16px; color: #fff; font-weight: bold; margin-bottom: 15px; }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .option-btn { padding: 12px; background: var(--panel); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 14px; text-align: left; transition: 0.2s; }
+        .option-btn:hover { border-color: var(--success); background: var(--panel-light); }
+        .option-btn.correct { background: var(--success); color: #fff; border-color: var(--success); }
+        .option-btn.wrong { background: var(--danger); color: #fff; border-color: var(--danger); }
+        .feedback { margin-top: 10px; font-size: 13px; font-weight: bold; display: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🌿 Unit 5: Cells & Life Systems</h1>
+        <a href="index.html" class="back-btn">← Back to Hub</a>
+    </header>
+
+    <div class="container">
+        
+        <!-- SECTION 1: CELL THEORY -->
+        <div class="content-card">
+            <h2>1. Cell Theory & Types of Cells</h2>
+            <p>Cells are the microscopic building blocks of all living things. The <strong>Cell Theory</strong> states three things: All living things are made of cells, cells are the basic unit of structure and function, and all cells come from pre-existing cells.</p>
+            
+            <div class="callout">
+                "There are two main categories of cells: <strong>Prokaryotic</strong> (simple, no nucleus, like bacteria) and <strong>Eukaryotic</strong> (complex, have a nucleus, like plants and animals)."
+            </div>
+
+            <h3>Plant Cells vs. Animal Cells</h3>
+            <p>While plant and animal cells share many of the same parts (like the nucleus and mitochondria), plant cells have a few extra structures to help them survive without moving.</p>
+            
+            <div class="img-row">
+                <div>
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Animal_cell_structure_en.svg/800px-Animal_cell_structure_en.svg.png" alt="Animal Cell Diagram">
+                    <p style="text-align: center; font-size: 12px; color: #8b949e;"><strong>Animal Cell:</strong> Flexible membrane, no cell wall.</p>
+                </div>
+                <div>
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Plant_cell_structure_svg.svg/800px-Plant_cell_structure_svg.svg.png" alt="Plant Cell Diagram">
+                    <p style="text-align: center; font-size: 12px; color: #8b949e;"><strong>Plant Cell:</strong> Rigid cell wall, large central vacuole, and chloroplasts.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: ORGANELLES -->
+        <div class="content-card">
+            <h2>2. The Organelles (Tiny Organs)</h2>
+            <p>Eukaryotic cells are filled with highly specialized structures called organelles. Think of the cell like a tiny, self-sustaining city.</p>
+            
+            <div class="vocab-grid">
+                <div class="vocab-box">
+                    <h4>🧠 Nucleus</h4>
+                    <p>The "brain" or control center of the cell. It holds the DNA (genetic instructions) needed to build proteins and run the cell.</p>
+                </div>
+                <div class="vocab-box">
+                    <h4>⚡ Mitochondria</h4>
+                    <p>The "powerhouse" of the cell. It performs cellular respiration, breaking down sugar (glucose) to create usable energy (ATP).</p>
+                </div>
+                <div class="vocab-box">
+                    <h4>☀️ Chloroplasts</h4>
+                    <p>Found <strong>only in plant cells</strong>. These act like solar panels, using sunlight to perform photosynthesis and create glucose.</p>
+                </div>
+                <div class="vocab-box">
+                    <h4>🧱 Cell Wall</h4>
+                    <p>Found <strong>only in plant cells</strong> (and fungi). A rigid outer layer made of cellulose that provides structure so plants can stand tall.</p>
+                </div>
+                <div class="vocab-box">
+                    <h4>🛡️ Cell Membrane</h4>
+                    <p>The "security guard." A semi-permeable boundary that surrounds all cells and controls what enters and exits the cell.</p>
+                </div>
+                <div class="vocab-box">
+                    <h4>💧 Vacuole</h4>
+                    <p>The "storage tank." Plant cells have one massive central vacuole to store water, while animal cells have several smaller ones.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 3: PHOTOSYNTHESIS -->
+        <div class="content-card">
+            <h2>3. Photosynthesis & Cellular Respiration</h2>
+            <p>Plants and animals rely on each other in a continuous cycle of energy and matter. The waste products of one process are the exact ingredients needed for the other.</p>
+            
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Photosynthesis_en.svg/800px-Photosynthesis_en.svg.png" alt="Photosynthesis Diagram" class="hero-img">
+
+            <h3>The Chemistry of Life</h3>
+            <ul>
+                <li><strong>Photosynthesis (Happens in Chloroplasts):</strong> Plants take in Carbon Dioxide ($CO_2$), Water ($H_2O$), and Sunlight to produce Glucose (Sugar) and Oxygen gas ($O_2$).</li>
+                <li><strong>Cellular Respiration (Happens in Mitochondria):</strong> Animals (and plants) breathe in Oxygen and eat Glucose to produce usable energy (ATP), breathing out Carbon Dioxide and Water as waste.</li>
+            </ul>
+        </div>
+
+        <!-- INTERACTIVE KNOWLEDGE CHECK -->
+        <div class="quiz-section">
+            <h2>🧠 Mini-Quiz: Test Your Knowledge</h2>
+            <p style="font-size: 13px; color: #8b949e; margin-bottom: 25px;">Select the correct answer to check your understanding of Unit 5.</p>
+
+            <!-- Question 1 -->
+            <div class="question-block" id="q1">
+                <div class="question-text">1. Which organelle is responsible for breaking down sugar to provide energy (ATP) for the cell?</div>
+                <div class="options-grid">
+                    <button class="option-btn" onclick="checkAnswer('q1', this, false)">A) Nucleus</button>
+                    <button class="option-btn" onclick="checkAnswer('q1', this, false)">B) Chloroplast</button>
+                    <button class="option-btn" onclick="checkAnswer('q1', this, true)">C) Mitochondria</button>
+                    <button class="option-btn" onclick="checkAnswer('q1', this, false)">D) Ribosome</button>
+                </div>
+                <div class="feedback" id="q1-feedback"></div>
+            </div>
+
+            <!-- Question 2 -->
+            <div class="question-block" id="q2">
+                <div class="question-text">2. Which of the following structures is found in a PLANT cell, but NOT in an animal cell?</div>
+                <div class="options-grid">
+                    <button class="option-btn" onclick="checkAnswer('q2', this, false)">A) Cell Membrane</button>
+                    <button class="option-btn" onclick="checkAnswer('q2', this, true)">B) Cell Wall</button>
+                    <button class="option-btn" onclick="checkAnswer('q2', this, false)">C) Cytoplasm</button>
+                    <button class="option-btn" onclick="checkAnswer('q2', this, false)">D) Nucleus</button>
+                </div>
+                <div class="feedback" id="q2-feedback"></div>
+            </div>
+
+            <!-- Question 3 -->
+            <div class="question-block" id="q3">
+                <div class="question-text">3. What are the two main products created during photosynthesis?</div>
+                <div class="options-grid">
+                    <button class="option-btn" onclick="checkAnswer('q3', this, true)">A) Glucose (Sugar) and Oxygen</button>
+                    <button class="option-btn" onclick="checkAnswer('q3', this, false)">B) Carbon Dioxide and Water</button>
+                    <button class="option-btn" onclick="checkAnswer('q3', this, false)">C) ATP Energy and Carbon Dioxide</button>
+                    <button class="option-btn" onclick="checkAnswer('q3', this, false)">D) Sunlight and Water</button>
+                </div>
+                <div class="feedback" id="q3-feedback"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Interactive Quiz Logic
+        function checkAnswer(questionId, buttonElement, isCorrect) {
+            // Disable all buttons in this question block after a guess
+            const options = document.querySelectorAll(`#${questionId} .option-btn`);
+            options.forEach(btn => {
+                btn.disabled = true;
+                btn.style.cursor = 'not-allowed';
+            });
+
+            const feedbackEl = document.getElementById(`${questionId}-feedback`);
+            feedbackEl.style.display = 'block';
+
+            if (isCorrect) {
+                buttonElement.classList.add('correct');
+                feedbackEl.style.color = 'var(--success)';
+                feedbackEl.innerText = '✅ Correct! Great job.';
+            } else {
+                buttonElement.classList.add('wrong');
+                feedbackEl.style.color = 'var(--danger)';
+                feedbackEl.innerText = '❌ Incorrect. Review the reading sections above and try again later!';
+                
+                // Highlight the correct one
+                options.forEach(btn => {
+                    if (btn.getAttribute('onclick').includes('true')) {
+                        btn.style.border = '2px solid var(--success)';
+                        btn.style.color = 'var(--success)';
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>

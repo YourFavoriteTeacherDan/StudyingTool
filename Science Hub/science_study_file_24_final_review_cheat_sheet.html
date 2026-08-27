@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WCAS State Exam Final Cheat Sheet | Middlanders Science</title>
+    <style>
+        :root {
+            --bg: #0d1117; --panel: #161b22; --panel-light: #21262d; --border: #30363d;
+            --accent: #f0883e; --accent-hover: #ffa657;
+            --success: #2ea043; --danger: #da3633; --warn: #d29922; --text: #c9d1d9;
+            --font-code: 'Consolas', 'Courier New', monospace;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; line-height: 1.6; }
+
+        header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        header h1 { margin: 0; color: var(--warn); font-size: 20px; display: flex; align-items: center; gap: 10px; }
+        .back-btn { text-decoration: none; color: var(--text); padding: 8px 16px; background: var(--panel-light); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-weight: bold; transition: 0.2s; }
+        .back-btn:hover { border-color: var(--warn); color: var(--warn); }
+
+        .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; width: 100%; flex: 1; }
+
+        .cheat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 20px; margin-bottom: 30px; }
+
+        .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 25px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+        .card h2 { margin-top: 0; color: var(--warn); font-size: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+
+        .item { margin-bottom: 15px; }
+        .item strong { color: #fff; }
+        .code-tag { font-family: var(--font-code); background: #010409; color: var(--success); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border); font-weight: bold; font-size: 13px; }
+
+        ul { margin: 5px 0 0 20px; padding: 0; color: #8b949e; font-size: 14px; }
+        li { margin-bottom: 4px; }
+
+        .print-btn { background: var(--warn); color: #000; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; float: right; transition: 0.2s; }
+        .print-btn:hover { filter: brightness(1.2); }
+
+        @media (max-width: 600px) {
+            .cheat-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>⚡ WCAS State Exam Cheat Sheet</h1>
+        <div>
+            <button class="print-btn" onclick="window.print()">🖨️ Print Sheet</button>
+            <a href="index.html" class="back-btn" style="margin-right: 10px;">← Back to Hub</a>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <div class="cheat-grid">
+
+            <!-- 1. SCIENTIFIC INQUIRY -->
+            <div class="card">
+                <h2>🔬 1. Scientific Inquiry & Design</h2>
+                
+                <div class="item">
+                    <strong>Experimental Variables:</strong>
+                    <ul>
+                        <li><span class="code-tag">MV</span> <strong>Manipulated (Independent):</strong> The ONE variable you change on purpose.</li>
+                        <li><span class="code-tag">RV</span> <strong>Responding (Dependent):</strong> What you measure/observe (the data).</li>
+                        <li><span class="code-tag">CV</span> <strong>Controlled (Constants):</strong> Everything kept identical for a fair test.</li>
+                    </ul>
+                </div>
+
+                <div class="item">
+                    <strong>Hypothesis Format:</strong>
+                    <div style="font-family: var(--font-code); color: var(--accent); font-size: 13px; margin-top: 5px;">"If [MV changes], then [RV will do this] because [reason]."</div>
+                </div>
+
+                <div class="item">
+                    <strong>Control vs. Experimental Group:</strong>
+                    <ul>
+                        <li><strong>Control Group:</strong> Baseline group receiving 0 treatment (for comparison).</li>
+                        <li><strong>Experimental Group:</strong> The group receiving the MV treatment.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 2. PHYSICS & MOTION -->
+            <div class="card">
+                <h2>⚡ 2. Physics & Laws of Motion</h2>
+                
+                <div class="item">
+                    <strong>Core Equations:</strong>
+                    <ul>
+                        <li>Speed / Velocity: <span class="code-tag">v = d / t</span></li>
+                        <li>Force (Newton's 2nd Law): <span class="code-tag">F = m × a</span></li>
+                        <li>Momentum: <span class="code-tag">p = m × v</span></li>
+                    </ul>
+                </div>
+
+                <div class="item">
+                    <strong>Newton's 3 Laws:</strong>
+                    <ul>
+                        <li><strong>1st (Inertia):</strong> Objects keep doing what they are doing unless acted on by an unbalanced force.</li>
+                        <li><strong>2nd (F=ma):</strong> Acceleration depends on force applied and object's mass.</li>
+                        <li><strong>3rd (Action/Reaction):</strong> Every force has an equal and opposite reaction force.</li>
+                    </ul>
+                </div>
+
+                <div class="item">
+                    <strong>Thermal Transfer:</strong> Conduction (direct contact), Convection (fluid loops), Radiation (waves).
+                </div>
+            </div>
+
+            <!-- 3. CHEMISTRY & MATTER -->
+            <div class="card">
+                <h2>🧪 3. Chemistry & Reactions</h2>
+                
+                <div class="item">
+                    <strong>Law of Conservation of Mass:</strong>
+                    <div style="color: var(--success); font-weight: bold; font-size: 13px;">Mass of Reactants = Mass of Products</div>
+                    <span style="font-size: 13px; color: #8b949e;">Matter cannot be created or destroyed in a reaction!</span>
+                </div>
+
+                <div class="item">
+                    <strong>Chemical vs. Physical Changes:</strong>
+                    <ul>
+                        <li><strong>Physical:</strong> Alters state/shape without changing chemical composition (e.g., melting ice).</li>
+                        <li><strong>Chemical:</strong> Breaks/forms bonds to make NEW substances (signs: gas, heat, precipitate, color change).</li>
+                    </ul>
+                </div>
+
+                <div class="item">
+                    <strong>Atomic Structure:</strong> Protons (+) and Neutrons (0) in Nucleus; Electrons (-) orbiting in shells.
+                </div>
+            </div>
+
+            <!-- 4. LIFE SCIENCE & GENETICS -->
+            <div class="card">
+                <h2>🧬 4. Biology & Genetics</h2>
+                
+                <div class="item">
+                    <strong>Organelles:</strong>
+                    <ul>
+                        <li><strong>Nucleus:</strong> Cell brain holding DNA.</li>
+                        <li><strong>Mitochondria:</strong> Powerhouse creating ATP energy.</li>
+                        <li><strong>Chloroplasts:</strong> Plant-only organelle for Photosynthesis.</li>
+                    </ul>
+                </div>
+
+                <div class="item">
+                    <strong>Genetics Rules:</strong>
+                    <ul>
+                        <li><strong>Genotype:</strong> Allele combination letters (e.g., <span class="code-tag">Aa</span>).</li>
+                        <li><strong>Phenotype:</strong> Physical trait shown (e.g., Brown eyes).</li>
+                        <li><strong>Dominant (A):</strong> Shows if 1+ copy present.</li>
+                        <li><strong>Recessive (a):</strong> Requires 2 copies to show (<span class="code-tag">aa</span>).</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 5. EARTH & SPACE SCIENCE -->
+            <div class="card">
+                <h2>🪐 5. Earth & Space Science</h2>
+                
+                <div class="item">
+                    <strong>Earth's Seasons:</strong> Caused by Earth's <span class="code-tag">23.5° axis tilt</span> as it revolves around the Sun—NOT distance from the Sun!
+                </div>
+
+                <div class="item">
+                    <strong>Plate Tectonics:</strong>
+                    <ul>
+                        <li><strong>Convergent:</strong> Plates collide (Mountains / Subduction trenches).</li>
+                        <li><strong>Divergent:</strong> Plates separate (Rift valleys / Mid-ocean ridges).</li>
+                        <li><strong>Transform:</strong> Plates slide past (Earthquakes).</li>
+                    </ul>
+                </div>
+
+                <div class="item">
+                    <strong>Ecosystem Energy:</strong> 10% Rule (Only 10% of energy transfers up each trophic level; 90% lost as heat).
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</body>
+</html>

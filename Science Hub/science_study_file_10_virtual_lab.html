@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Lab Simulators | Middlanders Science</title>
+    <style>
+        :root {
+            --bg: #0d1117; --panel: #161b22; --panel-light: #21262d; --border: #30363d;
+            --accent: #58a6ff; --accent-hover: #3182ce;
+            --success: #2ea043; --danger: #da3633; --warn: #d29922; --text: #c9d1d9;
+            --font-code: 'Consolas', 'Courier New', monospace;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+        header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        header h1 { margin: 0; color: #ff7b72; font-size: 20px; display: flex; align-items: center; gap: 10px; }
+        .back-btn { text-decoration: none; color: var(--text); padding: 8px 16px; background: var(--panel-light); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-weight: bold; transition: 0.2s; }
+        .back-btn:hover { border-color: #ff7b72; color: #ff7b72; }
+
+        .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; width: 100%; flex: 1; display: flex; flex-direction: column; gap: 30px; }
+
+        .lab-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 25px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+        .lab-card h2 { margin-top: 0; color: #fff; font-size: 22px; border-bottom: 2px solid var(--border); padding-bottom: 10px; display: flex; justify-content: space-between; }
+        
+        /* Layout Grids */
+        .lab-grid { display: grid; grid-template-columns: 300px 1fr; gap: 25px; margin-top: 20px; }
+        
+        /* Controls */
+        .controls-panel { display: flex; flex-direction: column; gap: 15px; background: #010409; padding: 20px; border-radius: 8px; border: 1px solid var(--border); }
+        .control-group { display: flex; flex-direction: column; gap: 5px; }
+        .control-group label { font-size: 13px; font-weight: bold; color: #8b949e; }
+        .control-group select, .control-group input { padding: 10px; background: var(--panel-light); border: 1px solid var(--border); color: #fff; border-radius: 6px; outline: none; }
+        
+        .btn { padding: 12px; background: var(--panel-light); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; text-align: center; }
+        .btn.primary { background: var(--accent); color: #000; border: none; }
+        .btn:hover { filter: brightness(1.2); }
+
+        /* Lab 1: Gravity Simulator */
+        .drop-zone { background: #010409; border: 1px solid var(--border); border-radius: 8px; position: relative; height: 350px; overflow: hidden; display: flex; justify-content: center; }
+        .ruler { position: absolute; left: 10px; top: 0; bottom: 0; width: 20px; border-right: 2px dashed #30363d; }
+        .drop-object { width: 40px; height: 40px; background: #ff7b72; border-radius: 50%; position: absolute; top: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .floor { position: absolute; bottom: 0; width: 100%; height: 20px; background: #30363d; border-top: 2px solid var(--border); }
+        
+        .stats-display { font-family: var(--font-code); font-size: 14px; color: var(--success); background: #010409; padding: 10px; border: 1px solid var(--border); border-radius: 6px; margin-top: 15px; text-align: center; }
+
+        /* Lab 2: pH Simulator */
+        .ph-zone { background: #010409; border: 1px solid var(--border); border-radius: 8px; height: 300px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        .beaker { width: 120px; height: 140px; border: 4px solid rgba(255,255,255,0.2); border-top: none; border-radius: 0 0 10px 10px; position: relative; overflow: hidden; margin-bottom: 20px; }
+        .liquid { position: absolute; bottom: 0; width: 100%; height: 70%; background: #c9d1d9; transition: background 0.5s; }
+        .ph-strip { width: 25px; height: 100px; background: #ffd700; border: 1px solid #000; position: absolute; top: -50px; left: 50%; transform: translateX(-50%); transition: top 0.5s, background 1s; z-index: 10; border-radius: 2px; }
+        
+        .ph-scale { display: flex; width: 100%; height: 20px; border-radius: 4px; overflow: hidden; margin-top: 20px; border: 1px solid var(--border); }
+        .ph-color { flex: 1; }
+
+        @media (max-width: 768px) {
+            .lab-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🥽 Interactive Virtual Labs</h1>
+        <a href="index.html" class="back-btn">← Back to Hub</a>
+    </header>
+
+    <div class="container">
+        
+        <img src="image_agent_tag_6388269727524722213" alt="Science Laboratory Equipment Diagram" style="width:100%; max-height:200px; object-fit:cover; border-radius:12px; border:1px solid var(--border);">
+
+        <!-- LAB 1: GRAVITY DROP SIMULATOR -->
+        <div class="lab-card">
+            <h2>Lab 1: Kinematics & Gravity Drop</h2>
+            <p style="font-size: 13px; color: #8b949e;">Test how different planetary gravity fields ($g$) affect the freefall of an object. Notice how changing the mass does <strong>not</strong> change the fall speed in a vacuum (Galileo's principle)!</p>
+            
+            <div class="lab-grid">
+                <div class="controls-panel">
+                    <div class="control-group">
+                        <label>Select Planet / Gravity:</label>
+                        <select id="sim-gravity">
+                            <option value="9.81">🌍 Earth (9.8 m/s²)</option>
+                            <option value="1.62">🌕 Moon (1.6 m/s²)</option>
+                            <option value="24.79">🪐 Jupiter (24.8 m/s²)</option>
+                            <option value="3.71">🔴 Mars (3.7 m/s²)</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>Object Mass (kg):</label>
+                        <select id="sim-mass">
+                            <option value="1">1 kg (Baseball)</option>
+                            <option value="10">10 kg (Bowling Ball)</option>
+                            <option value="100">100 kg (Anvil)</option>
+                        </select>
+                    </div>
+                    <button class="btn primary" onclick="startDrop()" id="drop-btn" style="margin-top: 10px;">Drop Object</button>
+                    <button class="btn" onclick="resetDrop()">Reset</button>
+
+                    <div class="stats-display" id="drop-stats">
+                        Fall Time: 0.00 s<br>
+                        Final Velocity: 0.00 m/s
+                    </div>
+                </div>
+
+                <div class="drop-zone">
+                    <div class="ruler"></div>
+                    <div class="drop-object" id="falling-object"></div>
+                    <div class="floor"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LAB 2: CHEMISTRY pH SIMULATOR -->
+        <div class="lab-card">
+            <h2>Lab 2: Acid/Base pH Tester</h2>
+            <p style="font-size: 13px; color: #8b949e;">Dip the universal indicator strip into various substances to measure their pH level. Acids turn red/orange, neutrals stay yellow/green, and bases turn blue/purple.</p>
+            
+            <div class="lab-grid">
+                <div class="controls-panel">
+                    <div class="control-group">
+                        <label>Select Substance to Test:</label>
+                        <select id="sim-substance" onchange="pourLiquid()">
+                            <option value="pure_water">💧 Pure Water (Neutral)</option>
+                            <option value="lemon_juice">🍋 Lemon Juice (Acidic)</option>
+                            <option value="vinegar">🧪 Vinegar (Acidic)</option>
+                            <option value="baking_soda">🥣 Baking Soda Sol. (Basic)</option>
+                            <option value="bleach">🧴 Bleach (Strong Base)</option>
+                            <option value="battery_acid">🔋 Battery Acid (Strong Acid)</option>
+                        </select>
+                    </div>
+                    <button class="btn primary" onclick="testPH()" style="margin-top: 15px;">Dip Indicator Strip</button>
+                    <button class="btn" onclick="resetPH()">Reset Strip</button>
+
+                    <div class="stats-display" id="ph-stats" style="font-size: 18px;">
+                        pH Level: --
+                    </div>
+                </div>
+
+                <div class="ph-zone">
+                    <div class="ph-strip" id="indicator-strip"></div>
+                    <div class="beaker">
+                        <div class="liquid" id="beaker-liquid" style="background: rgba(173, 216, 230, 0.4);"></div>
+                    </div>
+
+                    <div style="width: 80%; text-align: center; font-size: 11px; color: #8b949e; margin-top: 10px;">pH Scale Reference (0 - 14)</div>
+                    <div class="ph-scale" style="width: 80%;">
+                        <div class="ph-color" style="background: #e60000;"></div>
+                        <div class="ph-color" style="background: #ff4500;"></div>
+                        <div class="ph-color" style="background: #ffa500;"></div>
+                        <div class="ph-color" style="background: #ffd700;"></div>
+                        <div class="ph-color" style="background: #9acd32;"></div>
+                        <div class="ph-color" style="background: #32cd32;"></div>
+                        <div class="ph-color" style="background: #008000;"></div>
+                        <div class="ph-color" style="background: #00ced1;"></div>
+                        <div class="ph-color" style="background: #4169e1;"></div>
+                        <div class="ph-color" style="background: #0000ff;"></div>
+                        <div class="ph-color" style="background: #4b0082;"></div>
+                        <div class="ph-color" style="background: #800080;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- LAB 1: GRAVITY DROP LOGIC ---
+        let dropTimer;
+        let isDropping = false;
+        const fallDistanceMeters = 50; // simulated height
+        const pxPerMeter = 6; // visual scale
+        
+        function startDrop() {
+            if (isDropping) return;
+            isDropping = true;
+            document.getElementById('drop-btn').disabled = true;
+            
+            const g = parseFloat(document.getElementById('sim-gravity').value);
+            const obj = document.getElementById('falling-object');
+            
+            let t = 0; // time in seconds
+            const timeStep = 0.02; // 50fps
+            
+            dropTimer = setInterval(() => {
+                t += timeStep;
+                
+                // Kinematics Equation: d = 0.5 * g * t^2
+                const d = 0.5 * g * (t * t);
+                const visualY = (d * pxPerMeter) + 10; // +10 for starting top margin
+                
+                obj.style.top = visualY + 'px';
+                
+                // Final Velocity: v = g * t
+                const v = g * t;
+                
+                document.getElementById('drop-stats').innerHTML = `
+                    Fall Time: ${t.toFixed(2)} s<br>
+                    Current Velocity: ${v.toFixed(2)} m/s
+                `;
+                
+                // Hit the ground check (max distance is 320px visually)
+                if (visualY >= 300) {
+                    clearInterval(dropTimer);
+                    obj.style.top = '300px';
+                    isDropping = false;
+                    document.getElementById('drop-btn').disabled = false;
+                }
+            }, 20);
+        }
+
+        function resetDrop() {
+            clearInterval(dropTimer);
+            isDropping = false;
+            document.getElementById('drop-btn').disabled = false;
+            document.getElementById('falling-object').style.top = '10px';
+            document.getElementById('drop-stats').innerHTML = `
+                Fall Time: 0.00 s<br>
+                Final Velocity: 0.00 m/s
+            `;
+        }
+
+        // --- LAB 2: CHEMISTRY pH LOGIC ---
+        const substances = {
+            'pure_water': { ph: 7.0, lColor: 'rgba(173, 216, 230, 0.4)', sColor: '#32cd32' },
+            'lemon_juice': { ph: 2.5, lColor: 'rgba(255, 255, 100, 0.6)', sColor: '#ff4500' },
+            'vinegar': { ph: 3.0, lColor: 'rgba(255, 255, 255, 0.4)', sColor: '#ffa500' },
+            'baking_soda': { ph: 9.0, lColor: 'rgba(230, 230, 250, 0.6)', sColor: '#00ced1' },
+            'bleach': { ph: 12.5, lColor: 'rgba(240, 255, 240, 0.6)', sColor: '#4b0082' },
+            'battery_acid': { ph: 0.5, lColor: 'rgba(200, 200, 200, 0.6)', sColor: '#e60000' }
+        };
+
+        function pourLiquid() {
+            resetPH();
+            const val = document.getElementById('sim-substance').value;
+            const sub = substances[val];
+            document.getElementById('beaker-liquid').style.background = sub.lColor;
+        }
+
+        function testPH() {
+            const strip = document.getElementById('indicator-strip');
+            const val = document.getElementById('sim-substance').value;
+            const sub = substances[val];
+
+            // Animate strip down into the beaker
+            strip.style.top = '60px';
+
+            // After a delay, change the strip color based on pH
+            setTimeout(() => {
+                strip.style.background = sub.sColor;
+                document.getElementById('ph-stats').innerHTML = `pH Level: <strong>${sub.ph}</strong>`;
+                document.getElementById('ph-stats').style.color = sub.sColor;
+            }, 600);
+        }
+
+        function resetPH() {
+            const strip = document.getElementById('indicator-strip');
+            strip.style.top = '-50px';
+            strip.style.background = '#ffd700'; // Default yellow universal indicator
+            document.getElementById('ph-stats').innerHTML = `pH Level: --`;
+            document.getElementById('ph-stats').style.color = "var(--success)";
+        }
+    </script>
+</body>
+</html>

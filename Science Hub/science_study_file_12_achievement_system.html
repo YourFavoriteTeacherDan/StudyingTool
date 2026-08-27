@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Achievement System | Middlanders Science</title>
+    <style>
+        :root {
+            --bg: #0d1117; --panel: #161b22; --panel-light: #21262d; --border: #30363d;
+            --accent: #e3b341; --accent-hover: #f2cc60;
+            --success: #2ea043; --danger: #da3633; --warn: #d29922; --text: #c9d1d9;
+            --font-code: 'Consolas', 'Courier New', monospace;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+        header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        header h1 { margin: 0; color: var(--accent); font-size: 20px; display: flex; align-items: center; gap: 10px; }
+        .back-btn { text-decoration: none; color: var(--text); padding: 8px 16px; background: var(--panel-light); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-weight: bold; transition: 0.2s; }
+        .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; width: 100%; flex: 1; display: flex; flex-direction: column; gap: 30px; }
+
+        /* Profile Header */
+        .profile-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 30px; display: flex; gap: 30px; align-items: center; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+        
+        .level-ring { width: 120px; height: 120px; border-radius: 50%; border: 6px solid var(--panel-light); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; border-top-color: var(--accent); border-right-color: var(--accent); transform: rotate(-45deg); }
+        .level-content { transform: rotate(45deg); text-align: center; }
+        .level-num { font-size: 32px; font-weight: bold; color: #fff; font-family: var(--font-code); line-height: 1; }
+        .level-lbl { font-size: 12px; color: var(--accent); font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+
+        .stats-container { flex: 1; display: flex; flex-direction: column; gap: 15px; }
+        .stats-header { display: flex; justify-content: space-between; align-items: flex-end; }
+        .stats-header h2 { margin: 0; color: #fff; font-size: 24px; }
+        .xp-text { font-family: var(--font-code); color: var(--success); font-weight: bold; font-size: 18px; }
+
+        .progress-bar-bg { width: 100%; height: 12px; background: #010409; border-radius: 6px; border: 1px solid var(--border); overflow: hidden; }
+        .progress-bar-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.5s ease-out; box-shadow: 0 0 10px rgba(227, 179, 65, 0.5); }
+        .progress-lbl { font-size: 12px; color: #8b949e; text-align: right; margin-top: 5px; }
+
+        .action-row { display: flex; gap: 15px; margin-top: 10px; }
+        .btn { padding: 12px 20px; background: var(--panel-light); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; text-align: center; }
+        .btn.primary { background: var(--success); color: #fff; border: none; }
+        .btn:hover { filter: brightness(1.2); transform: translateY(-2px); }
+        .btn:disabled { background: #30363d; color: #8b949e; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        /* Streak Stats */
+        .streak-box { background: #010409; border: 1px solid var(--border); padding: 15px 25px; border-radius: 8px; text-align: center; min-width: 150px; }
+        .streak-val { font-size: 28px; font-weight: bold; color: #ff7b72; font-family: var(--font-code); }
+        .streak-lbl { font-size: 12px; color: #8b949e; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; }
+
+        /* Badges Grid */
+        .badges-section { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 30px; }
+        .badges-section h3 { margin: 0 0 20px 0; color: #fff; font-size: 18px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        
+        .badge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+        .badge-card { background: #010409; border: 1px solid var(--border); border-radius: 10px; padding: 20px; text-align: center; transition: 0.3s; position: relative; overflow: hidden; }
+        
+        .badge-icon { font-size: 40px; margin-bottom: 10px; filter: grayscale(100%); opacity: 0.3; transition: 0.3s; }
+        .badge-title { font-weight: bold; color: #8b949e; margin-bottom: 5px; font-size: 15px; }
+        .badge-desc { font-size: 12px; color: #6e7681; }
+        
+        /* Unlocked State */
+        .badge-card.unlocked { border-color: var(--accent); background: rgba(227, 179, 65, 0.05); }
+        .badge-card.unlocked .badge-icon { filter: grayscale(0%); opacity: 1; text-shadow: 0 0 15px rgba(227, 179, 65, 0.6); }
+        .badge-card.unlocked .badge-title { color: var(--accent); }
+        .badge-card.unlocked .badge-desc { color: #c9d1d9; }
+
+        @media (max-width: 768px) {
+            .profile-card { flex-direction: column; text-align: center; }
+            .stats-header { flex-direction: column; align-items: center; gap: 10px; }
+            .action-row { justify-content: center; flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🏆 Achievement & XP Tracker</h1>
+        <a href="index.html" class="back-btn">← Back to Hub</a>
+    </header>
+
+    <div class="container">
+        
+        <!-- Profile & XP Section -->
+        <div class="profile-card">
+            
+            <div class="level-ring">
+                <div class="level-content">
+                    <div class="level-lbl">Level</div>
+                    <div class="level-num" id="ui-level">1</div>
+                </div>
+            </div>
+
+            <div class="stats-container">
+                <div class="stats-header">
+                    <h2>Middlanders Scholar</h2>
+                    <div class="xp-text"><span id="ui-xp">0</span> XP</div>
+                </div>
+
+                <div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="ui-progress"></div>
+                    </div>
+                    <div class="progress-lbl" id="ui-progress-text">0 / 1000 XP to Level 2</div>
+                </div>
+
+                <div class="action-row">
+                    <button class="btn primary" id="btn-checkin" onclick="claimDailyXP()">🔥 Claim Daily Check-In (+250 XP)</button>
+                    <button class="btn" onclick="simulateStudySession()">📖 Log Study Session (+500 XP)</button>
+                    <button class="btn" style="border-color: var(--danger); color: var(--danger);" onclick="resetData()">Reset Data</button>
+                </div>
+            </div>
+
+            <div class="streak-box">
+                <div class="streak-val" id="ui-streak">0</div>
+                <div class="streak-lbl">Day Streak</div>
+            </div>
+
+        </div>
+
+        <!-- Badges Section -->
+        <div class="badges-section">
+            <h3>Milestone Badges</h3>
+            <div class="badge-grid" id="badge-container">
+                <!-- Badges rendered here via JS -->
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- GAME STATE ---
+        let userData = {
+            xp: 0,
+            level: 1,
+            streak: 0,
+            lastLogin: null,
+            studySessions: 0,
+            unlockedBadges: []
+        };
+
+        const badges = [
+            { id: "first_blood", icon: "🔬", title: "First Discovery", desc: "Log your first study session.", reqType: "sessions", reqVal: 1 },
+            { id: "apprentice", icon: "📘", title: "Science Apprentice", desc: "Reach Level 2.", reqType: "level", reqVal: 2 },
+            { id: "streak_3", icon: "🔥", title: "Heating Up", desc: "Achieve a 3-day study streak.", reqType: "streak", reqVal: 3 },
+            { id: "scholar", icon: "🎓", title: "Dedicated Scholar", desc: "Log 5 total study sessions.", reqType: "sessions", reqVal: 5 },
+            { id: "master", icon: "⚛️", title: "Physics Master", desc: "Reach Level 5.", reqType: "level", reqVal: 5 },
+            { id: "streak_7", icon: "☄️", title: "Unstoppable", desc: "Achieve a 7-day study streak.", reqType: "streak", reqVal: 7 }
+        ];
+
+        // --- INITIALIZATION ---
+        function initSystem() {
+            const saved = localStorage.getItem("middlanders_achievements");
+            if (saved) {
+                userData = JSON.parse(saved);
+                checkDailyStreak();
+            }
+            updateUI();
+        }
+
+        function saveData() {
+            localStorage.setItem("middlanders_achievements", JSON.stringify(userData));
+            updateUI();
+        }
+
+        // --- LOGIC ---
+        function checkDailyStreak() {
+            if (!userData.lastLogin) return;
+            
+            const today = new Date().setHours(0,0,0,0);
+            const last = new Date(userData.lastLogin).setHours(0,0,0,0);
+            const diffDays = Math.round((today - last) / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 1) {
+                // Kept streak alive! (Button remains clickable below)
+            } else if (diffDays > 1) {
+                // Broke streak
+                userData.streak = 0;
+            }
+        }
+
+        function claimDailyXP() {
+            const today = new Date().setHours(0,0,0,0);
+            if (userData.lastLogin) {
+                const last = new Date(userData.lastLogin).setHours(0,0,0,0);
+                if (today === last) {
+                    alert("You already claimed your Daily XP today!");
+                    return;
+                }
+            }
+
+            userData.streak += 1;
+            userData.lastLogin = new Date().toISOString();
+            addXP(250);
+        }
+
+        function simulateStudySession() {
+            userData.studySessions += 1;
+            addXP(500);
+        }
+
+        function addXP(amount) {
+            userData.xp += amount;
+            
+            // Calculate Level (1000 XP per level)
+            const newLevel = Math.floor(userData.xp / 1000) + 1;
+            if (newLevel > userData.level) {
+                userData.level = newLevel;
+                alert(`🎉 Level Up! You are now Level ${newLevel}!`);
+            }
+            
+            checkBadgeUnlocks();
+            saveData();
+        }
+
+        function checkBadgeUnlocks() {
+            let newlyUnlocked = false;
+
+            badges.forEach(badge => {
+                if (!userData.unlockedBadges.includes(badge.id)) {
+                    let unlock = false;
+                    if (badge.reqType === "sessions" && userData.studySessions >= badge.reqVal) unlock = true;
+                    if (badge.reqType === "level" && userData.level >= badge.reqVal) unlock = true;
+                    if (badge.reqType === "streak" && userData.streak >= badge.reqVal) unlock = true;
+
+                    if (unlock) {
+                        userData.unlockedBadges.push(badge.id);
+                        newlyUnlocked = true;
+                        setTimeout(() => alert(`🏆 Badge Unlocked: ${badge.title}!`), 100);
+                    }
+                }
+            });
+        }
+
+        function resetData() {
+            if(confirm("Are you sure? This will wipe all your XP and Badges.")) {
+                localStorage.removeItem("middlanders_achievements");
+                userData = { xp: 0, level: 1, streak: 0, lastLogin: null, studySessions: 0, unlockedBadges: [] };
+                saveData();
+            }
+        }
+
+        // --- UI RENDERING ---
+        function updateUI() {
+            // Text Updates
+            document.getElementById('ui-level').innerText = userData.level;
+            document.getElementById('ui-xp').innerText = userData.xp.toLocaleString();
+            document.getElementById('ui-streak').innerText = userData.streak;
+
+            // Progress Bar Math
+            const currentLevelXP = (userData.level - 1) * 1000;
+            const nextLevelXP = userData.level * 1000;
+            const xpIntoLevel = userData.xp - currentLevelXP;
+            const percentage = (xpIntoLevel / 1000) * 100;
+            
+            document.getElementById('ui-progress').style.width = `${percentage}%`;
+            document.getElementById('ui-progress-text').innerText = `${xpIntoLevel} / 1000 XP to Level ${userData.level + 1}`;
+
+            // Check-in Button State
+            const btnCheckIn = document.getElementById('btn-checkin');
+            if (userData.lastLogin) {
+                const today = new Date().setHours(0,0,0,0);
+                const last = new Date(userData.lastLogin).setHours(0,0,0,0);
+                if (today === last) {
+                    btnCheckIn.disabled = true;
+                    btnCheckIn.innerText = "✅ Daily XP Claimed";
+                } else {
+                    btnCheckIn.disabled = false;
+                    btnCheckIn.innerText = "🔥 Claim Daily Check-In (+250 XP)";
+                }
+            }
+
+            // Render Badges
+            const badgeContainer = document.getElementById('badge-container');
+            badgeContainer.innerHTML = '';
+
+            badges.forEach(badge => {
+                const isUnlocked = userData.unlockedBadges.includes(badge.id);
+                
+                const card = document.createElement('div');
+                card.className = `badge-card ${isUnlocked ? 'unlocked' : ''}`;
+                
+                card.innerHTML = `
+                    <div class="badge-icon">${badge.icon}</div>
+                    <div class="badge-title">${badge.title}</div>
+                    <div class="badge-desc">${badge.desc}</div>
+                `;
+                badgeContainer.appendChild(card);
+            });
+        }
+
+        // Boot up
+        window.addEventListener('DOMContentLoaded', initSystem);
+    </script>
+</body>
+</html>
