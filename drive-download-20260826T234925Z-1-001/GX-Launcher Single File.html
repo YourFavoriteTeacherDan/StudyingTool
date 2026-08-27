@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GX-Launcher Mini</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@500;600;700&display=swap');
+
+:root {
+  --ui-scale:    1;
+  --accent:      #cc0000;
+  --accent-hi:   #ff2222;
+  --accent-dim:  #7a0000;
+  --accent-glow: rgba(180, 0, 0, 0.18);
+  --bg:          #0a0a0a;
+  --bg2:         #111111;
+  --bg3:         #181818;
+  --panel:       #141414;
+  --border:      #2a2a2a;
+  --border2:     #3a0000;
+  --text:        #cccccc;
+  --text-dim:    #555555;
+  --text-bright: #eeeeee;
+  --mono:        'Share Tech Mono', monospace;
+  --sans:        'Rajdhani', 'Segoe UI', sans-serif;
+}
+
+[data-theme="green"] {
+  --accent:      #00cc44;
+  --accent-hi:   #00ff55;
+  --accent-dim:  #006622;
+  --accent-glow: rgba(0, 180, 60, 0.15);
+  --border2:     #003318;
+}
+[data-theme="blood"] {
+  --accent:      #cc0000;
+  --accent-hi:   #ff4444;
+  --accent-dim:  #800000;
+  --accent-glow: rgba(200, 0, 0, 0.22);
+  --border2:     #4a0000;
+  --bg:          #080000;
+  --bg2:         #0d0000;
+  --bg3:         #120000;
+  --panel:       #0f0000;
+}
+[data-theme="midnight"] {
+  --accent:      #5566ff;
+  --accent-hi:   #7788ff;
+  --accent-dim:  #2233bb;
+  --accent-glow: rgba(80, 100, 255, 0.18);
+  --border2:     #1a2050;
+  --bg:          #070710;
+  --bg2:         #0c0c1a;
+  --bg3:         #111125;
+  --panel:       #0e0e1e;
+}
+[data-theme="ash"] {
+  --accent:      #999999;
+  --accent-hi:   #cccccc;
+  --accent-dim:  #555555;
+  --accent-glow: rgba(150, 150, 150, 0.15);
+  --border2:     #404040;
+}
+[data-theme="amber"] {
+  --accent:      #cc7700;
+  --accent-hi:   #ffaa00;
+  --accent-dim:  #7a4400;
+  --accent-glow: rgba(200, 120, 0, 0.18);
+  --border2:     #3a2200;
+  --bg:          #090600;
+  --bg2:         #100d00;
+  --bg3:         #181200;
+  --panel:       #130f00;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { height: 100%; }
+body {
+  margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
+  background: var(--bg); color: var(--text); font-family: var(--sans);
+  display: flex; flex-direction: column;
+}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.055) 3px, rgba(0,0,0,0.055) 4px);
+  pointer-events: none; z-index: 9000;
+}
+
+.launcher {
+  width: 100%; flex: 1; min-height: 0; display: flex; flex-direction: column;
+  background: var(--bg2); position: relative; overflow: hidden; zoom: var(--ui-scale);
+}
+
+.title-bar {
+  background: var(--panel); border-bottom: 1px solid var(--border);
+  padding: 0 18px; height: 36px; display: flex; align-items: center;
+  justify-content: space-between; flex-shrink: 0; position: relative;
+}
+.title-bar::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%); opacity: 0.35;
+}
+.title-logo {
+  font-family: var(--mono); font-size: 12px; color: var(--accent);
+  letter-spacing: 0.18em; text-transform: uppercase; display: flex; align-items: center; gap: 10px;
+}
+.title-logo .ver { color: var(--text-dim); font-size: 10px; letter-spacing: 0.1em; }
+.title-dot {
+  width: 6px; height: 6px; background: var(--accent); border-radius: 50%;
+  box-shadow: 0 0 6px var(--accent); animation: gx-pulse 2s ease-in-out infinite;
+}
+@keyframes gx-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+.content { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+
+.sidebar {
+  width: 185px; flex-shrink: 0; background: var(--panel);
+  border-right: 1px solid var(--border); display: flex; flex-direction: column;
+}
+.profile { padding: 16px 14px 13px; border-bottom: 1px solid var(--border); }
+.profile-label {
+  font-family: var(--mono); font-size: 9px; color: var(--text-dim);
+  text-transform: uppercase; letter-spacing: 0.22em; margin-bottom: 5px;
+}
+.profile-name {
+  font-size: 15px; font-weight: 700; color: var(--text-bright); letter-spacing: 0.04em;
+  display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.profile-status {
+  font-family: var(--mono); font-size: 10px; color: var(--accent);
+  display: flex; align-items: center; gap: 5px; margin-top: 5px;
+}
+.status-dot {
+  width: 5px; height: 5px; background: var(--accent); border-radius: 50%;
+  box-shadow: 0 0 5px var(--accent); animation: gx-pulse 2s ease-in-out infinite;
+}
+
+nav { flex: 1; min-height: 0; padding: 6px 0; overflow-y: auto; }
+nav::-webkit-scrollbar { width: 3px; }
+nav::-webkit-scrollbar-thumb { background: var(--border2); }
+
+.nav-section-label {
+  font-family: var(--mono); font-size: 9px; color: var(--text-dim);
+  text-transform: uppercase; letter-spacing: 0.22em; padding: 10px 15px 4px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 11px; padding: 10px 15px; cursor: pointer;
+  transition: background 0.13s, color 0.13s; border-left: 2px solid transparent;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.06em; color: var(--text-dim);
+  text-transform: uppercase; user-select: none;
+}
+.nav-item:hover { background: rgba(255,255,255,0.035); color: var(--text); }
+.nav-item.selected { background: var(--accent-glow); border-left-color: var(--accent); color: var(--text-bright); }
+.nav-svg {
+  width: 15px; height: 15px; flex-shrink: 0; fill: none; stroke: currentColor;
+  stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; opacity: 0.5; transition: opacity 0.13s;
+}
+.nav-item:hover .nav-svg, .nav-item.selected .nav-svg { opacity: 1; }
+.sidebar-bottom { flex-shrink: 0; border-top: 1px solid var(--border); padding: 6px 0; }
+
+.main-panel {
+  flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column;
+  background: var(--bg3); overflow: hidden;
+}
+
+.top-bar {
+  background: var(--panel); border-bottom: 1px solid var(--border); padding: 0 18px;
+  height: 38px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+}
+.game-title {
+  font-family: var(--mono); font-size: 11px; color: var(--text-dim);
+  text-transform: uppercase; letter-spacing: 0.18em;
+}
+.game-title span { color: var(--accent); }
+.breadcrumb { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.1em; }
+
+.main-content {
+  flex: 1; position: relative; overflow: hidden; display: flex;
+  flex-direction: column; align-items: center; justify-content: center;
+}
+.main-content .wordmark {
+  font-family: var(--mono); font-size: 54px; letter-spacing: 0.1em; color: var(--text);
+  opacity: 0.06; user-select: none; text-align: center; line-height: 1.3;
+}
+.main-content .wordmark span { display:block; font-size: 16px; letter-spacing: 0.3em; }
+
+.launch-bar {
+  flex-shrink: 0; background: var(--panel); border-top: 1px solid var(--border);
+  padding: 9px 16px; display: flex; align-items: center; gap: 10px; position: relative; z-index: 10;
+}
+
+.version-wrapper { position: relative; flex: 1; max-width: 290px; }
+.version-select {
+  width: 100%; background: var(--bg); border: 1px solid var(--border2); color: var(--text-bright);
+  font-family: var(--mono); font-size: 12px; padding: 7px 11px; cursor: pointer; user-select: none;
+  display: flex; align-items: center; justify-content: space-between;
+  transition: border-color 0.13s, background 0.13s; letter-spacing: 0.05em;
+}
+.version-select:hover, .version-select.open { border-color: var(--accent); background: var(--bg3); }
+.version-select .chevron { font-size: 9px; color: var(--text-dim); transition: transform 0.15s; flex-shrink: 0; }
+.version-select.open .chevron { transform: rotate(180deg); }
+
+.version-dropdown {
+  position: absolute; bottom: calc(100% + 3px); left: 0; right: 0; background: var(--bg2);
+  border: 1px solid var(--border2); max-height: 230px; overflow-y: auto; display: none;
+  z-index: 1000; box-shadow: 0 -10px 35px rgba(0,0,0,0.75);
+}
+.version-dropdown.open { display: block; }
+.version-dropdown::-webkit-scrollbar { width: 5px; }
+.version-dropdown::-webkit-scrollbar-track { background: var(--bg); }
+.version-dropdown::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+.version-group-label {
+  font-family: var(--mono); font-size: 9px; color: var(--text-dim); text-transform: uppercase;
+  letter-spacing: 0.22em; padding: 8px 11px 4px; border-top: 1px solid var(--border);
+}
+.version-group-label:first-child { border-top: none; }
+
+.version-option {
+  display: flex; align-items: center; gap: 9px; padding: 7px 11px; cursor: pointer;
+  font-family: var(--mono); font-size: 11px; color: var(--text); transition: background 0.1s;
+}
+.version-option:hover { background: var(--accent-glow); color: var(--text-bright); }
+.version-option.active-ver { color: var(--accent); }
+.version-badge { margin-left: auto; font-size: 9px; color: var(--text-dim); border: 1px solid var(--border); padding: 1px 4px; }
+.version-badge.dir { color: var(--accent); border-color: var(--border2); }
+
+.launch-mode-badge {
+  font-family: var(--mono); font-size: 10px; color: var(--text-dim); border: 1px solid var(--border);
+  padding: 5px 10px; cursor: pointer; transition: border-color 0.13s, color 0.13s;
+  white-space: nowrap; letter-spacing: 0.08em;
+}
+.launch-mode-badge:hover { border-color: var(--accent); color: var(--accent); }
+
+.refresh-btn {
+  background: transparent; border: 1px solid var(--border); color: var(--text-dim);
+  font-family: var(--mono); font-size: 11px; padding: 7px 10px; cursor: pointer;
+  transition: border-color 0.13s, color 0.13s;
+}
+.refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+.refresh-btn.selected { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
+
+.play-button {
+  background: var(--accent); border: none; color: #fff; font-family: var(--sans);
+  font-size: 13px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  padding: 0 30px; height: 36px; cursor: pointer;
+  clip-path: polygon(7px 0%, 100% 0%, calc(100% - 7px) 100%, 0% 100%);
+  transition: background 0.13s, box-shadow 0.13s; white-space: nowrap; flex-shrink: 0;
+}
+.play-button:hover { background: var(--accent-hi); box-shadow: 0 0 18px var(--accent-glow); }
+.play-button:disabled { background: var(--border); color: var(--text-dim); cursor: not-allowed; clip-path: none; box-shadow: none; }
+
+.bottom-bar {
+  background: var(--panel); border-top: 1px solid var(--border); padding: 5px 16px;
+  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+}
+.status-line { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.08em; }
+.status-line .hl { color: var(--accent); }
+.credit { font-family: var(--mono); font-size: 10px; color: var(--text-dim); }
+
+.settings-scroll { flex: 1; overflow-y: auto; padding: 26px 30px; }
+.settings-scroll::-webkit-scrollbar { width: 5px; }
+.settings-scroll::-webkit-scrollbar-track { background: var(--bg3); }
+.settings-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+.settings-section { margin-bottom: 30px; }
+.settings-section-title {
+  font-family: var(--mono); font-size: 9px; color: var(--accent); text-transform: uppercase;
+  letter-spacing: 0.28em; margin-bottom: 12px; display: flex; align-items: center; gap: 10px;
+}
+.settings-section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+.settings-row {
+  display: flex; align-items: center; justify-content: space-between; padding: 13px 15px;
+  background: var(--panel); border: 1px solid var(--border); margin-bottom: 3px; gap: 20px;
+  transition: border-color 0.13s;
+}
+.settings-row:hover { border-color: var(--border2); }
+.settings-label { font-size: 13px; font-weight: 600; color: var(--text-bright); letter-spacing: 0.04em; }
+.settings-desc { font-family: var(--mono); font-size: 9px; color: var(--text-dim); margin-top: 3px; letter-spacing: 0.05em; }
+
+.theme-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-top: 10px; }
+.theme-swatch {
+  padding: 9px 6px; border: 1px solid var(--border); cursor: pointer; text-align: center;
+  font-family: var(--mono); font-size: 9px; color: var(--text-dim); transition: border-color 0.13s, color 0.13s;
+  display: flex; flex-direction: column; align-items: center; gap: 6px; letter-spacing: 0.08em; text-transform: uppercase;
+}
+.theme-swatch:hover { border-color: var(--text-dim); color: var(--text); }
+.theme-swatch.selected { border-color: var(--accent); color: var(--accent); }
+.swatch-dot { width: 18px; height: 18px; border-radius: 50%; }
+
+.mode-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
+.mode-card { padding: 13px 12px; border: 1px solid var(--border); cursor: pointer; transition: border-color 0.13s, background 0.13s; background: var(--panel); }
+.mode-card:hover { border-color: var(--border2); }
+.mode-card.selected { border-color: var(--accent); background: var(--accent-glow); }
+.mode-card-title { font-size: 12px; font-weight: 700; color: var(--text-bright); letter-spacing: 0.06em; margin-bottom: 5px; text-transform: uppercase; }
+.mode-card.selected .mode-card-title { color: var(--accent); }
+.mode-card-desc { font-family: var(--mono); font-size: 9px; color: var(--text-dim); line-height: 1.55; }
+
+.settings-input {
+  background: var(--bg); border: 1px solid var(--border); color: var(--text-bright);
+  font-family: var(--mono); font-size: 12px; padding: 7px 11px; width: 220px; outline: none; transition: border-color 0.13s;
+}
+.settings-input:focus { border-color: var(--accent); }
+
+.settings-btn {
+  background: var(--accent); border: none; color: #fff; font-family: var(--sans); font-size: 12px;
+  font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 7px 18px; cursor: pointer; transition: background 0.13s;
+}
+.settings-btn:hover { background: var(--accent-hi); }
+
+.toast {
+  position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(55px);
+  background: var(--panel); border: 1px solid var(--accent); color: var(--text-bright);
+  font-family: var(--mono); font-size: 11px; padding: 9px 20px; z-index: 9999;
+  transition: transform 0.28s ease; box-shadow: 0 0 20px var(--accent-glow); white-space: nowrap; letter-spacing: 0.06em;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.error { border-color: #ff1744; color: #ff5555; }
+
+.loading-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 9990; display: none;
+  align-items: center; justify-content: center; flex-direction: column; gap: 14px;
+}
+.loading-overlay.active { display: flex; }
+.loading-text { font-family: var(--mono); font-size: 12px; color: var(--accent); letter-spacing: 0.18em; animation: gx-blink 1s steps(1) infinite; }
+@keyframes gx-blink { 0%,100%{opacity:1} 50%{opacity:0.15} }
+.loading-bar-wrap { width: 260px; height: 2px; background: var(--border); }
+.loading-bar { height: 100%; background: var(--accent); width: 0%; transition: width 0.08s; box-shadow: 0 0 8px var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="launcher">
+
+  <div class="title-bar">
+    <div class="title-logo"><div class="title-dot"></div>GX-LAUNCHER MINI<span class="ver"></span></div>
+  </div>
+
+  <div class="content">
+
+    <!-- SIDEBAR (shared across both views) -->
+    <div class="sidebar">
+      <div class="profile">
+        <div class="profile-label">Player</div>
+        <span class="profile-name" id="profile-name">Player</span>
+        <div class="profile-status"><div class="status-dot"></div>ONLINE</div>
+      </div>
+      <nav>
+        <div class="nav-section-label">Navigation</div>
+        <div class="nav-item selected" id="nav-game" onclick="showView('game')">
+          <svg class="nav-svg" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="13" rx="1"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+          Game
+        </div>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="nav-item" id="nav-settings" onclick="showView('settings')">
+          <svg class="nav-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          Launcher Settings
+        </div>
+      </div>
+    </div>
+
+    <!-- GAME VIEW -->
+    <div class="main-panel" id="panel-game">
+      <div class="top-bar">
+        <div class="game-title">GX-LAUNCHER <span>// GAME</span></div>
+        <div class="breadcrumb">HOME / GAME</div>
+      </div>
+
+      <div class="main-content">
+        <div class="wordmark">GX<span>LAUNCHER</span></div>
+      </div>
+
+      <div class="launch-bar">
+        <div class="version-wrapper">
+          <div class="version-select" id="game-select" onclick="toggleGameDropdown()">
+            <span id="game-label">Select Game</span>
+            <span class="chevron">▼</span>
+          </div>
+          <div class="version-dropdown" id="game-dropdown">
+            <div class="version-group-label">Loading games…</div>
+          </div>
+        </div>
+
+        <button class="refresh-btn" onclick="populateGames()" title="Reload game list from GitHub">↻</button>
+
+        <div class="launch-mode-badge" onclick="showView('settings')" title="Change in Settings">
+          MODE: <span id="mode-badge-text">BLOB URL</span>
+        </div>
+
+        <button class="play-button" id="play-btn" onclick="playGame()" disabled>LAUNCH</button>
+      </div>
+
+      <div class="bottom-bar">
+        <div class="status-line" id="status-line-game">READY</div>
+        <div class="credit">Built by Jon Stearns</div>
+      </div>
+    </div>
+
+    <!-- SETTINGS VIEW -->
+    <div class="main-panel" id="panel-settings" style="display:none;">
+      <div class="top-bar">
+        <div class="game-title">GX-LAUNCHER <span>// SETTINGS</span></div>
+        <div class="breadcrumb">HOME / SETTINGS</div>
+      </div>
+
+      <div class="settings-scroll">
+
+        <div class="settings-section">
+          <div class="settings-section-title">Profile</div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Username</div>
+              <div class="settings-desc">Displayed in the launcher sidebar</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input class="settings-input" id="username-input" type="text" placeholder="Enter username" maxlength="24">
+              <button class="settings-btn" onclick="saveUsername()">Save</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-title">Text Size</div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">UI Scale</div>
+              <div class="settings-desc">Adjusts the size of all text and UI elements across the launcher.</div>
+            </div>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <button class="refresh-btn" data-scale="0.75" onclick="saveUiScale(0.75, this)">75%</button>
+              <button class="refresh-btn" data-scale="1"    onclick="saveUiScale(1,    this)">100%</button>
+              <button class="refresh-btn" data-scale="1.25" onclick="saveUiScale(1.25, this)">125%</button>
+              <button class="refresh-btn" data-scale="1.5"  onclick="saveUiScale(1.5,  this)">150%</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-title">Theme</div>
+          <div class="theme-grid">
+            <div class="theme-swatch" data-theme-name="default" onclick="applyThemeFromSwatch('default', this)">
+              <div class="swatch-dot" style="background:#cc0000;box-shadow:0 0 8px #cc000055;"></div>Default
+            </div>
+            <div class="theme-swatch" data-theme-name="green" onclick="applyThemeFromSwatch('green', this)">
+              <div class="swatch-dot" style="background:#00cc44;box-shadow:0 0 8px #00cc4455;"></div>Green
+            </div>
+            <div class="theme-swatch" data-theme-name="blood" onclick="applyThemeFromSwatch('blood', this)">
+              <div class="swatch-dot" style="background:#cc0000;box-shadow:0 0 10px #cc000077;border:2px solid #4a0000;"></div>Blood
+            </div>
+            <div class="theme-swatch" data-theme-name="midnight" onclick="applyThemeFromSwatch('midnight', this)">
+              <div class="swatch-dot" style="background:#5566ff;box-shadow:0 0 8px #5566ff55;"></div>Midnight
+            </div>
+            <div class="theme-swatch" data-theme-name="ash" onclick="applyThemeFromSwatch('ash', this)">
+              <div class="swatch-dot" style="background:#888;box-shadow:0 0 8px #88888855;"></div>Ash
+            </div>
+            <div class="theme-swatch" data-theme-name="amber" onclick="applyThemeFromSwatch('amber', this)">
+              <div class="swatch-dot" style="background:#cc7700;box-shadow:0 0 8px #cc770055;"></div>Amber
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-title">Launch Mode</div>
+          <div class="mode-grid">
+            <div class="mode-card" data-mode="about-blank" onclick="selectLaunchMode('about-blank', this)">
+              <div class="mode-card-title">About:Blank</div>
+              <div class="mode-card-desc">Fetches the game and writes it into an about:blank tab. Bypasses some URL filters.</div>
+            </div>
+            <div class="mode-card" data-mode="data-uri" onclick="selectLaunchMode('data-uri', this)">
+              <div class="mode-card-title">Data URI</div>
+              <div class="mode-card-desc">Base64 encodes a game-fetch loader and copies it to your clipboard. Bookmarkable.</div>
+            </div>
+            <div class="mode-card" data-mode="blob" onclick="selectLaunchMode('blob', this)">
+              <div class="mode-card-title">Blob URL</div>
+              <div class="mode-card-desc">Fetches the game HTML and opens it as a blob: URL in a new tab.</div>
+            </div>
+            <div class="mode-card" data-mode="popup" onclick="selectLaunchMode('popup', this)">
+              <div class="mode-card-title">Popup Window</div>
+              <div class="mode-card-desc">Fetches the game HTML and opens it as a blob: URL in a sized, borderless popup. Requires popups to be allowed in browser.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="bottom-bar">
+        <div class="status-line" id="status-line-settings">SETTINGS</div>
+        <div class="credit">Built by Jon Stearns</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="loading-overlay" id="loading-overlay">
+  <div class="loading-text" id="loading-text">FETCHING...</div>
+  <div class="loading-bar-wrap"><div class="loading-bar" id="loading-bar"></div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+
+const GH_OWNER  = 'GX-Launcher';
+const GH_REPO   = 'GX-Launcher.github.io';
+const GH_BRANCH = 'main';
+const GAMES_PATH = 'game';
+const IMAGE_EXTS = ['png','jpg','jpeg','gif','webp','svg','ico','bmp','avif'];
+
+// ===== STORAGE HELPERS =====
+const _memStore = {};
+function _lsGet(name) { try { return localStorage.getItem(name); } catch(e) { return _memStore[name] ?? null; } }
+function _lsSet(name, value) { try { localStorage.setItem(name, value); } catch(e) { _memStore[name] = value; } }
+function getCookie(name)            { return _lsGet(name); }
+function setCookie(name, value, _d) { _lsSet(name, String(value)); }
+
+// ===== TOAST =====
+let _toastTimer;
+function showToast(msg, isError) {
+    const t = document.getElementById('toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.className = 'toast' + (isError ? ' error' : '') + ' show';
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ===== STATUS LINE (there's one per view) =====
+function setStatus(html) {
+    ['status-line-game','status-line-settings'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = html;
+    });
+}
+
+// ===== LOADING OVERLAY =====
+function showLoading(msg) {
+    const ov = document.getElementById('loading-overlay');
+    const tx = document.getElementById('loading-text');
+    if (ov) ov.classList.add('active');
+    if (tx) tx.textContent = msg || 'LOADING...';
+    setLoadingBar(0);
+}
+function hideLoading() {
+    document.getElementById('loading-overlay')?.classList.remove('active');
+}
+function setLoadingBar(pct) {
+    const bar = document.getElementById('loading-bar');
+    if (bar) bar.style.width = pct + '%';
+}
+
+// ===== VIEW SWITCHING (was multi-page, now one file) =====
+function showView(view) {
+    const isGame = view === 'game';
+    document.getElementById('panel-game').style.display = isGame ? 'flex' : 'none';
+    document.getElementById('panel-settings').style.display = isGame ? 'none' : 'flex';
+    document.getElementById('nav-game').classList.toggle('selected', isGame);
+    document.getElementById('nav-settings').classList.toggle('selected', !isGame);
+}
+
+// ===== THEME SYSTEM =====
+const GX_THEMES = {
+    'default':  {},
+    'green':    { '--accent':'#00cc44','--accent-hi':'#00ff55','--accent-dim':'#006622','--accent-glow':'rgba(0,180,60,0.15)','--border2':'#003318' },
+    'blood':    { '--accent':'#cc0000','--accent-hi':'#ff4444','--accent-dim':'#800000','--accent-glow':'rgba(200,0,0,0.22)','--border2':'#4a0000','--bg':'#080000','--bg2':'#0d0000','--bg3':'#120000','--panel':'#0f0000' },
+    'midnight': { '--accent':'#5566ff','--accent-hi':'#7788ff','--accent-dim':'#2233bb','--accent-glow':'rgba(80,100,255,0.18)','--border2':'#1a2050','--bg':'#070710','--bg2':'#0c0c1a','--bg3':'#111125','--panel':'#0e0e1e' },
+    'ash':      { '--accent':'#999999','--accent-hi':'#cccccc','--accent-dim':'#555555','--accent-glow':'rgba(150,150,150,0.15)','--border2':'#404040' },
+    'amber':    { '--accent':'#cc7700','--accent-hi':'#ffaa00','--accent-dim':'#7a4400','--accent-glow':'rgba(200,120,0,0.18)','--border2':'#3a2200','--bg':'#090600','--bg2':'#100d00','--bg3':'#181200','--panel':'#130f00' },
+};
+const GX_DEFAULTS = {
+    '--accent':'#cc0000','--accent-hi':'#ff2222','--accent-dim':'#7a0000',
+    '--accent-glow':'rgba(180,0,0,0.18)','--bg':'#0a0a0a','--bg2':'#111111',
+    '--bg3':'#181818','--panel':'#141414','--border2':'#3a0000'
+};
+function applyTheme(name) {
+    const root = document.documentElement;
+    for (const [k, v] of Object.entries(GX_DEFAULTS)) root.style.setProperty(k, v);
+    const t = GX_THEMES[name] || {};
+    for (const [k, v] of Object.entries(t)) root.style.setProperty(k, v);
+    setCookie('launcherTheme', name, 365);
+    document.querySelectorAll('.theme-swatch').forEach(s => {
+        s.classList.toggle('selected', s.dataset.themeName === name);
+    });
+}
+
+// ===== GAME SELECTOR =====
+let _selectedGame = '';
+const GX_MODE_LABELS = { 'about-blank':'ABOUT:BLANK', 'data-uri':'DATA URI', blob:'BLOB URL', popup:'POPUP' };
+
+function toggleGameDropdown() {
+    const dd  = document.getElementById('game-dropdown');
+    const sel = document.getElementById('game-select');
+    if (!dd) return;
+    const isOpen = dd.classList.toggle('open');
+    sel.classList.toggle('open', isOpen);
+}
+
+function selectGame(name, el) {
+    _selectedGame = name;
+    document.getElementById('game-label').textContent = name;
+    document.getElementById('game-dropdown')?.classList.remove('open');
+    document.getElementById('game-select')?.classList.remove('open');
+    document.querySelectorAll('#game-dropdown .version-option').forEach(o => o.classList.remove('active-ver'));
+    el?.classList.add('active-ver');
+    document.getElementById('play-btn').disabled = false;
+    updateModeBadge();
+    setStatus('GAME: <span class="hl">' + name + '</span>');
+}
+
+document.addEventListener('click', e => {
+    if (!e.target.closest('.version-wrapper')) {
+        document.getElementById('game-dropdown')?.classList.remove('open');
+        document.getElementById('game-select')?.classList.remove('open');
+    }
+});
+
+// ===== VERSION-STYLE SORTING =====
+// Canonical Minecraft version/release order, newest to oldest, grouped
+// exactly as in the reference launcher (Release / Beta / Alpha - Pre-Classic).
+// Folder names are matched against these ids case-insensitively.
+const GX_VERSION_GROUPS = [
+    { label: 'Release', ids: [
+        '1.12.2-wasm', '1.12.2', '1.8.8-wasm', '1.8.8', '1.7.10', '1.6.4',
+        '1.5.2', '1.4.7-wasm', '1.3.2', '1.2.5-wasm', '1.2.5', '1.1', '1.0'
+    ]},
+    { label: 'Beta', ids: [
+        'beta-1.8.1-wasm', 'beta-1.8.1', 'beta-1.7.3', 'beta-1.6.4', 'beta-1.5',
+        'beta-1.4', 'beta-1.3', 'beta-1.2', 'beta-1.1', 'beta-1.0.2', 'beta-1.0'
+    ]},
+    { label: 'Alpha - Pre-Classic', ids: [
+        'alpha-1.2.6', 'infdev-wasm', 'indev', '4k', 'classic-0.3.0-wasm',
+        'classic-0.0.23a-01-wasm', 'classic-0.0.22a-05-wasm', 'classic-0.0.21a-wasm',
+        'classic-0.0.20a-02-wasm', 'classic-0.0.19a-06-wasm', 'classic-0.0.18a-02-wasm',
+        'classic-0.0.17a-wasm', 'classic-0.0.16a-02-wasm', 'classic-0.0.15a-wasm',
+        'classic-0.0.14a-08-wasm', 'classic-0.0.13a-03-wasm', 'classic-0.0.12a-03-wasm',
+        'classic-0.0.11a-wasm', 'pre-classic-rd-161348-wasm', 'pre-classic-rd-160052-wasm',
+        'pre-classic-rd-132328-wasm', 'pre-classic-rd-132211-wasm', 'pre-classic-rd-131655-wasm'
+    ]}
+];
+
+// Flat lookup: normalized id -> global rank (lower = newer/earlier in the list)
+const GX_VERSION_RANK = new Map();
+(() => {
+    let rank = 0;
+    GX_VERSION_GROUPS.forEach(g => g.ids.forEach(id => GX_VERSION_RANK.set(id, rank++)));
+})();
+
+function _versionGroupLabel(name) {
+    const key = name.trim().toLowerCase();
+    for (const g of GX_VERSION_GROUPS) if (g.ids.includes(key)) return g.label;
+    return 'Other';
+}
+
+// Sorts folders into the canonical Minecraft version order (Release, Beta,
+// Alpha - Pre-Classic). Any folder that doesn't match a known id is grouped
+// under "Other" and sorted alphabetically at the end.
+function _sortGameFolders(folders) {
+    const known = [];
+    const unknown = [];
+    folders.forEach(f => {
+        const key = f.name.trim().toLowerCase();
+        if (GX_VERSION_RANK.has(key)) known.push(f);
+        else unknown.push(f);
+    });
+    known.sort((a, b) => GX_VERSION_RANK.get(a.name.trim().toLowerCase()) - GX_VERSION_RANK.get(b.name.trim().toLowerCase()));
+    unknown.sort((a, b) => a.name.localeCompare(b.name));
+
+    const groups = [];
+    let currentLabel = null, currentList = null;
+    known.forEach(f => {
+        const label = _versionGroupLabel(f.name);
+        if (label !== currentLabel) {
+            currentLabel = label;
+            currentList = [];
+            groups.push({ label, items: currentList });
+        }
+        currentList.push(f);
+    });
+    if (unknown.length) groups.push({ label: 'Other', items: unknown });
+    return groups;
+}
+
+// Pulls the list of game folders from GX-Launcher.github.io/game/
+async function populateGames() {
+    const dd = document.getElementById('game-dropdown');
+    dd.innerHTML = '<div class="version-group-label">Loading games…</div>';
+    try {
+        const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GAMES_PATH}`);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const items = await res.json();
+        const folders = items.filter(it => it.type === 'dir');
+        if (!folders.length) { dd.innerHTML = '<div class="version-group-label">No games found</div>'; return; }
+        const groups = _sortGameFolders(folders);
+        dd.innerHTML = '';
+        groups.forEach(g => {
+            const label = document.createElement('div');
+            label.className = 'version-group-label';
+            label.textContent = g.label;
+            dd.appendChild(label);
+            g.items.forEach(f => {
+                const opt = document.createElement('div');
+                opt.className = 'version-option';
+                opt.textContent = f.name;
+                opt.onclick = () => selectGame(f.name, opt);
+                dd.appendChild(opt);
+            });
+        });
+    } catch (e) {
+        dd.innerHTML = '<div class="version-group-label">Failed to load — tap ↻ to retry</div>';
+        showToast('Could not load game list: ' + e.message, true);
+    }
+}
+
+// ===== GITFETCH-STYLE FILE RESOLUTION =====
+// Looks inside game/{folder}/html, ignores images, and decides
+// whether this game needs DIR MODE or the HTML-ONLY loader.
+async function _resolveGameFiles(folderName) {
+    const path = `${GAMES_PATH}/${encodeURIComponent(folderName)}`;
+    const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`);
+    if (!res.ok) throw new Error('Could not list game files (HTTP ' + res.status + ')');
+    const items = await res.json();
+    const nonImages = items.filter(it =>
+        it.type === 'file' && !IMAGE_EXTS.includes((it.name.split('.').pop() || '').toLowerCase())
+    );
+    const htmlFiles = nonImages.filter(it => it.name.toLowerCase().endsWith('.html'));
+    if (!htmlFiles.length) throw new Error('No HTML file found in this game folder.');
+    const entry = (htmlFiles.find(f => f.name.toLowerCase() === 'index.html') || htmlFiles[0]).name;
+    // More than just the html file(s) present (css/js alongside) -> DIR MODE
+    const isDir = nonImages.length > 1;
+    return { entry, isDir };
+}
+
+var _lsPolyfill = '<scr' + 'ipt>(function(){var s={};Object.defineProperty(window,"localStorage",{value:{getItem:function(k){return s.hasOwnProperty(k)?s[k]:null;},setItem:function(k,v){s[k]=String(v);},removeItem:function(k){delete s[k];},clear:function(){s={};},key:function(i){return Object.keys(s)[i]||null;},get length(){return Object.keys(s).length;}},writable:false,configurable:false});}());</' + 'script>';
+
+// ---- DIR MODE: commit-pinned raw.githack + <base href> ----
+async function _fetchDirHtml(folderName, entry) {
+    const repoRes = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}`);
+    const repo = await repoRes.json();
+    const branch = repo.default_branch || GH_BRANCH;
+    const commitRes = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/commits/${branch}`);
+    const commit = await commitRes.json();
+    const hash = commit.sha;
+    const BASE = `https://raw.githack.com/${GH_OWNER}/${GH_REPO}/${hash}/${GAMES_PATH}/${encodeURIComponent(folderName)}/`;
+    const res = await fetch(BASE + entry);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    let text = await res.text();
+    text = text.replace(/<head([^>]*)>/i, '<head$1>' + _lsPolyfill + '<base href="' + BASE + '">');
+    return text;
+}
+
+// ---- HTML-ONLY MODE: plain fetch, no rewriting ----
+async function _fetchHtmlOnly(folderName, entry) {
+    const url = `https://raw.githack.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/${GAMES_PATH}/${encodeURIComponent(folderName)}/${entry}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.text();
+}
+
+// ===== LAUNCH LOGIC =====
+async function playGame() {
+    if (!_selectedGame) { showToast('Select a game first.', true); return; }
+    const method = getCookie('launchMethod') || 'blob';
+    const popupFeatures = 'width=1280,height=720,toolbar=0,menubar=0,location=0,status=0';
+
+    setStatus('RESOLVING GAME FILES...');
+    let entry, isDir;
+    try {
+        ({ entry, isDir } = await _resolveGameFiles(_selectedGame));
+    } catch (e) {
+        showToast('Failed to resolve game: ' + e.message, true);
+        setStatus('RESOLVE ERROR');
+        return;
+    }
+
+    if (method === 'data-uri') {
+        _launchDataUri(_selectedGame, entry, isDir);
+        return;
+    }
+
+    // about-blank / blob / popup all need the actual HTML text —
+    // this is where DIR MODE vs HTML-ONLY actually matters.
+    try {
+        setStatus(isDir ? 'FETCHING (DIR MODE)...' : 'FETCHING...');
+        showLoading(isDir ? 'FETCHING (DIR MODE)...' : 'FETCHING...');
+        const html = isDir ? await _fetchDirHtml(_selectedGame, entry) : await _fetchHtmlOnly(_selectedGame, entry);
+        hideLoading();
+
+        if (method === 'about-blank') {
+            const win = window.open('', '_blank');
+            if (!win) { showToast('Popup blocked.', true); return; }
+            win.document.open();
+            win.document.write(html);
+            win.document.close();
+            setStatus('LAUNCHED AS <span class="hl">ABOUT:BLANK</span>');
+        } else if (method === 'blob') {
+            const blob = new Blob([html], { type: 'text/html' });
+            window.open(URL.createObjectURL(blob), '_blank');
+            setStatus('LAUNCHED AS <span class="hl">BLOB URL</span>');
+        } else if (method === 'popup') {
+            // Same blob: URL approach as Blob URL mode, just opened into a
+            // sized/borderless popup window instead of a normal tab.
+            const blob = new Blob([html], { type: 'text/html' });
+            const w = window.open(URL.createObjectURL(blob), '_blank', popupFeatures);
+            if (!w) showToast('Popup blocked — allow popups for this site.', true);
+            setStatus('LAUNCHED AS <span class="hl">POPUP</span>');
+        }
+    } catch (e) {
+        hideLoading();
+        showToast('Launch failed: ' + e.message, true);
+        setStatus('FETCH ERROR');
+    }
+}
+
+// ---- Data URI mode: builds a self-contained loader you paste in the address bar ----
+function _launchDataUri(folderName, entry, isDir) {
+    try {
+        const folder  = encodeURIComponent(folderName);
+        const cdnBase = `https://raw.githack.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/${GAMES_PATH}/${folder}/`;
+        const gameUrl = cdnBase + entry;
+        const baseTagJs = isDir ? `var baseTag='<base href="${cdnBase}">';` : `var baseTag='';`;
+
+        const loaderHtml = `<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8">
+<base href="${cdnBase}">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;background:#000;overflow:hidden;font-family:monospace;color:#fff}
+#s{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#0a0a0a}
+#bar-wrap{width:320px;height:6px;background:#222;border-radius:3px;overflow:hidden}
+#bar{height:100%;width:0%;background:#cc0000;border-radius:3px;transition:width 0.1s}
+#msg{font-size:13px;color:#aaa;letter-spacing:0.1em}
+</style>
+</head><body>
+<div id="s">
+  <div id="msg">FETCHING GAME...</div>
+  <div id="bar-wrap"><div id="bar"></div></div>
+</div>
+<script>
+(async()=>{
+  const url='${gameUrl}';
+  const bar=document.getElementById('bar');
+  const msg=document.getElementById('msg');
+  try{
+    const res=await fetch(url);
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const len=+res.headers.get('content-length')||0;
+    const reader=res.body.getReader();
+    const chunks=[];let got=0;
+    while(true){
+      const{done,value}=await reader.read();
+      if(done)break;
+      chunks.push(value);got+=value.length;
+      if(len)bar.style.width=(5+Math.round(got/len*90))+'%';
+    }
+    bar.style.width='100%';
+    msg.textContent='LAUNCHING...';
+    const merged=new Uint8Array(got);let pos=0;
+    for(const c of chunks){merged.set(c,pos);pos+=c.length;}
+    const html=new TextDecoder().decode(merged);
+    ${baseTagJs}
+    let patched;
+    if(/<head[\\s>]/i.test(html)){patched=html.replace(/(<head[^>]*>)/i,'$1\\n'+baseTag);}
+    else if(/<html[\\s>]/i.test(html)){patched=html.replace(/(<html[^>]*>)/i,'$1\\n<head>'+baseTag+'</head>');}
+    else{patched=baseTag+html;}
+    document.open();
+    document.write(patched);
+    document.close();
+  }catch(e){
+    msg.textContent='ERROR: '+e.message;
+    bar.style.background='#aa0000';
+  }
+})();
+</` + `script>
+</body></html>`;
+
+        const b64     = btoa(unescape(encodeURIComponent(loaderHtml)));
+        const dataUri = 'data:text/html;base64,' + b64;
+        navigator.clipboard.writeText(dataUri).then(() => {
+            _showDataUriSplash(true);
+        }).catch(() => {
+            _showDataUriSplash(false);
+        });
+        setStatus('DATA URI COPIED — PASTE IN ADDRESS BAR');
+    } catch (e) {
+        showToast('Failed to generate URI: ' + e.message, true);
+        setStatus('URI ERROR');
+    }
+}
+
+function _showDataUriSplash(copied) {
+    document.getElementById('_gx_uri_splash')?.remove();
+    const overlay = document.createElement('div');
+    overlay.id = '_gx_uri_splash';
+    overlay.style.cssText = [
+        'position:fixed','inset:0','z-index:99999',
+        'background:rgba(0,0,0,0.92)',
+        'display:flex','flex-direction:column',
+        'align-items:center','justify-content:center','gap:18px',
+        'font-family:var(--mono,monospace)',
+        'animation:_gxFadeIn 0.2s ease'
+    ].join(';');
+    overlay.innerHTML = `
+        <style>
+            @keyframes _gxFadeIn { from{opacity:0;transform:scale(0.97)} to{opacity:1;transform:scale(1)} }
+            #_gx_uri_splash .splash-box {
+                border:1px solid var(--accent,#cc0000);
+                background:var(--panel,#141414);
+                padding:32px 40px;
+                text-align:center;
+                max-width:420px;
+                box-shadow:0 0 40px var(--accent-glow,rgba(180,0,0,0.2));
+            }
+            #_gx_uri_splash .splash-icon { font-size:36px; margin-bottom:12px; }
+            #_gx_uri_splash .splash-title {
+                font-size:13px; letter-spacing:0.18em; text-transform:uppercase;
+                color:var(--accent,#cc0000); margin-bottom:10px;
+            }
+            #_gx_uri_splash .splash-body {
+                font-size:11px; color:var(--text-dim,#888); line-height:1.7; margin-bottom:20px;
+            }
+            #_gx_uri_splash .splash-body strong { color:var(--text-bright,#fff); }
+            #_gx_uri_splash .splash-warn { font-size:10px; color:#ffaa00; margin-bottom:16px; }
+            #_gx_uri_splash .splash-close {
+                background:var(--accent-dim,#7a0000); border:none;
+                color:#fff; font-family:var(--mono,monospace);
+                font-size:11px; padding:8px 24px; cursor:pointer;
+                letter-spacing:0.1em; text-transform:uppercase;
+                transition:background 0.13s;
+            }
+            #_gx_uri_splash .splash-close:hover { background:var(--accent,#cc0000); }
+        </style>
+        <div class="splash-box">
+            <div class="splash-icon">📋</div>
+            <div class="splash-title">${copied ? 'URI Copied!' : 'URI Ready'}</div>
+            <div class="splash-body">
+                ${copied
+                    ? 'The <strong>data: URI</strong> has been copied to your clipboard.'
+                    : 'Could not auto-copy — please copy the URI from the address bar manually.'}
+                <br><br>
+                Open a <strong>new tab</strong>, click the address bar,<br>
+                <strong>paste</strong> and press <strong>Enter</strong>.
+            </div>
+            ${!copied ? '<div class="splash-warn">⚠ Clipboard access was blocked by your browser.</div>' : ''}
+            <button class="splash-close" onclick="document.getElementById('_gx_uri_splash').remove()">Got it</button>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+    setTimeout(() => overlay?.remove(), 15000);
+}
+
+// ===== SETTINGS PAGE ACTIONS =====
+function updateModeBadge() {
+    const method = getCookie('launchMethod') || 'blob';
+    const badge = document.getElementById('mode-badge-text');
+    if (badge) badge.textContent = GX_MODE_LABELS[method] || method.toUpperCase();
+}
+
+function saveUsername() {
+    const val = (document.getElementById('username-input')?.value || '').trim();
+    if (!val) { showToast('Enter a username first.', true); return; }
+    setCookie('username', val, 365);
+    const el = document.getElementById('profile-name');
+    if (el) el.textContent = val;
+    showToast('Username saved: ' + val);
+}
+
+function applyUiScale(scale) {
+    document.documentElement.style.setProperty('--ui-scale', scale);
+    document.querySelectorAll('[data-scale]').forEach(btn => {
+        btn.classList.toggle('selected', parseFloat(btn.dataset.scale) === scale);
+    });
+}
+function saveUiScale(scale) {
+    applyUiScale(scale);
+    setCookie('uiScale', scale, 365);
+    showToast('UI scale: ' + Math.round(scale * 100) + '%');
+}
+function loadUiScale() {
+    const saved = parseFloat(getCookie('uiScale'));
+    applyUiScale(!isNaN(saved) ? saved : 1);
+}
+
+function applyThemeFromSwatch(name) {
+    applyTheme(name);
+    showToast('Theme: ' + name);
+}
+
+function selectLaunchMode(mode, el) {
+    setCookie('launchMethod', mode, 365);
+    document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
+    if (el) el.classList.add('selected');
+    updateModeBadge();
+    showToast('Launch mode: ' + (GX_MODE_LABELS[mode] || mode));
+}
+
+// ===== DOM READY =====
+document.addEventListener('DOMContentLoaded', () => {
+    const username = getCookie('username');
+    if (username) {
+        const el = document.getElementById('profile-name');
+        if (el) el.textContent = username;
+        const input = document.getElementById('username-input');
+        if (input) input.value = username;
+    }
+
+    applyTheme(getCookie('launcherTheme') || 'default');
+
+    const savedMode = getCookie('launchMethod') || 'blob';
+    document.querySelectorAll('.mode-card').forEach(c => {
+        c.classList.toggle('selected', c.dataset.mode === savedMode);
+    });
+    updateModeBadge();
+
+    loadUiScale();
+    populateGames();
+});
+</script>
+
+</body>
+</html>
