@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="home.css" />
+    <link rel="shortcut icon" href="assets/icon.png" type="image/x-icon" />
+    <title>1.5 Clients</title>
+    <link 
+      href="https://fonts.googleapis.com/icon?family=Material+Icons+Round"
+      rel="stylesheet"
+    />
+    <script src="sounds.js" defer></script>
+    <script src="loader.js" defer></script>
+  </head>
+  <body>
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-B23XL7G2NK"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "G-B23XL7G2NK");
+    </script>
+    <style>
+      body,
+      html {
+        background: url("assets/pano.png");
+        background-attachment: fixed;
+        background-size: cover;
+        background-repeat: repeat-x;
+        margin: 0;
+        animation: panorama 95s linear infinite;
+      }
+
+      @keyframes panorama {
+        0% {
+          background-position: 0;
+        }
+
+        100% {
+          background-position: calc(100vh / 144 * -820);
+        }
+      }
+    </style>
+    <center>
+      <h1 style="font-size: xxx-large; text-shadow: 2px 2px 2px black; margin-bottom: 0;">1.5 Clients</h1>
+      <p class="splash-text">
+        <a
+          href="/"
+          class="github-link"
+          style="color: yellow; font-size: 17px; margin-top: -10px;"
+          >Back home</a
+        >
+      </p>
+      <div class="vflex" id="container" style="justify-content: center;">
+      <!--load clients into here-->
+      <div id="cclients">
+        <ul id="clients">
+          
+        </ul>
+      </div>
+    </div>
+    </center>
+    <div class="backdrop-blur"></div>
+  </body>
+</html>

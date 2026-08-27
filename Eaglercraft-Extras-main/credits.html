@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="home.css" />
+    <link rel="shortcut icon" href="assets/icon.png" type="image/x-icon" />
+    <title>Credits</title>
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons+Round"
+      rel="stylesheet"
+    />
+    <script src="sounds.js" defer></script>
+    <script src="index.js" defer></script>
+  </head>
+  <body>
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-B23XL7G2NK"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "G-B23XL7G2NK");
+    </script>
+    <style>
+      body,
+      html {
+        background: url("assets/pano.png");
+        background-attachment: fixed;
+        background-size: cover;
+        background-repeat: repeat-x;
+        margin: 0;
+        animation: panorama 95s linear infinite;
+      }
+
+      @keyframes panorama {
+        0% {
+          background-position: 0;
+        }
+
+        100% {
+          background-position: calc(100vh / 144 * -820);
+        }
+      }
+    </style><br>
+    <center>
+      <img
+        src="assets/title.png"
+        style="margin: -50px; margin-bottom: -100px; scale: auto"
+        alt="the-gay-ass-dev-who-made-us-use-a-fucking-image-made-me-do-this-shit-please-help-im-stuck-in-his-fucking-liveshare-and-in-his-basement-HELP.png"
+      />
+      <p class="splash-text">Credits</p>
+      <div class="vflex">
+        <h1>Developers</h1>
+        <p>x8r (xor)</p>
+        <p>SyntaxError52</p>
+        <p>SprintingSnail</p>
+
+        <h1>Design</h1>
+        <p>x8r</p>
+
+        <h1>Design Inspiration</h1>
+        <p>Mojang</p>
+        <p>Legacy Edition Minigames</p>
+
+        <h1>Website Inspiration</h1>
+        <p>EaglercrackX</p>
+        <p>Eaglercraft</p>
+      </div><br>
+    </center>
+        <center>
+      <a href="/">
+        <button class="button">Return Home</button>
+      </a>
+    </center><br>
+    <div class="backdrop-blur"></div>
+  </body>
+</html>

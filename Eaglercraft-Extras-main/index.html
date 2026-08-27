@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="home.css" />
+    <link rel="shortcut icon" href="assets/icon.png" type="image/x-icon" />
+    <title>Eaglercraft Extras</title>
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons+Round"
+      rel="stylesheet"
+    />
+    <script src="sounds.js" defer></script>
+    <script src="index.js" defer></script>
+  </head>
+  <body>
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-B23XL7G2NK"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "G-B23XL7G2NK");
+    </script>
+    <style>
+      body,
+      html {
+        background: url("assets/pano.png");
+        background-attachment: fixed;
+        background-size: cover;
+        background-repeat: repeat-x;
+        margin: 0;
+        animation: panorama 95s linear infinite;
+      }
+
+      @keyframes panorama {
+        0% {
+          background-position: 0;
+        }
+
+        100% {
+          background-position: calc(100vh / 144 * -820);
+        }
+      }
+    </style>
+    <center>
+      <img
+        src="assets/title.png"
+        style="margin: -50px; margin-bottom: -100px; scale: auto"
+        alt="the-gay-ass-dev-who-made-us-use-a-fucking-image-made-me-do-this-shit-please-help-im-stuck-in-his-fucking-liveshare-and-in-his-basement-HELP.png"
+      />
+      <p class="splash-text">
+        Contact us on our anonymous form
+        <a
+          href="https://forms.gle/Aj2pX9dXKSRJMzRT8"
+          target="_blank"
+          class="github-link"
+          style="color: yellow;"
+          >here</a
+        >.
+      </p>
+      <div class="vflex">
+        <a href="clients.html" class="a">
+          <button class="button">Clients</button>
+        </a>
+        <a href="servers.html" class="a">
+          <button class="button">Servers</button>
+        </a>
+        <a href="packs.html" class="a">
+          <button class="button">Resource Packs</button>
+        </a>
+        <a href="worlds.html" class="a">
+          <button class="button" onmouseover="document.getElementById('hoversound').play()">Worlds</button>
+        </a>
+        <a href="skins.html" class="a">
+          <button disabled class="button">Skins (In Development)</button>
+        </a>
+        <a href="credits.html" target="blank" class="a">
+          <button class="button">Credits</button>
+        </a>
+      </div>
+    </center>
+    <div class="backdrop-blur"></div>
+    <video src="assets/intro.mp4" id="introVid">
+    </video>
+    <p id="opening" style="color: black; z-index: 100; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; text-shadow: transparent;">Please Click.</p>
+  </body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="home.css" />
+    <link rel="shortcut icon" href="assets/icon.png" type="image/x-icon" />
+    <title>1.8 Servers</title>
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons+Round"
+      rel="stylesheet"
+    />
+    <script src="sounds.js" defer></script>
+  </head>
+  <body>
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-B23XL7G2NK"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "G-B23XL7G2NK");
+    </script>
+    <style>
+      body,
+      html {
+        background: url("assets/pano.png");
+        background-attachment: fixed;
+        background-size: cover;
+        background-repeat: repeat-x;
+        margin: 0;
+        animation: panorama 95s linear infinite;
+      }
+
+      @keyframes panorama {
+        0% {
+          background-position: 0;
+        }
+
+        100% {
+          background-position: calc(100vh / 144 * -820);
+        }
+      }
+    </style>
+    <center>
+      <h1
+        style="
+          font-size: xxx-large;
+          text-shadow: 2px 2px 2px black;
+          margin-bottom: 0;
+        "
+      >
+        1.8 Servers
+      </h1>
+      <p class="splash-text" style="font-size: 19px;">
+        Click any server to copy the IP and refresh the status
+        <br><br>
+        <a
+          href="/"
+          class="github-link"
+          style="color: yellow; font-size: 17px; margin-top: -10px"
+          >Back home</a
+        >
+        <br>
+      </p>
+      <div class="vflex" id="container" style="justify-content: center">
+        <!--load clients into here-->
+        <div id="cclients">
+          <li id="client" class="copyLink" data-link="wss://mc.arch.lol" data-server="mc.arch.lol/">
+            <img id="icon" src="/assets/servers/arch.png" />
+            <h1 id="title">Arch MC</h1>
+            <p id="ver"><span class="status">Loading...</span></p>
+            <p id="author" style="font-size: 18px;">Survival, Bedwars, KitPVP, Duels</p>
+          </li>
+          <li id="client" class="copyLink" data-link="wss://zentic.cc" data-server="zentic.cc">
+            <img id="icon" src="/assets/servers/zentic.png" />
+            <h1 id="title">Zentic</h1>
+            <p id="ver"><span class="status">Loading...</span></p>
+            <p id="author" style="font-size: 18px;">Practice, Skywars, Bedwars</p>
+          </li>
+          <li id="client" class="copyLink" data-link="wss://aeon-network.net/1.8" data-server="play.aeon-network.net">
+            <img id="icon" src="/assets/servers/aeon.jpg" />
+            <h1 id="title">Aeon Network</h1>
+            <p id="ver"><span class="status">Loading...</span></p>
+            <p id="author" style="font-size: 18px;">Survival, Pitfall, Practice</p>
+          </li>
+          <li id="client" class="copyLink" data-link="wss://legxndsmp.minecraft.pe" data-server="legxndsmp.minecraft.pe">
+            <img id="icon" src="/assets/eaglercraftx.jpg" />
+            <h1 id="title">LegendSMP</h1>
+            <p id="ver"><span class="status">Loading...</span></p>
+            <p id="author" style="font-size: 18px;">Survival</p>
+          </li>
+          <li id="client" class="copyLink" data-link="wss://ggsmp.net/" data-server="ggsmp.net">
+            <img id="icon" src="/assets/servers/gg.png" />
+            <h1 id="title">GG SMP</h1>
+            <p id="ver"><span class="status">Loading...</span></p>
+            <p id="author" style="font-size: 18px;">Chess</p>
+          </li>
+          <li id="client" class="copyLink" data-link="wss://clever-teaching.com/web/" data-server="java.clever-teaching.com">
+            <img id="icon" src="/assets/servers/clever.png" />
+            <h1 id="title">Clever Teaching</h1>
+            <p id="ver"><span class="status">Loading...</span></p>
+            <p id="author" style="font-size: 18px;">Survival, Skyblock, Minigames, etc.</p>
+          </li>
+          <li id="client" class="copyLink" data-link="wss://ricenetwork.neutine.net/" data-server="ricejava-neutine.net">
+            <img id="icon" src="/assets/servers/ricenetwork.png" />
+            <h1 id="title">Rice Network</h1>
+            <p id="ver"><span class="status">Loading...</span></p>
+            <p id="author" style="font-size: 18px;">CrystalPVP, Duels, Survival, Minigames</p>
+          </li>
+          <li id="client" class="copyLink" data-link="wss://play.craftclue.rocks/" data-server="java.craftclue.rocks">
+            <img id="icon" src="/assets/servers/cc.png" />
+            <h1 id="title">Craftclue</h1>
+            <p id="ver"><span class="status">Loading...</span></p>
+            <p id="author" style="font-size: 18px;">Anarchy</p>
+          </li>
+          <li id="client" class="copyLink" data-link="wss://mc.asspixel.net/" data-server="mc.asspixel.net">
+            <img id="icon" src="/assets/servers/ap.png" />
+            <h1 id="title">A*spixel</h1>
+            <p id="ver"><span class="status">Loading...</span></p>
+            <p id="author" style="font-size: 18px;">Minigames</p>
+          </li>
+          <li id="client" class="copyLink" data-link="wss://sus.shhnowisnottheti.me/" data-server="sus.shhnowisnottheti.me">
+            <img id="icon" src="/assets/eaglercraftx.jpg" />
+            <h1 id="title">Creacraft</h1>
+            <p id="ver"><span class="status">Loading...</span></p>
+            <p id="author" style="font-size: 18px;">Survival, Admin, Creative</p>
+          </li>
+          <li id="client" class="copyLink" data-link="wss://ep.rufan.tech/" data-server="ep.rufan.tech">
+            <img id="icon" src="/assets/servers/tl.png" />
+            <h1 id="title">Time Legacy</h1>
+            <p id="ver"><span class="status">Loading...</span></p>
+            <p id="author" style="font-size: 18px;">Skyblock</p>
+          </li>
+          <li id="client" class="copyLink" data-link="wss://x.mess.eu.org" data-server="x.mess.eu.org">
+            <img id="icon" src="/assets/servers/mc.png" />
+            <h1 id="title">Messcraft</h1>
+            <p id="ver"><span class="status">Loading...</span></p>
+            <p id="author" style="font-size: 18px;">Survival</p>
+          </li>
+          <li id="client" class="copyLink" data-link="wss://mc.zyth.me/" data-server="mc.zyth.me">
+            <img id="icon" src="/assets/servers/zyth.png" />
+            <h1 id="title">Zyth MC</h1>
+            <p id="ver"><span class="status">Loading...</span></p>
+            <p id="author" style="font-size: 18px;">Bedwars</p>
+          </li>
+        </div>
+      </div>
+    </center>
+    <div class="backdrop-blur"></div>
+
+    <div id="toast" style="position: fixed;">
+        IP Copied!
+    </div>
+    <br>
+
+    <script>
+        function showToast(text) {
+            const toast = document.getElementById("toast")
+            toast.textContent = text
+
+            toast.style.right = "1%"
+            setTimeout(() => {
+                toast.style.right = "-40%"
+            }, 3000)
+        }
+
+        function copyToClipboard(text) {
+            const tempInput = document.createElement('input');
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            tempInput.setSelectionRange(0, 99999);
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            showToast("IP Copied!")
+        }
+
+        document.querySelectorAll('.copyLink').forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                const link = this.getAttribute('data-link');
+                copyToClipboard(link);
+            });
+        });
+    </script>
+
+    <script>
+        function updateServerStatus(serverAddress, statusElement) {
+            fetch(`https://api.mcstatus.io/v2/status/java/${serverAddress}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.online) {
+                    statusElement.innerHTML = `Status: <span class="online">Online</span>`;
+                } else {
+                    statusElement.innerHTML = `Status: <span class="offline">Offline</span>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching server status:', error);
+                statusElement.innerHTML = `<span class="unknown">Failed to fetch data</span>`;
+            });
+        }
+
+        const sbuttons = document.querySelectorAll('#client');
+
+        sbuttons.forEach(button => {
+            const serverAddress = button.dataset.server;
+            const statusElement = button.querySelector('.status');
+            button.addEventListener('click', () => {
+                updateServerStatus(serverAddress, statusElement);
+            });
+            updateServerStatus(serverAddress, statusElement);
+        }); 
+
+        setInterval(() => {
+            sbuttons.forEach(button => {
+                const serverAddress = button.dataset.server;
+                const statusElement = button.querySelector('.status');
+                updateServerStatus(serverAddress, statusElement);
+            });
+        }, 5000);
+    </script>
+  </body>
+</html>

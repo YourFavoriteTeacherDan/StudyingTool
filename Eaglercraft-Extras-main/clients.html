@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="home.css" />
+    <link rel="shortcut icon" href="assets/icon.png" type="image/x-icon" />
+    <title>Clients</title>
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons+Round"
+      rel="stylesheet"
+    />
+    <script src="sounds.js" defer></script>
+  </head>
+  <body>
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-B23XL7G2NK"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "G-B23XL7G2NK");
+    </script>
+    <style>
+      body,
+      html {
+        background: url("assets/pano.png");
+        background-attachment: fixed;
+        background-size: cover;
+        background-repeat: repeat-x;
+        margin: 0;
+        animation: panorama 95s linear infinite;
+      }
+
+      @keyframes panorama {
+        0% {
+          background-position: 0;
+        }
+
+        100% {
+          background-position: calc(100vh / 144 * -820);
+        }
+      }
+    </style>
+    <center>
+      <h1 style="font-size: xxx-large; text-shadow: 2px 2px 2px black;">Clients</h1>
+      <div class="vflex">
+        <a href="1.3.html">
+          <button class="button">1.3</button>
+        </a>
+        <a href="1.5.html">
+          <button class="button">1.5</button>
+        </a>
+        <a href="1.8.html">
+          <button class="button">1.8</button>
+        </a>
+      </div>
+    </center>
+    <div class="backdrop-blur"></div>
+  </body>
+</html>

@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DeathClient JS Plugin API Documentation</title>
+<style>
+  :root {
+    --bg:       #0d0d0d;
+    --bg2:      #141414;
+    --bg3:      #1a1a1a;
+    --border:   #2a2a2a;
+    --red:      #cc0000;
+    --green:    #00cc66;
+    --blue:     #3399ff;
+    --yellow:   #ffcc00;
+    --purple:   #aa66ff;
+    --cyan:     #00cccc;
+    --text:     #e0e0e0;
+    --muted:    #777;
+    --code-bg:  #111;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .shell { display: flex; min-height: 100vh; }
+
+  nav {
+    width: 240px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    padding: 20px;
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  nav h1 { font-size: 18px; margin-bottom: 20px; color: var(--red); }
+  nav a { display: block; color: var(--muted); text-decoration: none; padding: 6px 0; font-size: 14px; transition: 0.2s; }
+  nav a:hover, nav a.active { color: var(--text); }
+  nav ul { list-style: none; margin-bottom: 15px; padding-left: 10px; border-left: 2px solid var(--border); }
+
+  main {
+    flex: 1;
+    margin-left: 240px;
+    padding: 40px;
+    max-width: 900px;
+  }
+
+  h2 { font-size: 24px; margin: 40px 0 15px; border-bottom: 1px solid var(--border); padding-bottom: 8px; color: var(--blue); }
+  h2:first-child { margin-top: 0; }
+  h3 { font-size: 18px; margin: 25px 0 10px; color: var(--text); }
+  p { margin-bottom: 15px; }
+
+  code {
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Consolas', monospace;
+    font-size: 13px;
+    color: var(--cyan);
+  }
+
+  pre {
+    background: var(--bg3);
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    overflow-x: auto;
+    margin-bottom: 20px;
+  }
+
+  pre code {
+    background: transparent; padding: 0; color: #cdd6f4;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+  th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border); }
+  th { color: var(--blue); font-weight: normal; }
+
+  .callout-tip {
+    background: rgba(0, 204, 102, 0.1);
+    border-left: 4px solid var(--green);
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 0 4px 4px 0;
+  }
+  .callout-warning {
+    background: rgba(255, 204, 0, 0.1);
+    border-left: 4px solid var(--yellow);
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 0 4px 4px 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <nav>
+    <h1>DeathClient JS</h1>
+    <a href="#getting-started">Getting Started</a>
+    <a href="#mod-registration">Mod Registration</a>
+    <a href="#settings">Settings API</a>
+    <a href="#commands">Commands API</a>
+    <a href="#mod-callbacks">Mod Callbacks</a>
+    <a href="#hud-mods">HUD Mods <span style="color:var(--green);font-size:10px;">NEW</span></a>
+    <a href="#bridge-api">Bridge API (dc.*)</a>
+    <a href="#game-state">Game State & Mutation <span style="color:var(--green);font-size:10px;">NEW</span></a>
+    <a href="#events">Event System</a>
+    <a href="#data-persistence">Data Persistence</a>
+  </nav>
+
+  <main>
+    <h2 id="getting-started">Getting Started</h2>
+    <p>DeathClient supports JavaScript plugins executed directly via the built-in browser engine. Plugins interact with the Java client using the global <code>window.DeathClient</code> or <code>dc</code> object.</p>
+    
+    <div class="callout-tip">
+      <p><strong>VS Code IDE Editor:</strong> You can edit your scripts directly in-game! Open the JS Plugins menu and click <strong>Edit Code</strong> to open our built-in VS Code-style IDE. It features full syntax highlighting, Light/Dark themes, file renaming, and direct downloading. Press <code>Ctrl+S</code> to save and hot-reload your code instantly!</p>
+    </div>
+
+    <pre><code>// Example Plugin: AutoGG
+const dc = window.DeathClient;
+
+dc.createMod({
+    name: "AutoGG",
+    description: "Says GG after a match.",
+    category: "CHAT",
+    isCheat: false,
+    settings: [],
+    onUpdate: function() {
+        // Logic goes here
+    }
+});</code></pre>
+
+    <h2 id="mod-registration">Mod Registration</h2>
+    <p>Register a module using <code>dc.createMod(config)</code>. The config object accepts the following fields:</p>
+    <table>
+      <thead>
+        <tr><th>Property</th><th>Type</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>name</code></td><td>String</td><td><strong>Required.</strong> The exact name of the module.</td></tr>
+        <tr><td><code>description</code></td><td>String</td><td>A short description shown in the click GUI.</td></tr>
+        <tr><td><code>category</code></td><td>String</td><td><code>MOVEMENT</code>, <code>COMBAT</code>, <code>RENDER</code>, <code>WORLD</code>, <code>HUD</code>, <code>PLAYER</code>. Defaults to <code>PLAYER</code>.</td></tr>
+        <tr><td><code>isCheat</code></td><td>Boolean</td><td>Marks the module as a cheat (can be hidden on strict servers).</td></tr>
+        <tr><td><code>settings</code></td><td>Array</td><td>Array of setting objects created via <code>dc.createSetting()</code>.</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="settings">Settings API</h2>
+    <p>Settings allow users to configure your script via the ClickGUI. Create them easily using the new <code>dc.createSetting()</code> helper function and pass them into your mod's <code>settings</code> array.</p>
+
+    <h3>Toggle (Boolean) Setting</h3>
+    <pre><code>dc.createSetting("Toggle", "Spam Mode", true)</code></pre>
+
+    <h3>Slider (Number) Setting</h3>
+    <pre><code>// (Type, Name, DefaultValue, MinValue, MaxValue)
+dc.createSetting("Slider", "Delay", 50, 0, 1000)</code></pre>
+
+    <h3>Mode (Dropdown) Setting</h3>
+    <pre><code>// (Type, Name, DefaultValue, ArrayOfModes)
+dc.createSetting("Mode", "Style", "Normal", ["Normal", "Aggressive", "Passive"])</code></pre>
+
+    <h3>String (Text) Setting <span style="color:var(--green);font-size:12px;font-weight:bold;">NEW</span></h3>
+    <pre><code>// (Type, Name, DefaultValue)
+dc.createSetting("String", "Message", "Hello World!")</code></pre>
+
+    <p>To read settings dynamically during callbacks, use the injected <code>settingsCache</code> object:</p>
+    <pre><code>onUpdate: function(settings) {
+    if (settings["Spam Mode"] && settings["Spam Mode"].value) {
+        let delay = settings["Delay"].value;
+        let message = settings["Message"].value;
+        // Do something
+    }
+}</code></pre>
+
+    <h2 id="commands">Commands API <span style="color:var(--green);font-size:12px;font-weight:bold;">NEW in v1.3.1</span></h2>
+    <p>You can now register custom chat commands that intercept player chat natively, preventing "Unknown Command" errors on the server!</p>
+    <pre><code>dc.createCommand({
+    command: "panic",
+    prefix: ".", // User types: .panic
+    description: "Emergency disable all mods",
+    execute: function(args) {
+        dc.chat("\u00a7cPANIC INITIATED!");
+        // args contains any text typed after the command
+    }
+});</code></pre>
+
+    <h2 id="mod-callbacks">Mod Callbacks</h2>
+    <p>Assign functions to your module object to hook into game loops. Callbacks are automatically passed your mod's current <code>settingsCache</code>.</p>
+    <table>
+      <tbody>
+        <tr><td><code>onEnable(settings)</code></td><td>Called when the module is toggled on.</td></tr>
+        <tr><td><code>onDisable(settings)</code></td><td>Called when the module is toggled off.</td></tr>
+        <tr><td><code>onUpdate(settings)</code></td><td>Called every client tick (usually 20 times per second).</td></tr>
+        <tr><td><code>onRender2D(settings)</code></td><td>Called every frame. Useful for drawing custom HUD elements.</td></tr>
+        <tr><td><code>onChat(message)</code></td><td>Called when an incoming chat message is received from the server.</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="hud-mods">HUD Mods (Draggable & Resizable)</h2>
+    <p>If you want your plugin to render visual elements on the screen that users can drag around and resize in the <b>HUD Editor</b>, you must use <code>dc.createHudMod(config)</code> instead of the standard <code>createMod</code> function.</p>
+    
+    <p>HUD Mods require two extra properties: <code>width</code> and <code>height</code>. These tell the GUI Editor how big the green bounding box should be when the user is dragging your mod. Inside your <code>onRender2D</code> event, you must use <code>this.x</code> and <code>this.y</code> to draw your elements, as these values update in real-time when the user moves your mod.</p>
+
+    <div style="background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 12px; overflow-x: auto; margin-bottom: 20px;">
+<pre style="color: var(--text); font-family: Consolas, monospace; font-size: 14px;"><code><span style="color: var(--kw);">const</span> dc = window.DeathClient;
+
+dc.createHudMod({
+  name: <span style="color: var(--str);">"Watermark"</span>,
+  description: <span style="color: var(--str);">"Displays a custom client watermark"</span>,
+  category: <span style="color: var(--str);">"HUD"</span>,
+  
+  <span style="color: var(--com);">// REQUIRED: Defines the size of the green drag-box in the HUD Editor</span>
+  width: 80,  
+  height: 12, 
+  
+  onRender2D: <span style="color: var(--kw);">function</span>() {
+    <span style="color: var(--com);">// this.x, this.y, and this.scale are automatically updated by the Java backend!</span>
+    <span style="color: var(--com);">// You must use them as your X and Y coordinates when drawing.</span>
+    
+    <span style="color: var(--kw);">let</span> text = <span style="color: var(--str);">"DeathClient JS"</span>;
+    
+    <span style="color: var(--com);">// Example: Assuming you have a dc.drawString method mapped in your JSBridge</span>
+    dc.drawString(text, <span style="color: var(--kw);">this</span>.x, <span style="color: var(--kw);">this</span>.y, 0xFFFFFF, <span style="color: var(--kw);">true</span>);
+  }
+});</code></pre>
+    </div>
+
+    <p><b>Reactive Variables Available in HUD Mods:</b></p>
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
+      <thead>
+        <tr style="background: var(--bg3); border-bottom: 2px solid var(--border);">
+          <th style="padding: 10px; text-align: left;">Variable</th>
+          <th style="padding: 10px; text-align: left;">Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 10px;"><code>this.x</code></td>
+          <td style="padding: 10px;">The current absolute X position of the mod on the screen.</td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 10px;"><code>this.y</code></td>
+          <td style="padding: 10px;">The current absolute Y position of the mod on the screen.</td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 10px;"><code>this.scale</code></td>
+          <td style="padding: 10px;">The current size multiplier (modified by scroll wheel in the HUD editor). Use this if you are doing custom OpenGL scaling in your JS.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2 id="bridge-api">Bridge API (dc.*)</h2>
+    <p>The <code>dc</code> global object provides methods to interact with the game state.</p>
+    
+    <h3>Chat & Commands</h3>
+    <table>
+      <tbody>
+        <tr><td><code>dc.chat(msg)</code></td><td>Prints a localized message to the user's chat box (not sent to server).</td></tr>
+        <tr><td><code>dc.sendChat(msg)</code></td><td>Sends a message to the server, visible to other players.</td></tr>
+        <tr><td><code>dc.sendCommand(cmd)</code></td><td>Executes a slash command. Automatically adds '/' if missing.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Mod Control & Queries</h3>
+    <table>
+      <tbody>
+        <tr><td><code>dc.enableMod(name)</code></td><td>Force enables a module.</td></tr>
+        <tr><td><code>dc.disableMod(name)</code></td><td>Force disables a module.</td></tr>
+        <tr><td><code>dc.toggleMod(name)</code></td><td>Toggles a module's state.</td></tr>
+        <tr><td><code>dc.isEnabled(name)</code></td><td>Returns <code>true</code> if the specified JS mod is currently active.</td></tr>
+        <tr><td><code>dc.getMods()</code></td><td>Returns an array of strings containing all registered JS mod names.</td></tr>
+        <tr><td><code>dc.getAllMods()</code></td><td>Returns an array of objects representing EVERY mod in the client (Java + JS). Example: <code>[{name: "Flight", enabled: true}]</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3>Visuals & Audio</h3>
+    <table>
+      <tbody>
+        <tr><td><code>dc.playSound(name, vol, pitch)</code></td><td>Plays a client-side sound (e.g., <code>"random.orb"</code>, <code>1.0</code>, <code>1.0</code>).</td></tr>
+        <tr><td><code>dc.showTitle(title, subtitle)</code></td><td>Displays big text in the center of the screen. Subtitle is optional.</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="game-state">Game State & Mutation <span style="color:var(--green);font-size:12px;font-weight:bold;">NEW</span></h2>
+    <p>You can now directly read and modify the player and world state natively! Property mutations are pushed to the Java engine automatically through a Two-Way Queue System.</p>
+    
+    <h3>Player API (<code>dc.player</code>)</h3>
+    <p>Directly access and mutate the local player entity.</p>
+    <table>
+      <tbody>
+        <tr><td><strong>Mutable Properties</strong></td><td><code>x</code>, <code>y</code>, <code>z</code>, <code>motionX</code>, <code>motionY</code>, <code>motionZ</code>, <code>yaw</code>, <code>pitch</code></td></tr>
+        <tr><td><strong>Read-Only Properties</strong></td><td><code>name</code>, <code>health</code>, <code>maxHealth</code>, <code>onGround</code></td></tr>
+        <tr><td><strong>Methods</strong></td><td><code>jump()</code></td></tr>
+      </tbody>
+    </table>
+    <pre><code>// Teleport the player up by 6 blocks
+dc.player.y += 6;
+
+// Freeze player in the air (Flight/Hover)
+dc.player.motionY = 0;
+
+// Spinbot example
+dc.player.yaw += 45;
+
+// Jump check
+if (dc.player.onGround) {
+    dc.player.jump();
+}</code></pre>
+
+    <h3>World API (<code>dc.world</code>)</h3>
+    <p>Access and manipulate the current dimension and world state.</p>
+    <table>
+      <tbody>
+        <tr><td><strong>Mutable Properties</strong></td><td><code>time</code></td></tr>
+        <tr><td><strong>Read-Only Properties</strong></td><td><code>raining</code></td></tr>
+      </tbody>
+    </table>
+    <pre><code>// Make it permanent daytime
+dc.world.time = 6000;</code></pre>
+
+    <h2 id="events">Event System</h2>
+    <p>Instead of tying logic to a specific mod, you can listen to global events using <code>dc.on(eventName, callback)</code>.</p>
+
+    <h3>Available Events</h3>
+    <table>
+      <tbody>
+        <tr><td><code>tick</code></td><td>Fires every client tick. Payload contains the player state JSON.</td></tr>
+        <tr><td><code>chat_receive</code></td><td>Fires when a chat message is received from the server. Payload contains <code>message</code>.</td></tr>
+        <tr><td><code>mod_enable</code></td><td>Fires when any module is toggled on. Payload contains <code>name</code>.</td></tr>
+        <tr><td><code>mod_disable</code></td><td>Fires when any module is toggled off. Payload contains <code>name</code>.</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="data-persistence">Data Persistence</h2>
+    <p>Plugins can save and load data (like configs or stats) across client restarts using the built-in LocalStorage bridge.</p>
+    <table>
+      <tbody>
+        <tr><td><code>dc.saveFile(key, val)</code></td><td>Saves a string value under the given key.</td></tr>
+        <tr><td><code>dc.loadFile(key)</code></td><td>Returns the saved string, or <code>null</code> if it doesn't exist.</td></tr>
+        <tr><td><code>dc.deleteFile(key)</code></td><td>Deletes the stored key.</td></tr>
+        <tr><td><code>dc.listFiles(prefix)</code></td><td>Returns an array of saved keys that start with the prefix.</td></tr>
+      </tbody>
+    </table>
+
+    <br><br>
+    <p style="color: var(--muted); font-size: 12px; border-top: 1px solid var(--border); padding-top: 16px;">
+      DeathClient v1.3.1 · Plugin API documentation · EaglerCraft 1.8
+    </p>
+  </main>
+</div>
+
+<script>
+  var headings = document.querySelectorAll('h2[id], h3[id]');
+  var links = document.querySelectorAll('nav a');
+
+  function updateNav() {
+    var scroll = window.scrollY + 60;
+    var active = null;
+    headings.forEach(function(h) {
+      if (h.offsetTop <= scroll) active = h.id;
+    });
+    
+    links.forEach(function(link) {
+      link.classList.remove('active');
+      if (active && link.getAttribute('href') === '#' + active) {
+        link.classList.add('active');
+      }
+    });
+  }
+
+  window.addEventListener('scroll', updateNav);
+  updateNav();
+</script>
+</body>
+</html>

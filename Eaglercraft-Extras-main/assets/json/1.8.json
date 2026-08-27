@@ -1,0 +1,44 @@
+[
+  {
+    "name": "EaglercraftX",
+    "version": "u53",
+    "url": "/clients/1.8/eaglercraftx.html",
+    "icon": "/assets/eaglercraftx.jpg",
+    "author": "lax1dude, ayunami2000"
+  },
+  {
+    "name": "Shadow Client",
+    "version": "3.0 Beta",
+    "url": "/clients/1.8/shadowclient30beta.html",
+    "icon": "/assets/eaglercraftx.jpg",
+    "author": "PeytonPlayz595"
+  },
+  {
+    "name": "Starlike Client",
+    "version": "Unknown",
+    "url": "/clients/1.8/Starlike_Client.html",
+    "icon": "/assets/eaglercraftx.jpg",
+    "author": "zumbiepig"
+  },
+  {
+    "name": "Pi Client",
+    "version": "1.0",
+    "url": "/clients/1.8/pi-client.html",
+    "icon": "/assets/eaglercraftx.jpg",
+    "author": "SnesLover22"
+  },
+  {
+    "name": "DragonX Lite",
+    "version": "4.0",
+    "url": "/clients/1.8/DragonXLite.html",
+    "icon": "/assets/eaglercraftx.jpg",
+    "author": "averycoolusername"
+  },
+  {
+    "name": "DragonX",
+    "version": "4.0",
+    "url": "/clients/1.8/DragonX_V4.html",
+    "icon": "/assets/eaglercraftx.jpg",
+    "author": "3TERN4LF1R3"
+  }
+]

@@ -1,0 +1,65 @@
+[
+  {
+    "name": "EaglercraftX 1.5",
+    "version": "Service Pack #1",
+    "url": "/clients/1.5/eagler1.5.html",
+    "icon": "/assets/eaglercraftx.jpg",
+    "author": "lax1dude and ayunami2000"
+  },
+  {
+    "name": "Precision Client",
+    "version": "Unknown",
+    "url": "/clients/1.5/PrecisionClient.html",
+    "icon": "/assets/precision.png",
+    "author": "LazerXTeam"
+  },
+  {
+    "name": "NitClient",
+    "version": "2.0",
+    "url": "/clients/1.5/nitclient.html",
+    "icon": "/assets/eaglercraftx.jpg",
+    "author": "Unknown"
+  },
+  {
+    "name": "Nebula",
+    "version": "Service Pack #1",
+    "url": "/clients/1.5/nebula.html",
+    "icon": "/assets/eaglercraftx.jpg",
+    "author": "eviuhu9fvhfudiaefuieavnui"
+  },
+  {
+    "name": "Kerosene",
+    "version": "Unknown",
+    "url": "/clients/1.5/kerosene.html",
+    "icon": "/assets/eaglercraftx.jpg",
+    "author": "Anonymous"
+  },
+  {
+    "name": "CoderCraft",
+    "version": "November 21st 2023",
+    "url": "/clients/1.5/codercraft.html",
+    "icon": "/assets/eaglercraftx.jpg",
+    "author": "AriesTropixDev"
+  },
+  {
+    "name": "Odd Future Client",
+    "version": "June 1st 2022",
+    "url": "/clients/1.5/oddfutureclient.html",
+    "icon": "/assets/eaglercraftx.jpg",
+    "author": "AriesTropixDev"
+  },
+  {
+    "name": "FuchsiaX",
+    "version": "FuchsiaX Web",
+    "url": "/clients/1.5/fuchsiax.html",
+    "icon": "/assets/eaglercraftx.jpg",
+    "author": "ayunami2000"
+  },
+  {
+    "name": "Nova Client",
+    "version": "1.0",
+    "url": "/clients/1.5/N0VA CLIENT.html",
+    "icon": "/assets/eaglercraftx.jpg",
+    "author": "A3R10"
+  }
+]
