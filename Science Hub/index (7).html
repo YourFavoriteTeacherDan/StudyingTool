@@ -161,6 +161,7 @@
             color: inherit; 
             position: relative;
             overflow: hidden;
+            cursor: pointer;
         }
 
         .card:hover { 
@@ -189,7 +190,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* Category Styling */
         .card[data-category="g7"]:hover { border-color: var(--success); }
         .card[data-category="g7"] .badge { color: var(--success); border-color: var(--success); }
 
@@ -252,7 +252,7 @@
 
     <header>
         <h1>🧪 Middlanders Science Study & Encyclopedia Hub</h1>
-        <p>Master Directory — 25 Integrated 7th & 8th Grade Science Modules (sorry images dont work)</p>
+        <p>Master Directory — 25 Integrated 7th & 8th Grade Science Modules</p>
     </header>
 
     <div class="controls-bar">
@@ -490,10 +490,24 @@
     <script>
         let currentFilter = 'all';
 
+        // Launcher Hub Integration: Direct postMessage backup fallback for VFS tabs
+        document.addEventListener('click', (e) => {
+            const card = e.target.closest('.card');
+            if (card) {
+                const targetPath = card.getAttribute('href');
+                if (targetPath && !targetPath.startsWith('http') && window.parent && window.parent !== window) {
+                    // Signal the launcher host to open in a tab if running in launcher VFS mode
+                    if (window.__VFS_HTML__ && window.__VFS_HTML__[targetPath]) {
+                        e.preventDefault();
+                        window.parent.postMessage({ type: 'OPEN_TAB_VFS', path: window.__VFS_HTML__[targetPath] }, '*');
+                    }
+                }
+            }
+        });
+
         function setFilter(category, btnElement) {
             currentFilter = category;
             
-            // Toggle active button state
             document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
             if (btnElement) btnElement.classList.add('active');
 
@@ -522,17 +536,21 @@
                 }
             });
 
-            // Handle Section Block visibility
+            // Robust Section Block visibility check (avoids fragile querySelector style attribute selector)
             document.querySelectorAll('.section-block').forEach(block => {
-                const visibleCards = block.querySelectorAll('.card[style="display: flex;"]');
-                if (visibleCards.length === 0 && (query !== '' || currentFilter !== 'all')) {
+                const blockCards = block.querySelectorAll('.card');
+                let hasVisibleCard = false;
+                blockCards.forEach(c => {
+                    if (c.style.display !== 'none') hasVisibleCard = true;
+                });
+
+                if (!hasVisibleCard && (query !== '' || currentFilter !== 'all')) {
                     block.style.display = 'none';
                 } else {
                     block.style.display = 'block';
                 }
             });
 
-            // Show "No Results" message if empty
             const noResults = document.getElementById('no-results');
             noResults.style.display = (visibleCount === 0) ? 'block' : 'none';
         }
