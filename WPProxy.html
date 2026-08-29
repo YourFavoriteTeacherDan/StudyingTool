@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remote Proxy Browser</title>
+    <style>
+        body { 
+            margin: 0; 
+            font-family: system-ui, -apple-system, sans-serif; 
+            background: #1a1a1a; 
+            color: white; 
+            overflow: hidden; 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        #nav-bar { 
+            display: flex; 
+            align-items: center; 
+            padding: 8px 12px; 
+            gap: 8px; 
+            background: #36393f; 
+        }
+        .nav-icon-btn { 
+            background: transparent; 
+            border: none; 
+            color: #b9bbbe; 
+            font-size: 16px; 
+            cursor: pointer; 
+            padding: 6px; 
+            border-radius: 4px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            width: 32px; 
+            height: 32px;
+        }
+        .nav-icon-btn:hover { background: #4f545c; color: white; }
+        #address-bar { 
+            flex-grow: 1; 
+            background: #202225; 
+            border: 1px solid #202225; 
+            padding: 8px 15px; 
+            color: white; 
+            border-radius: 20px; 
+            font-size: 14px; 
+            outline: none; 
+            margin: 0 10px;
+        }
+        #address-bar:focus { border-color: #5865F2; }
+        #wss-url { 
+            background: #202225; 
+            border: 1px solid #202225; 
+            color: #b9bbbe; 
+            padding: 8px 15px; 
+            border-radius: 4px; 
+            font-size: 12px; 
+            width: 180px; 
+            outline: none; 
+        }
+        .action-btn { 
+            background: #4f545c; 
+            border: none; 
+            color: white; 
+            font-size: 13px; 
+            cursor: pointer; 
+            padding: 8px 14px; 
+            border-radius: 4px; 
+            font-weight: bold; 
+        }
+        .action-btn:hover { background: #5d6269; }
+        .dropdown-menu { 
+            display: none; 
+            position: absolute; 
+            top: 45px; 
+            right: 0; 
+            background: #36393f; 
+            border: 1px solid #202225; 
+            border-radius: 8px; 
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6); 
+            z-index: 1005; 
+            min-width: 250px; 
+            padding: 15px; 
+            color: white; 
+            text-align: left; 
+        }
+        .dropdown-menu h3, .dropdown-menu h4 { 
+            margin: 0 0 10px 0; 
+            border-bottom: 1px solid #4f545c; 
+            padding-bottom: 10px; 
+            font-size: 14px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+        }
+        .menu-item { 
+            padding: 10px 16px; 
+            font-size: 14px; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px;
+        }
+        .menu-item:hover { background: #4f545c; border-radius: 4px;}
+        .scrollable-list { overflow-y: auto; max-height: 250px; padding-right: 5px; }
+        .list-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 8px 5px; 
+            border-bottom: 1px solid #4f545c; 
+            font-size: 13px;
+        }
+        .list-item a, .list-item span.link-text { 
+            color: #5865F2; 
+            text-decoration: none; 
+            font-weight: bold; 
+            cursor: pointer; 
+        }
+        .del-btn { 
+            background: transparent; 
+            color: #e74c3c; 
+            border: none; 
+            cursor: pointer; 
+            font-size: 14px; 
+            font-weight: bold; 
+        }
+        .sort-btn { 
+            background: #4f545c; 
+            border: none; 
+            color: white; 
+            font-size: 11px; 
+            padding: 4px 8px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            margin-left: 4px;
+        }
+        #content-area { 
+            flex-grow: 1; 
+            position: relative; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            background: #000; 
+            overflow: hidden; 
+        }
+        
+        /* tabindex="0" and outline:none REQUIRED for typing on the canvas */
+        #screen { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: contain; 
+            cursor: default; 
+            outline: none; 
+        }
+        
+        #virtual-pointer { 
+            position: absolute; 
+            display: none; 
+            pointer-events: none; 
+            z-index: 1002; 
+            filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.8)); 
+            width: 16px; 
+            height: 24px;
+        }
+        #status { 
+            position: absolute; 
+            color: #b9bbbe; 
+            font-size: 18px; 
+            pointer-events: none; 
+            background: rgba(0,0,0,0.7); 
+            padding: 15px 25px; 
+            border-radius: 8px; 
+            z-index: 10;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+</head>
+<body>
+    <div id="nav-bar">
+        <button class="nav-icon-btn" onclick="navigate('back')" title="Back">⬅️</button>
+        <button class="nav-icon-btn" onclick="navigate('forward')" title="Forward">➡️</button>
+        <button class="nav-icon-btn" onclick="navigate('reload')" title="Reload">🔄</button>
+        
+        <input type="text" id="address-bar" placeholder="Paste website link or search..." value="https://duckduckgo.com">
+        
+        <input type="text" id="wss-url" placeholder="wss://your-tunnel...">
+        <button class="action-btn" style="background-color: #43b581;" onclick="connectProxy()">Connect Stream</button>
+
+        <div style="position: relative;">
+            <button class="nav-icon-btn" onclick="toggleMenu('history-panel')" title="History">🕒</button>
+            <div id="history-panel" class="dropdown-menu">
+                <h3><span>History</span> <button onclick="clearHistory()" class="sort-btn" style="background:#e74c3c;">Clear</button></h3>
+                <div id="history-list" class="scrollable-list"></div>
+            </div>
+        </div>
+
+        <div style="position: relative;">
+            <button class="nav-icon-btn" onclick="toggleMenu('settings-menu')" title="Settings">⚙️</button>
+            <div id="settings-menu" class="dropdown-menu">
+                <h4>Browser Settings</h4>
+                <label class="menu-item"><input type="checkbox" id="setting-pointer" onchange="togglePointerLockMode()"> 🎮 Enable Mouse Lock</label>
+                <div class="menu-item" onclick="toggleEruda()">🛠️ Toggle Eruda DevTools</div>
+            </div>
+        </div>
+
+        <div style="position: relative;">
+            <button class="action-btn" onclick="toggleMenu('downloads-panel')">Downloads</button>
+            <div id="downloads-panel" class="dropdown-menu">
+                <h3><span>Downloads</span><div><button onclick="clearDownloads()" class="sort-btn" style="background:#e74c3c;">Clear</button></div></h3>
+                <div id="downloads-list" class="scrollable-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="content-area">
+        <div id="status">Paste WSS URL & Click Connect Stream</div>
+        <canvas id="screen" width="1280" height="720" tabindex="0"></canvas>
+        <img id="virtual-pointer" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='24' viewBox='0 0 16 24'><path d='M0,0 L16,16 L9,16 L14,24 L10,24 L5,16 L0,22 Z' fill='white' stroke='black' stroke-width='1'/></svg>">
+    </div>
+
+    <script>
+        const cvs = document.getElementById('screen');
+        const ctx = cvs.getContext('2d');
+        const statusMsg = document.getElementById('status');
+        
+        let ws = null;
+        let pointerLockEnabled = false;
+        let vX = 640, vY = 360;
+
+        // Load saved WSS host
+        document.getElementById('wss-url').value = localStorage.getItem('proxy_host') || '';
+
+        function toggleMenu(id) {
+            document.querySelectorAll('.dropdown-menu').forEach(m => { if(m.id !== id) m.style.display = 'none'; });
+            const m = document.getElementById(id); 
+            m.style.display = m.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function toggleEruda() { 
+            if(!window.erudaInit) { 
+                eruda.init(); 
+                window.erudaInit=true; 
+            } else { 
+                eruda.destroy(); 
+                window.erudaInit=false; 
+            } 
+            toggleMenu('settings-menu'); 
+        }
+
+        function connectProxy() {
+            const host = document.getElementById('wss-url').value.trim();
+            const targetUrl = document.getElementById('address-bar').value.trim();
+            if(!host || !targetUrl) return;
+
+            localStorage.setItem('proxy_host', host);
+            addHistory(targetUrl);
+
+            statusMsg.innerText = 'Connecting Stream...'; 
+            statusMsg.style.display = 'block';
+            
+            if(ws) ws.close(); 
+            ws = new WebSocket(host);
+            
+            ws.onopen = () => { 
+                statusMsg.style.display = 'none'; 
+                ws.send(JSON.stringify({ type: 'goto', url: targetUrl })); 
+                cvs.focus(); // Focus canvas automatically
+            };
+            
+            ws.onmessage = e => {
+                const m = JSON.parse(e.data);
+                if(m.type === 'frame') { 
+                    const img = new Image(); 
+                    img.onload = () => ctx.drawImage(img, 0, 0, cvs.width, cvs.height); 
+                    img.src = 'data:image/jpeg;base64,' + m.data; 
+                }
+                if(m.type === 'url_change') { 
+                    document.getElementById('address-bar').value = m.url; 
+                    addHistory(m.url); 
+                }
+                if(m.type === 'download_ready') { 
+                    const tunnelHost = new URL(host).hostname;
+                    addDownload(m.filename, `https://${tunnelHost}/downloads/${m.filename}`);
+                    document.getElementById('downloads-panel').style.display = 'block';
+                }
+            };
+            
+            ws.onclose = () => { 
+                statusMsg.innerText = 'Stream Disconnected. Check Terminal.'; 
+                statusMsg.style.display = 'block'; 
+            };
+        }
+
+        // --- NAVIGATION CONTROLS ---
+        function navigate(action) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return;
+            if (action === 'reload') {
+                ws.send(JSON.stringify({ type: 'keydown', key: 'F5', code: 'F5' }));
+                ws.send(JSON.stringify({ type: 'keyup', key: 'F5', code: 'F5' }));
+            } else if (action === 'back') {
+                ws.send(JSON.stringify({ type: 'keydown', key: 'ArrowLeft', code: 'ArrowLeft' }));
+                ws.send(JSON.stringify({ type: 'keyup', key: 'ArrowLeft', code: 'ArrowLeft' }));
+            } else if (action === 'forward') {
+                ws.send(JSON.stringify({ type: 'keydown', key: 'ArrowRight', code: 'ArrowRight' }));
+                ws.send(JSON.stringify({ type: 'keyup', key: 'ArrowRight', code: 'ArrowRight' }));
+            }
+        }
+
+        // Function to go to a new website without restarting the server stream
+        function loadUrl(targetUrl) {
+            document.getElementById('address-bar').value = targetUrl;
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                // If stream is active, just tell Chromium to navigate
+                ws.send(JSON.stringify({ type: 'goto', url: targetUrl }));
+                addHistory(targetUrl);
+                cvs.focus();
+            } else {
+                // If not connected yet, initiate connection
+                connectProxy();
+            }
+        }
+
+        // Address bar enter key logic
+        document.getElementById('address-bar').addEventListener('keypress', e => { 
+            if(e.key === 'Enter') {
+                loadUrl(e.target.value.trim());
+            }
+        });
+
+        // --- HISTORY MANAGEMENT ---
+        let historyLog = JSON.parse(localStorage.getItem('proxyHistory') || '[]');
+        
+        function addHistory(url) {
+            if (historyLog.length > 0 && historyLog[0].url === url) return; 
+            let domain = url; 
+            try { domain = new URL(url).hostname; } catch(e){}
+            historyLog.unshift({ url, domain, id: Date.now() });
+            if (historyLog.length > 50) historyLog.pop();
+            localStorage.setItem('proxyHistory', JSON.stringify(historyLog));
+            renderHistory();
+        }
+        
+        function renderHistory() {
+            const list = document.getElementById('history-list');
+            if (historyLog.length === 0) return list.innerHTML = '<i style="color: #b9bbbe;">No history yet</i>';
+            list.innerHTML = historyLog.map(item => `
+                <div class="list-item">
+                    <span class="link-text" onclick="loadUrl('${item.url}')" title="${item.url}">${item.domain}</span>
+                    <button class="del-btn" onclick="historyLog=historyLog.filter(i=>i.id!==${item.id}); localStorage.setItem('proxyHistory', JSON.stringify(historyLog)); renderHistory();">✖</button>
+                </div>`).join('');
+        }
+        
+        function clearHistory() { historyLog = []; localStorage.removeItem('proxyHistory'); renderHistory(); }
+        renderHistory();
+
+        // --- DOWNLOADS MANAGEMENT ---
+        let downloads = [];
+        function addDownload(filename, url) { downloads.unshift({ filename, url, id: Date.now() }); renderDownloads(); }
+        function renderDownloads() {
+            const list = document.getElementById('downloads-list');
+            if (downloads.length === 0) return list.innerHTML = '<i style="color: #b9bbbe;">No recent downloads</i>';
+            list.innerHTML = downloads.map(item => `
+                <div class="list-item">
+                    <a href="${item.url}" target="_blank" download title="${item.filename}">📄 ${item.filename}</a>
+                    <button class="del-btn" onclick="downloads=downloads.filter(i=>i.id!==${item.id}); renderDownloads();">✖</button>
+                </div>`).join('');
+        }
+        function clearDownloads() { downloads = []; renderDownloads(); }
+
+        // --- MOUSE & POINTER LOCK ---
+        function togglePointerLockMode() {
+            pointerLockEnabled = document.getElementById('setting-pointer').checked;
+            if (!pointerLockEnabled) {
+                if (document.pointerLockElement === cvs) document.exitPointerLock();
+                document.getElementById('virtual-pointer').style.display = 'none'; 
+                cvs.style.cursor = 'default';
+            } else { 
+                cvs.style.cursor = 'none'; 
+            }
+        }
+
+        // Focus canvas on click so keyboard typing works immediately
+        cvs.addEventListener('click', () => { 
+            cvs.focus();
+            if (pointerLockEnabled && document.pointerLockElement !== cvs) {
+                cvs.requestPointerLock(); 
+            }
+        });
+
+        cvs.addEventListener('mousemove', (e) => {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return;
+            if (pointerLockEnabled && document.pointerLockElement === cvs) {
+                document.getElementById('virtual-pointer').style.display = 'block';
+                vX += e.movementX; vY += e.movementY;
+                vX = Math.max(0, Math.min(1280, vX)); 
+                vY = Math.max(0, Math.min(720, vY));
+                const rect = cvs.getBoundingClientRect();
+                document.getElementById('virtual-pointer').style.left = (rect.left + vX * (rect.width/1280)) + 'px';
+                document.getElementById('virtual-pointer').style.top = (rect.top + vY * (rect.height/720)) + 'px';
+                ws.send(JSON.stringify({ type: 'mousemove', x: vX, y: vY }));
+            } else if (!pointerLockEnabled) {
+                const rect = cvs.getBoundingClientRect();
+                vX = (e.clientX - rect.left) * (1280 / rect.width); 
+                vY = (e.clientY - rect.top) * (720 / rect.height);
+                ws.send(JSON.stringify({ type: 'mousemove', x: vX, y: vY }));
+            }
+        });
+
+        cvs.addEventListener('mousedown', (e) => { 
+            if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'mousedown', button: e.button === 2 ? 'right' : 'left' })); 
+        });
+        
+        cvs.addEventListener('mouseup', (e) => { 
+            if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'mouseup', button: e.button === 2 ? 'right' : 'left' })); 
+        });
+        
+        cvs.addEventListener('wheel', (e) => { 
+            if (ws && ws.readyState === WebSocket.OPEN) { 
+                ws.send(JSON.stringify({ type: 'wheel', deltaX: e.deltaX, deltaY: e.deltaY })); 
+            } 
+        });
+
+        // --- KEYBOARD TYPING ---
+        cvs.addEventListener('keydown', (e) => {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return;
+            
+            // Prevent browser from scrolling or tabbing out when typing in the remote browser
+            if (['Backspace', 'Tab', 'ArrowUp', 'ArrowDown', 'Space', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                e.preventDefault();
+            }
+
+            ws.send(JSON.stringify({
+                type: 'keydown',
+                key: e.key,
+                code: e.code,
+                keyCode: e.keyCode,
+                text: e.key.length === 1 ? e.key : '' // Extracts letters/symbols properly
+            }));
+        });
+
+        cvs.addEventListener('keyup', (e) => {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return;
+            e.preventDefault();
+            ws.send(JSON.stringify({
+                type: 'keyup',
+                key: e.key,
+                code: e.code,
+                keyCode: e.keyCode
+            }));
+        });
+    </script>
+</body>
+</html>
