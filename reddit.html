@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reddit Hub</title>
+    <style>
+        :root {
+            --bg: #030303; --nav: #1a1a1b; --card: #1a1a1b; --hover: #272729;
+            --border: #343536; --text: #d7dadc; --muted: #818384;
+            --up: #ff4500; --down: #7193ff; --accent: #0079d3; --mod: #28a745; --gold: #ffd700;
+        }
+        body.light-mode {
+            --bg: #dae0e6; --nav: #ffffff; --card: #ffffff; --hover: #f6f7f8;
+            --border: #ccc; --text: #1c1c1c; --muted: #787c7e;
+        }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; transition: background 0.2s; }
+        
+        #navbar { height: 56px; background: var(--nav); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 20px; gap: 20px; flex-shrink: 0; z-index: 100; }
+        .logo { font-size: 22px; font-weight: 800; color: var(--up); cursor: pointer; display: flex; align-items: center; gap: 8px; text-decoration: none; }
+        .search-bar { flex: 1; max-width: 600px; margin: 0 auto; background: var(--hover); border: 1px solid var(--border); border-radius: 20px; padding: 8px 16px; color: var(--text); outline: none; }
+        
+        .nav-actions { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+        .icon-btn { background: transparent; border: none; font-size: 20px; cursor: pointer; color: var(--text); padding: 8px; border-radius: 50%; transition: 0.2s; position: relative; }
+        .icon-btn:hover { background: var(--hover); }
+        .notif-dot { position: absolute; top: 0; right: 0; background: var(--up); width: 10px; height: 10px; border-radius: 50%; display: none; }
+        .btn { background: var(--accent); color: #fff; font-weight: bold; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 14px; transition: 0.2s; }
+        .btn-outline { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
+        .btn-danger { background: transparent; border: 1px solid var(--down); color: var(--down); }
+        
+        .user-pill { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: bold; padding: 4px 12px; border-radius: 20px; cursor: pointer; border: 1px solid transparent; }
+        .user-pill img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+        
+        #layout { display: flex; flex: 1; overflow: hidden; }
+        #sidebar { width: 250px; border-right: 1px solid var(--border); padding: 16px; overflow-y: auto; background: var(--card); flex-shrink: 0; }
+        .sub-btn { padding: 10px 12px; border-radius: 6px; cursor: pointer; color: var(--text); font-size: 14px; display: flex; align-items: center; gap: 10px; font-weight: 500; }
+        .sub-btn:hover, .sub-btn.active { background: var(--hover); }
+        
+        #center-column { flex: 1; overflow-y: auto; display: flex; flex-direction: column; align-items: center; padding: 24px; position:relative; }
+        .view-container { width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 16px; z-index: 10; }
+        
+        #sub-banner { position: absolute; top: 0; left: 0; right: 0; height: 180px; background-size: cover; background-position: center; display: none; z-index: 0; opacity: 0.5; filter: blur(2px); mask-image: linear-gradient(to bottom, black 50%, transparent 100%); }
+        #sub-header { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 20px; display: none; align-items: center; justify-content: space-between; margin-top: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .sort-bar { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 10px 16px; display: flex; gap: 12px; }
+        .sort-btn { background: transparent; border: none; color: var(--muted); font-weight: bold; font-size: 14px; cursor: pointer; padding: 8px 12px; border-radius: 20px; }
+        .sort-btn.active { background: var(--hover); color: var(--text); }
+        
+        .post { background: var(--card); border: 1px solid var(--border); border-radius: 6px; display: flex; cursor: pointer; }
+        .vote-col { width: 40px; background: rgba(0,0,0,0.02); padding: 8px 4px; display: flex; flex-direction: column; align-items: center; gap: 2px; border-right: 1px solid transparent; }
+        .vote-btn { background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; font-weight: bold; }
+        .vote-btn.up.active { color: var(--up); }
+        .vote-btn.down.active { color: var(--down); }
+        .score { font-size: 12px; font-weight: bold; }
+        
+        .post-body { padding: 12px 16px; flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+        .post-meta { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+        .post-meta img { width: 20px; height: 20px; border-radius: 50%; }
+        .post-title { font-size: 18px; font-weight: 600; margin: 0; display:flex; align-items:center; gap:8px;}
+        .flair { background: var(--hover); padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; color: var(--text); border: 1px solid var(--border); }
+        .user-flair { font-size: 11px; background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px; color: var(--muted); border: 1px solid var(--border); }
+        .mod-badge { background: var(--mod); color: white; font-size: 10px; padding: 2px 4px; border-radius: 3px; font-weight: bold; margin-left: 4px; }
+        .post-text { font-size: 14px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+        
+        /* Advanced Filters */
+        .filter-wrap { cursor: pointer; border-radius: 6px; overflow: hidden; position: relative; }
+        .filter-wrap.nsfw > * { filter: blur(35px); pointer-events: none; transition: filter 0.3s; }
+        .filter-wrap.spoiler { background: #000; display: block; }
+        .filter-wrap.spoiler > * { opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+        .filter-wrap.revealed > * { filter: blur(0); opacity: 1; pointer-events: auto; }
+        .filter-wrap.revealed { background: transparent; }
+        .filter-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 13px; z-index: 2; pointer-events: none; }
+        .filter-wrap.revealed .filter-label { display: none; }
+
+        .post-img { max-width: 100%; max-height: 500px; border-radius: 4px; object-fit: contain; margin-top: 8px; background: rgba(0,0,0,0.1); display: block; }
+        .post-footer { display: flex; flex-wrap: wrap; gap: 16px; font-size: 12px; font-weight: bold; color: var(--muted); margin-top: 4px; }
+        .post-footer div { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 4px; transition: 0.2s; }
+        .post-footer div:hover { background: var(--hover); }
+
+        .poll-container { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 12px; margin-top: 8px; }
+        .poll-opt { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--hover); border-radius: 4px; margin-bottom: 8px; cursor: pointer; position: relative; overflow: hidden; }
+        .poll-opt:hover { border: 1px solid var(--accent); }
+        .poll-bar { position: absolute; left: 0; top: 0; bottom: 0; background: rgba(0, 121, 211, 0.3); z-index: 0; }
+        .poll-text { z-index: 1; font-weight: bold; font-size: 14px; }
+        .poll-votes { z-index: 1; font-size: 12px; color: var(--muted); }
+
+        .comment-input-box { background: var(--card); padding: 16px; border: 1px solid var(--border); border-radius: 6px; }
+        .comment-input-box textarea { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 4px; resize: vertical; outline: none; box-sizing: border-box; }
+        .comment-tree { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
+        .comment-node { display: flex; flex-direction: column; margin-top: 8px; }
+        .comment-header { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); cursor:pointer;}
+        .comment-header img { width: 24px; height: 24px; border-radius: 50%; }
+        .comment-actions { display: flex; gap: 12px; font-size: 12px; font-weight: bold; color: var(--muted); margin-top:4px; }
+        .comment-actions span { cursor: pointer; } .comment-actions span:hover { color: var(--text); }
+
+        .content-split { display: flex; gap: 20px; align-items: flex-start;}
+        .main-feed-col { flex: 1; display:flex; flex-direction:column; gap:16px; min-width:0; }
+        .sidebar-col { width: 300px; background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 16px; display:none; flex-shrink: 0; }
+
+        #profile-header { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 24px; display: flex; gap: 20px; align-items: center; margin-bottom: 16px;}
+        #profile-header img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; }
+        .tabs-header { display: flex; gap: 10px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+        .tab-btn { flex: 1; padding: 12px; background: transparent; border: none; color: var(--muted); cursor: pointer; font-weight: bold; border-bottom: 2px solid transparent;}
+        .tab-btn.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
+
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; z-index: 2000; }
+        .modal-content { background: var(--card); border: 1px solid var(--border); padding: 24px; border-radius: 12px; width: 450px; display: flex; flex-direction: column; gap: 16px; max-height: 90vh; overflow-y: auto;}
+        .modal-content input[type="text"], .modal-content input[type="password"], .modal-content textarea, .modal-content select { background: var(--hover); border: 1px solid var(--border); color: var(--text); padding: 12px; outline: none; border-radius: 6px; font-family: inherit; width: 100%; box-sizing: border-box; }
+        .drop-zone { background: var(--bg); border: 2px dashed var(--border); padding: 20px; border-radius: 6px; text-align: center; color: var(--muted); cursor: pointer; }
+        .preview-img { max-width: 100%; max-height: 150px; border-radius: 8px; display: none; margin: 10px auto; object-fit: cover;}
+
+        .side-panel { display: none; position: fixed; right: 20px; bottom: 20px; width: 340px; height: 500px; background: var(--card); border: 1px solid var(--border); border-radius: 8px 8px 0 0; box-shadow: 0 10px 30px rgba(0,0,0,0.5); flex-direction: column; z-index: 1000; overflow: hidden; }
+        .panel-header { padding: 12px 16px; background: var(--nav); font-weight: bold; display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); }
+        .notif-card { padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 13px; }
+        .notif-card:hover { background: var(--hover); }
+        .notif-card.unread { border-left: 3px solid var(--accent); }
+    </style>
+</head>
+<body>
+
+    <div id="navbar">
+        <a href="#" class="logo" onclick="goHome()">⚡ r/eddit</a>
+        <input type="text" id="global-search" class="search-bar" placeholder="Search posts locally..." oninput="filterPosts()">
+        <div class="nav-actions">
+            <button class="icon-btn" onclick="document.getElementById('settings-modal').style.display='flex'" title="Settings">⚙️</button>
+            <div id="auth-buttons" style="display: flex; gap: 10px;">
+                <button class="btn btn-outline" onclick="openAuth('register')">Register</button>
+                <button class="btn" onclick="openAuth('login')">Log In</button>
+            </div>
+            <div id="user-section" style="display: none; align-items: center; gap: 12px;">
+                <button class="icon-btn" onclick="toggleNotifPanel()" title="Notifications">🔔 <div id="notif-dot" class="notif-dot"></div></button>
+                <button class="icon-btn" onclick="toggleDMPanel()" title="Messages">💬 <div id="dm-notif" class="notif-dot"></div></button>
+                <button class="icon-btn" onclick="openPostModal()" title="Create Post">➕</button>
+                <div class="user-pill" onclick="loadProfile(myUser)">
+                    <img id="my-pfp" src=""> <span id="my-name"></span> (<span id="my-pill-karma" style="color:var(--gold);">0</span>)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="layout">
+        <div id="sidebar">
+            <div style="font-size: 11px; color: var(--muted); font-weight: bold; text-transform: uppercase; margin-bottom: 8px; padding-left: 12px;">Feeds</div>
+            <div class="sub-btn active" id="sub-all" onclick="loadSub('all')">🏠 Home</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin: 24px 0 8px; padding: 12px;">
+                <div style="font-size: 11px; color: var(--muted); font-weight: bold; text-transform: uppercase;">Communities</div>
+                <button style="background:transparent; border:none; color:var(--text); cursor:pointer; font-weight:bold; font-size:16px;" onclick="document.getElementById('create-sub-modal').style.display='flex'">+</button>
+            </div>
+            <div id="sub-list"></div>
+        </div>
+
+        <div id="center-column">
+            <div id="sub-banner"></div>
+            
+            <div id="main-view" class="view-container">
+                <div id="sub-header">
+                    <div style="display:flex; align-items:center; gap: 16px;">
+                        <img id="sub-header-icon" src="" style="width: 60px; height: 60px; border-radius: 50%; display: none; object-fit:cover; border: 3px solid var(--border);">
+                        <div>
+                            <h2 id="sub-header-title" style="margin: 0; font-size: 26px;">r/all</h2>
+                            <div id="sub-header-desc" style="font-size: 14px; color: var(--muted); margin-top: 4px;"></div>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap: 8px;">
+                        <button id="sub-edit-btn" class="btn btn-outline" style="display:none;" onclick="openEditSub()">Mod Tools</button>
+                        <button id="sub-join-btn" class="btn" style="display:none;" onclick="toggleJoinSub()">Join</button>
+                    </div>
+                </div>
+
+                <div class="content-split">
+                    <div class="main-feed-col">
+                        <div class="sort-bar">
+                            <button class="sort-btn active" onclick="setSort('hot')">🔥 Hot</button>
+                            <button class="sort-btn" onclick="setSort('new')">✨ New</button>
+                            <button class="sort-btn" onclick="setSort('top')">🚀 Top</button>
+                        </div>
+                        <div id="feed"><div style="text-align:center; padding: 40px; color: var(--muted);">Please setup your WSS link in settings and Log in.</div></div>
+                    </div>
+                    <div class="sidebar-col" id="sub-sidebar">
+                        <h3 style="margin-top:0; border-bottom:1px solid var(--border); padding-bottom:8px;">Rules & Info</h3>
+                        <div id="sub-rules" style="font-size:13px; line-height:1.6; white-space:pre-wrap;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="thread-view" class="view-container" style="display:none;">
+                <button class="btn btn-outline" style="width: fit-content;" onclick="goHome()">← Back</button>
+                <div id="thread-post"></div>
+                <div id="comment-zone" class="comment-input-box">
+                    <textarea id="root-comment" rows="3" placeholder="What are your thoughts? (Markdown: **bold**, *italic*, `code`, > quote, [Text](URL))"></textarea>
+                    <button class="btn" style="float: right; margin-top:8px;" onclick="submitComment()">Comment</button>
+                    <div style="clear: both;"></div>
+                </div>
+                <div id="thread-comments" class="comment-tree"></div>
+            </div>
+
+            <div id="profile-view" class="view-container" style="display:none;">
+                <div id="profile-header">
+                    <img id="pv-pfp" src="">
+                    <div class="profile-info">
+                        <h2 id="pv-display-name">Name</h2>
+                        <div style="margin: 0 0 12px 0; color: var(--muted); font-size: 14px;">
+                            <span id="pv-username">u/username</span> 
+                            <span id="pv-joindate" style="font-size:11px; margin-left:8px;"></span>
+                        </div>
+                        <span id="pv-karma" style="font-weight:bold;">⚡ 0 Karma</span>
+                        <div id="pv-action-btn" style="margin-top:8px;"></div>
+                    </div>
+                </div>
+                <div class="tabs-header">
+                    <button id="ptab-posts" class="tab-btn active" onclick="loadProfileTab('posts')">User Posts</button>
+                    <button id="ptab-saved" class="tab-btn" onclick="loadProfileTab('saved')">Saved Bookmarks</button>
+                </div>
+                <div id="profile-feed"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="auth-modal" class="modal">
+        <div class="modal-content">
+            <div class="tabs-header"><button id="tab-login" class="tab-btn active" onclick="switchAuthTab('login')">Log In</button><button id="tab-register" class="tab-btn" onclick="switchAuthTab('register')">Register</button></div>
+            <input type="text" id="username" placeholder="Username">
+            <input type="password" id="password" placeholder="Password">
+            <div style="display: flex; gap: 8px;"><input type="checkbox" id="remember-me" checked><label for="remember-me" style="font-size: 13px; color: var(--muted);">Remember Me</label></div>
+            <button class="btn" id="auth-submit-btn" style="padding: 12px; font-size: 16px;" onclick="executeAuth()">Log In</button>
+            <button class="btn btn-outline" onclick="document.getElementById('auth-modal').style.display='none'">Cancel</button>
+        </div>
+    </div>
+
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">⚙️ Global Settings</div>
+            <label style="color: var(--text); font-size: 14px; font-weight: bold;">Connection (WSS)</label>
+            <input type="text" id="wss-url" placeholder="wss://your-cloudflare-tunnel...">
+            <button class="btn btn-outline" onclick="toggleTheme()" style="margin-top:10px;">Toggle Dark/Light Mode</button>
+            <button class="btn btn-danger" onclick="logoutApp()" style="margin-top:10px;">Log Out</button>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+                <button class="btn btn-outline" onclick="document.getElementById('settings-modal').style.display='none'">Close</button>
+                <button class="btn" onclick="saveSettings()">Save & Connect</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="profile-modal" class="modal">
+        <div class="modal-content" style="max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">Edit Profile</div>
+
+            <label style="font-size: 12px; color: var(--muted); margin-bottom:-10px;">Change Username (Optional)</label>
+            <input type="text" id="edit-username" placeholder="New Username">
+
+            <label style="font-size: 12px; color: var(--muted); margin-bottom:-10px;">Change Password (Optional)</label>
+            <input type="password" id="edit-password" placeholder="New Password">
+
+            <label style="font-size: 12px; color: var(--muted); margin-bottom:-10px;">Display Name & Flair</label>
+            <input type="text" id="edit-displayname" placeholder="Display Name">
+            <input type="text" id="edit-flair" placeholder="Global User Flair (e.g. Developer, Gamer)">
+
+            <div class="drop-zone" id="pfp-dropzone" onclick="document.getElementById('pfp-file').click()">
+                Drag & Drop Avatar Image Here or Click
+                <input type="file" id="pfp-file" accept="image/*" style="display:none;" onclick="event.stopPropagation();" onchange="handlePfpSelect(event)">
+            </div>
+            <img id="settings-pfp-preview" class="preview-img">
+
+            <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                <button class="btn btn-outline" onclick="document.getElementById('profile-modal').style.display='none'">Cancel</button>
+                <button class="btn" onclick="saveProfile()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="create-sub-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Create a Community</div>
+            <input type="text" id="new-sub-name" placeholder="Name (e.g. tech, memes)">
+            <textarea id="new-sub-desc" rows="2" placeholder="Short Description"></textarea>
+            <div class="drop-zone" id="create-sub-dropzone" onclick="document.getElementById('create-sub-file').click()">
+                Drag & Drop Community Icon Here or Click
+                <input type="file" id="create-sub-file" accept="image/*" style="display:none;" onclick="event.stopPropagation();" onchange="handleSubIconSelect(event)">
+            </div>
+            <img id="sub-icon-preview" class="preview-img">
+            <div style="display: flex; justify-content: flex-end; gap: 8px;"><button class="btn btn-outline" onclick="document.getElementById('create-sub-modal').style.display='none'">Cancel</button><button class="btn" onclick="createSub()">Create</button></div>
+        </div>
+    </div>
+
+    <div id="edit-sub-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Moderator Tools</div>
+            <textarea id="edit-sub-desc" rows="2" placeholder="Update Description"></textarea>
+            <textarea id="edit-sub-rules" rows="4" placeholder="Subreddit Rules (Sidebar)"></textarea>
+            <div class="drop-zone" id="edit-sub-dropzone" onclick="document.getElementById('edit-sub-file').click()">
+                New Icon (Square) - Click to browse
+                <input type="file" id="edit-sub-file" accept="image/*" style="display:none;" onclick="event.stopPropagation();" onchange="handleEditSubIconSelect(event)">
+            </div>
+            <img id="edit-sub-icon-preview" class="preview-img">
+            <div class="drop-zone" id="edit-banner-dropzone" onclick="document.getElementById('edit-banner-file').click()">
+                New Banner (Wide) - Click to browse
+                <input type="file" id="edit-banner-file" accept="image/*" style="display:none;" onclick="event.stopPropagation();" onchange="handleEditBannerSelect(event)">
+            </div>
+            <img id="edit-banner-preview" class="preview-img">
+            <div style="display: flex; justify-content: flex-end; gap: 8px;"><button class="btn btn-outline" onclick="document.getElementById('edit-sub-modal').style.display='none'">Cancel</button><button class="btn" onclick="saveSubEdit()">Save Settings</button></div>
+        </div>
+    </div>
+
+    <div id="post-modal" class="modal">
+        <div class="modal-content" style="width: 650px;">
+            <div class="modal-header">Create a Post</div>
+            <div style="display:flex; gap:10px;">
+                <select id="post-sub" style="flex:1;"></select>
+                <input type="text" id="post-flair" placeholder="Flair Tag (Optional)" style="width:150px;">
+            </div>
+            <input type="text" id="post-title" placeholder="An interesting title">
+            <textarea id="post-text" rows="5" placeholder="Text content (Markdown supported)"></textarea>
+            
+            <div id="poll-creator" style="display:none; flex-direction:column; gap:8px; background:var(--bg); padding:10px; border-radius:6px; border:1px solid var(--border);">
+                <input type="text" class="poll-opt-input" placeholder="Option 1">
+                <input type="text" class="poll-opt-input" placeholder="Option 2">
+                <button class="btn btn-outline" style="font-size:11px; padding:4px;" onclick="addPollOpt()">+ Add Option</button>
+            </div>
+            
+            <div class="drop-zone" id="post-dropzone" onclick="document.getElementById('post-media-file').click()">
+                Drag & Drop Image/Video/GIF Here or Click
+                <input type="file" id="post-media-file" accept="image/*,video/*" style="display:none;" onclick="event.stopPropagation();" onchange="handlePostMediaSelect(event)">
+            </div>
+            <img id="post-media-preview" class="preview-img">
+            <input type="text" id="post-media-url" placeholder="Or paste image/video URL (.mp4, .webm, .gif)..." style="margin-top:8px;">
+
+            <div style="display: flex; align-items:center; justify-content: space-between; margin-top: 10px;">
+                <div style="display:flex; gap:12px;">
+                    <label style="display:flex; align-items:center; gap:4px; color:var(--up); font-weight:bold; cursor:pointer; font-size:13px;"><input type="checkbox" id="post-nsfw"> NSFW</label>
+                    <label style="display:flex; align-items:center; gap:4px; color:var(--muted); font-weight:bold; cursor:pointer; font-size:13px;"><input type="checkbox" id="post-spoiler"> Spoiler</label>
+                    <label style="display:flex; align-items:center; gap:4px; color:var(--accent); font-weight:bold; cursor:pointer; font-size:13px;"><input type="checkbox" id="post-is-poll" onchange="document.getElementById('poll-creator').style.display=this.checked?'flex':'none'"> Poll</label>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn btn-outline" onclick="document.getElementById('post-modal').style.display='none'">Cancel</button>
+                    <button class="btn" onclick="submitPost()">Post</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dm-panel" class="side-panel">
+        <div class="panel-header"><span>Social & Chat</span><span style="cursor:pointer;" onclick="toggleDMPanel()">✖</span></div>
+        <div class="dm-tabs"><div class="dm-tab active" id="tab-btn-chat" onclick="switchSocialTab('chat')">Chat</div><div class="dm-tab" id="tab-btn-friends" onclick="switchSocialTab('friends')">Friends</div></div>
+        <div id="chat-view-panel" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
+            <div style="padding: 10px; border-bottom: 1px solid var(--border);"><input type="text" id="dm-target-user" placeholder="Chat with username..." style="width: 100%; background: var(--hover); border: 1px solid var(--border); color: var(--text); padding: 8px; border-radius: 4px; outline: none; font-size: 13px; box-sizing: border-box;"></div>
+            <div id="dm-list" style="flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:10px; background:var(--bg);"></div>
+            <div id="dm-input-area" style="display:flex; padding:12px; border-top:1px solid var(--border); gap:8px; background:var(--nav);">
+                <input type="text" id="dm-text" placeholder="Message..." style="flex:1; background:var(--hover); border:1px solid var(--border); color:var(--text); padding:10px; border-radius:20px; outline:none;" onkeydown="if(event.key==='Enter') sendDM()">
+                <button class="btn" onclick="sendDM()">Send</button>
+            </div>
+        </div>
+        <div id="friends-view-panel" style="display: none; flex-direction: column; flex: 1; overflow: hidden;"><div id="friend-list" style="flex:1; overflow-y:auto; padding:12px; background:var(--bg);"></div></div>
+    </div>
+
+    <div id="notif-panel" class="side-panel">
+        <div class="panel-header"><span>Notifications</span><span style="cursor:pointer;" onclick="toggleNotifPanel()">✖</span></div>
+        <div id="notif-list" style="flex:1; overflow-y:auto; background:var(--bg);"></div>
+    </div>
+
+    <script>
+        let ws = null;
+        let myUser = null; let myDisplayName = null; let myPfp = null; let myFlair = null; let myKarma = 1;
+        let myJoinedSubs = []; let mySavedPosts = []; let myBlocked = []; let myNotifs = [];
+        let votedPosts = {}; let votedComments = {}; let subreddits = {};
+        let currentSub = 'all'; let currentSort = 'hot'; let currentThread = null; let currentProfileTab = 'posts'; let activeProfileUser = null;
+        let authMode = 'login'; let dms = []; let myFriendRequests = []; let myFriends = [];
+
+        let b64Pfp = null; let b64PostMedia = null; let b64SubIcon = null; let b64EditSubIcon = null; let b64EditBanner = null;
+
+        document.getElementById('wss-url').value = localStorage.getItem('reddit_wss') || '';
+        if (localStorage.getItem('reddit_theme') === 'light') document.body.classList.add('light-mode');
+
+        function toggleTheme() { document.body.classList.toggle('light-mode'); localStorage.setItem('reddit_theme', document.body.classList.contains('light-mode') ? 'light' : 'dark'); }
+        function logoutApp() { localStorage.removeItem('reddit_user'); localStorage.removeItem('reddit_pass'); location.reload(); }
+        function saveSettings() { localStorage.setItem('reddit_wss', document.getElementById('wss-url').value.trim()); document.getElementById('settings-modal').style.display = 'none'; executeAuth(); }
+
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                if(!file || (!file.type.startsWith('image/') && !file.type.startsWith('video/'))) return reject("Unsupported file");
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    if (file.type.startsWith('video/') || file.type === 'image/gif') return resolve(e.target.result); 
+
+                    const img = new Image();
+                    img.onload = () => {
+                        const cvs = document.createElement('canvas');
+                        let w = img.width, h = img.height;
+                        if (w > 800) { h *= 800/w; w = 800; }
+                        cvs.width = w; cvs.height = h;
+                        cvs.getContext('2d').drawImage(img, 0, 0, w, h);
+                        resolve(cvs.toDataURL('image/jpeg', 0.8));
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+        function setupDropzone(id, previewId, cb) {
+            const d = document.getElementById(id);
+            d.ondragover = e => { e.preventDefault(); d.style.borderColor = 'var(--accent)'; };
+            d.ondragleave = e => { e.preventDefault(); d.style.borderColor = 'var(--border)'; };
+            d.ondrop = async e => { e.preventDefault(); d.style.borderColor = 'var(--border)'; if(e.dataTransfer.files[0]){ const b = await fileToBase64(e.dataTransfer.files[0]); document.getElementById(previewId).src=b.startsWith('data:video')?'':b; document.getElementById(previewId).style.display=b.startsWith('data:video')?'none':'block'; cb(b);} };
+        }
+        setupDropzone('pfp-dropzone', 'settings-pfp-preview', b => b64Pfp = b);
+        setupDropzone('post-dropzone', 'post-media-preview', b => b64PostMedia = b);
+        setupDropzone('create-sub-dropzone', 'sub-icon-preview', b => b64SubIcon = b);
+        setupDropzone('edit-sub-dropzone', 'edit-sub-icon-preview', b => b64EditSubIcon = b);
+        setupDropzone('edit-banner-dropzone', 'edit-banner-preview', b => b64EditBanner = b);
+
+        function handlePfpSelect(e) { if(e.target.files[0]) fileToBase64(e.target.files[0]).then(b => { document.getElementById('settings-pfp-preview').src = b; document.getElementById('settings-pfp-preview').style.display='block'; b64Pfp = b; }); }
+        function handlePostMediaSelect(e) { if(e.target.files[0]) fileToBase64(e.target.files[0]).then(b => { document.getElementById('post-media-preview').src=b.startsWith('data:video')?'':b; document.getElementById('post-media-preview').style.display=b.startsWith('data:video')?'none':'block'; b64PostMedia = b; }); }
+        function handleSubIconSelect(e) { if(e.target.files[0]) fileToBase64(e.target.files[0]).then(b => { document.getElementById('sub-icon-preview').src = b; document.getElementById('sub-icon-preview').style.display='block'; b64SubIcon = b; }); }
+        function handleEditSubIconSelect(e) { if(e.target.files[0]) fileToBase64(e.target.files[0]).then(b => { document.getElementById('edit-sub-icon-preview').src = b; document.getElementById('edit-sub-icon-preview').style.display='block'; b64EditSubIcon = b; }); }
+        function handleEditBannerSelect(e) { if(e.target.files[0]) fileToBase64(e.target.files[0]).then(b => { document.getElementById('edit-banner-preview').src = b; document.getElementById('edit-banner-preview').style.display='block'; b64EditBanner = b; }); }
+
+        function openAuth(m) { document.getElementById('auth-modal').style.display = 'flex'; switchAuthTab(m); }
+        function switchAuthTab(m) { authMode = m; document.getElementById('tab-login').classList.toggle('active', m === 'login'); document.getElementById('tab-register').classList.toggle('active', m === 'register'); document.getElementById('auth-submit-btn').innerText = m === 'register' ? 'Sign Up' : 'Log In'; }
+
+        function executeAuth() {
+            const wss = localStorage.getItem('reddit_wss');
+            const u = document.getElementById('username').value.trim(); const p = document.getElementById('password').value.trim();
+            if (!wss || !u || !p) return;
+            if (ws) ws.close();
+            ws = new WebSocket(wss);
+            ws.onopen = () => ws.send(JSON.stringify({ type: 'AUTH', username: u, password: p, isRegister: authMode === 'register' }));
+            ws.onmessage = (e) => {
+                const msg = JSON.parse(e.data);
+
+                if (msg.type === 'FORCE_REAUTH') {
+                    myUser = msg.newUsername;
+                    if (document.getElementById('remember-me').checked) {
+                        localStorage.setItem('reddit_user', msg.newUsername);
+                        if (msg.newPassword) localStorage.setItem('reddit_pass', msg.newPassword);
+                    }
+                    document.getElementById('username').value = msg.newUsername;
+                    if (msg.newPassword) document.getElementById('password').value = msg.newPassword;
+                }
+
+                if (msg.type === 'AUTH_SUCCESS') {
+                    if (document.getElementById('remember-me').checked) { localStorage.setItem('reddit_user', u); localStorage.setItem('reddit_pass', p); }
+                    myUser = msg.user.username; myDisplayName = msg.user.displayName; myPfp = msg.user.pfp; myFlair = msg.user.flair; myKarma = msg.user.karma;
+                    myJoinedSubs = msg.user.joinedSubs || ['all']; mySavedPosts = msg.user.savedPosts || []; myBlocked = msg.user.blocked || [];
+                    myNotifs = msg.user.notifications || []; renderNotifs();
+                    votedPosts = msg.user.votedPosts || {}; votedComments = msg.user.votedComments || {};
+                    document.getElementById('auth-buttons').style.display = 'none'; document.getElementById('user-section').style.display = 'flex';
+                    updateMyPill(); document.getElementById('auth-modal').style.display = 'none';
+                    subreddits = msg.subreddits || {}; renderSubs(); goHome();
+                }
+                if (msg.type === 'USER_KARMA_UPDATE') { myKarma = msg.karma; updateMyPill(); }
+                if (msg.type === 'PROFILE_UPDATED') { 
+                    if(msg.username) myUser = msg.username;
+                    myDisplayName = msg.displayName; myPfp = msg.pfp; myFlair = msg.flair; 
+                    updateMyPill(); 
+                    if (document.getElementById('profile-view').style.display === 'flex') loadProfileTab(currentProfileTab); 
+                }
+                if (msg.type === 'USER_PROFILE_DATA') renderUserProfile(msg.profile, msg.posts, msg.tab);
+                if (msg.type === 'SUBS_UPDATED') { subreddits = msg.subreddits || {}; renderSubs(); if(currentSub !== 'all') updateSubHeaderBtn(); }
+                if (msg.type === 'JOINED_SUBS_UPDATED') { myJoinedSubs = msg.joinedSubs || ['all']; renderSubs(); if(currentSub !== 'all') updateSubHeaderBtn(); }
+                if (msg.type === 'SUB_CREATED_SUCCESS') loadSub(msg.subName);
+                if (msg.type === 'SAVED_POSTS_UPDATED') { mySavedPosts = msg.savedPosts; renderFeed(window.lastFeedCache || [], currentSub); }
+                if (msg.type === 'FEED_DATA') { window.lastFeedCache = msg.posts; renderFeed(msg.posts, msg.subreddit); }
+                if (msg.type === 'NEW_POST') if (currentSub === 'all' || currentSub === msg.post.subreddit) ws.send(JSON.stringify({ type: 'GET_FEED', subreddit: currentSub, sort: currentSort }));
+                if (msg.type === 'THREAD_DATA') renderThread(msg.post, msg.comments);
+                if (msg.type === 'NEW_COMMENT' && currentThread === msg.postId) ws.send(JSON.stringify({ type: 'GET_POST_THREAD', postId: currentThread }));
+                if (msg.type === 'VOTE_SYNC') { const el = document.getElementById(`score-${msg.id}`); if(el) el.innerText = msg.upvotes - msg.downvotes; }
+                if (msg.type === 'USER_VOTE_SYNC') { if (msg.isPost) votedPosts[msg.id]=msg.vote; else votedComments[msg.id]=msg.vote; }
+                if (msg.type === 'POLL_UPDATED') { if(currentThread === msg.post.id) ws.send(JSON.stringify({ type: 'GET_POST_THREAD', postId: currentThread })); else ws.send(JSON.stringify({ type: 'GET_FEED', subreddit: currentSub, sort: currentSort })); }
+                if (msg.type === 'AWARD_SYNC') { ws.send(JSON.stringify({ type: 'GET_FEED', subreddit: currentSub, sort: currentSort })); if(currentThread) ws.send(JSON.stringify({ type: 'GET_POST_THREAD', postId: currentThread })); }
+                if (msg.type === 'NEW_NOTIF') { myNotifs.unshift(msg.notif); renderNotifs(); document.getElementById('notif-dot').style.display='block'; }
+                if (msg.type === 'TOAST') { console.log(msg.msg); alert(msg.msg); }
+                if (msg.type === 'ERROR') alert(msg.msg);
+            };
+        }
+
+        function updateMyPill() { document.getElementById('my-name').innerText = myDisplayName; document.getElementById('my-pfp').src = myPfp; document.getElementById('my-pill-karma').innerText = myKarma; }
+
+        // --- Markdown Parser ---
+        function parseMD(str) {
+            if(!str) return '';
+            str = escapeHTML(str);
+            str = str.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" style="color:var(--accent); text-decoration:none;">$1</a>');
+            str = str.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+            str = str.replace(/\*(.*?)\*/g, '<i>$1</i>');
+            str = str.replace(/^> (.*?)$/gm, '<blockquote style="border-left:3px solid var(--accent); padding-left:8px; margin:4px 0; color:var(--muted);">$1</blockquote>');
+            str = str.replace(/`(.*?)`/g, '<code style="background:var(--hover); padding:2px 4px; border-radius:4px; font-family:monospace;">$1</code>');
+            return str;
+        }
+
+        function copyLink(title, e) {
+            e.stopPropagation();
+            navigator.clipboard.writeText(`Check out this post: ${title}`);
+            alert('Post title copied to clipboard to share!');
+        }
+
+        // --- Subreddits ---
+        function renderSubs() {
+            const list = document.getElementById('sub-list'); const select = document.getElementById('post-sub');
+            list.innerHTML = ''; select.innerHTML = '';
+            let jHtml = '<div style="font-size:11px;color:var(--muted);font-weight:bold;margin:12px 0 8px;padding-left:12px;">Joined</div>';
+            let dHtml = '<div style="font-size:11px;color:var(--muted);font-weight:bold;margin:16px 0 8px;padding-left:12px;">Discover</div>';
+            let hj=false, hd=false;
+            Object.keys(subreddits).forEach(k => {
+                if (k === 'all') return;
+                const s = subreddits[k]; const i = s.icon || 'https://www.redditstatic.com/avatars/avatar_default_02_FF4500.png';
+                const ij = myJoinedSubs.includes(k);
+                const html = `<div class="sub-btn ${currentSub===k?'active':''}" onclick="loadSub('${k}')" style="justify-content:space-between;"><div style="display:flex;align-items:center;gap:10px;"><img src="${i}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;"><span>r/${k}</span></div>${ij?'<span style="color:var(--accent);">★</span>':''}</div>`;
+                if(ij){ jHtml+=html; hj=true; } else { dHtml+=html; hd=true; }
+                select.innerHTML += `<option value="${k}">r/${k}</option>`;
+            });
+            list.innerHTML = (hj?jHtml:'') + (hd?dHtml:'');
+        }
+
+        function loadSub(sub) { currentSub = sub; goHome(); }
+        function setSort(sort) { currentSort = sort; document.querySelectorAll('.sort-btn').forEach(e=>e.classList.remove('active')); event.target.classList.add('active'); goHome(); }
+        function goHome() { currentThread = null; document.querySelectorAll('.view-container').forEach(v=>v.style.display='none'); document.getElementById('main-view').style.display='flex'; if (ws) ws.send(JSON.stringify({ type: 'GET_FEED', subreddit: currentSub, sort: currentSort })); renderSubs(); updateSubHeaderBtn(); }
+
+        function updateSubHeaderBtn() {
+            const hdr = document.getElementById('sub-header'); const ban = document.getElementById('sub-banner'); const sbar = document.getElementById('sub-sidebar');
+            if (currentSub === 'all') { hdr.style.display = 'none'; ban.style.display = 'none'; sbar.style.display='none'; return; }
+            const s = subreddits[currentSub] || {};
+            hdr.style.display = 'flex'; sbar.style.display = s.rules ? 'block' : 'none';
+            document.getElementById('sub-rules').innerHTML = parseMD(s.rules || '');
+            document.getElementById('sub-header-title').innerText = `r/${currentSub}`; document.getElementById('sub-header-desc').innerText = s.desc || '';
+            const iEl = document.getElementById('sub-header-icon'); if(s.icon){iEl.src=s.icon; iEl.style.display='block';}else{iEl.style.display='none';}
+            if(s.banner){ban.style.backgroundImage=`url(${s.banner})`; ban.style.display='block';}else{ban.style.display='none';}
+            const jBtn = document.getElementById('sub-join-btn'); jBtn.innerText = myJoinedSubs.includes(currentSub) ? 'Joined' : 'Join'; jBtn.className = myJoinedSubs.includes(currentSub) ? 'btn btn-outline' : 'btn'; jBtn.style.display = 'block';
+            document.getElementById('sub-edit-btn').style.display = (s.creator === myUser || myUser === 'Gulo') ? 'block' : 'none';
+        }
+
+        function toggleJoinSub() { if(ws) ws.send(JSON.stringify({ type: 'TOGGLE_JOIN_SUB', sub: currentSub })); }
+        function createSub() { const n=document.getElementById('new-sub-name').value.trim(); const d=document.getElementById('new-sub-desc').value.trim(); if(n&&ws) ws.send(JSON.stringify({ type: 'CREATE_SUB', name:n, desc:d, icon:b64SubIcon })); document.getElementById('create-sub-modal').style.display='none'; document.getElementById('new-sub-name').value=''; b64SubIcon=null; }
+
+        function openEditSub() {
+            const s = subreddits[currentSub]; if(!s) return;
+            document.getElementById('edit-sub-desc').value = s.desc || ''; document.getElementById('edit-sub-rules').value = s.rules || '';
+            document.getElementById('edit-sub-icon-preview').src = s.icon||''; document.getElementById('edit-sub-icon-preview').style.display = s.icon?'block':'none';
+            document.getElementById('edit-banner-preview').src = s.banner||''; document.getElementById('edit-banner-preview').style.display = s.banner?'block':'none';
+            b64EditSubIcon=null; b64EditBanner=null; document.getElementById('edit-sub-modal').style.display='flex';
+        }
+        function saveSubEdit() { ws.send(JSON.stringify({ type: 'UPDATE_SUB', sub: currentSub, desc: document.getElementById('edit-sub-desc').value, rules: document.getElementById('edit-sub-rules').value, icon: b64EditSubIcon, banner: b64EditBanner })); document.getElementById('edit-sub-modal').style.display='none'; }
+
+        // --- Posts, Polls & Bans ---
+        function escapeHTML(s) { return s.replace(/[&<>'"]/g, t => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[t])); }
+        function filterPosts() { const q=document.getElementById('global-search').value.toLowerCase(); document.querySelectorAll('.post').forEach(e=>e.style.display=e.innerText.toLowerCase().includes(q)?'flex':'none'); }
+
+        function generatePostHTML(p, isThread = false) {
+            const v = votedPosts[p.id] || 0; const s = p.upvotes - p.downvotes;
+            const isSaved = mySavedPosts.includes(p.id);
+            const isMod = (subreddits[p.subreddit] && subreddits[p.subreddit].creator === myUser) || myUser === 'Gulo';
+            const isAuthorMod = (subreddits[p.subreddit] && subreddits[p.subreddit].creator === p.author) || p.author === 'Gulo';
+
+            const pinBtn = isMod ? `<div onclick="modPin('${p.id}', event)" style="color:var(--mod);">📌 ${p.isPinned?'Unpin':'Pin'}</div>` : '';
+            const lockBtn = isMod ? `<div onclick="modLock('${p.id}', event)" style="color:var(--gold);">🔒 ${p.isLocked?'Unlock':'Lock'}</div>` : '';
+            const banBtn = isMod && p.author !== myUser && p.author !== 'Gulo' ? `<div onclick="banUser('${p.author}', '${p.subreddit}', event)" style="color:var(--down);">🚫 Ban</div>` : '';
+            const delBtn = (p.author === myUser || isMod) ? `<div onclick="deleteItem('${p.id}', true, event)" style="color:var(--down);">🗑️ Delete</div>` : '';
+            const blockBtn = p.author !== myUser ? `<div onclick="blockUser('${p.author}', event)" style="color:var(--muted);">⛔ Block</div>` : '';
+            const awardBtn = `<div onclick="awardItem('${p.id}', true, event)" style="color:var(--gold);">⭐ Award ${p.awards > 0 ? `(${p.awards})` : '(5 Karma)'}</div>`;
+            const shareBtn = `<div onclick="copyLink('${escapeHTML(p.title)}', event)" style="color:var(--muted);">🔗 Share</div>`;
+
+            const flairHTML = p.flair ? `<span class="flair">${escapeHTML(p.flair)}</span>` : '';
+            const uFlairHTML = p.userFlair ? `<span class="user-flair">${escapeHTML(p.userFlair)}</span>` : '';
+            const modBadge = isAuthorMod ? `<span class="mod-badge" title="Moderator">MOD</span>` : '';
+
+            const pinBadge = p.isPinned ? `<span style="color:var(--mod); font-size:14px;" title="Pinned">📌</span>` : '';
+            const lockBadge = p.isLocked ? `<span style="color:var(--gold); font-size:14px;" title="Locked">🔒</span>` : '';
+
+            let contentCls = "filter-wrap";
+            let filterLabel = "";
+            if (!isThread) {
+                if (p.isSpoiler) { contentCls += " spoiler"; filterLabel = "<div class='filter-label'>SPOILER</div>"; }
+                else if (p.isNSFW) { contentCls += " nsfw"; filterLabel = "<div class='filter-label'>NSFW</div>"; }
+            }
+            const contentAction = (p.isSpoiler || p.isNSFW) && !isThread ? `onclick="this.classList.add('revealed'); event.stopPropagation();"` : "";
+
+            const isVid = p.mediaUrl && p.mediaUrl.match(/\.(mp4|webm|ogg)$/i) || (p.mediaUrl && p.mediaUrl.startsWith('data:video'));
+            const mediaHTML = p.mediaUrl ? (isVid ? `<video src="${p.mediaUrl}" controls class="post-img" style="width:100%; max-height:500px; background:black;"></video>` : `<img class="post-img" src="${p.mediaUrl}">`) : '';
+
+            let pollHTML = '';
+            if (p.poll) {
+                const totalVotes = p.poll.options.reduce((acc, o) => acc + o.votes, 0);
+                const hasVoted = p.poll.voters[myUser] !== undefined;
+                pollHTML = `<div class="poll-container">`;
+                p.poll.options.forEach((opt, idx) => {
+                    const pct = totalVotes > 0 ? Math.round((opt.votes / totalVotes) * 100) : 0;
+                    if (hasVoted) {
+                        const isMyVote = p.poll.voters[myUser] === idx;
+                        pollHTML += `<div class="poll-opt" style="cursor:default;"><div class="poll-bar" style="width:${pct}%; background:${isMyVote?'rgba(0,121,211,0.5)':'rgba(255,255,255,0.1)'}"></div><span class="poll-text">${escapeHTML(opt.text)} ${isMyVote?'✔':''}</span><span class="poll-votes">${pct}% (${opt.votes})</span></div>`;
+                    } else {
+                        pollHTML += `<div class="poll-opt" onclick="votePoll('${p.id}', ${idx}, event)"><span class="poll-text">⚪ ${escapeHTML(opt.text)}</span></div>`;
+                    }
+                });
+                pollHTML += `</div><div style="font-size:11px; color:var(--muted); margin-top:4px;">Total Votes: ${totalVotes}</div>`;
+            }
+
+            return `
+                <div class="post" ${!isThread ? `onclick="openThread('${p.id}')"` : ''} style="${isThread ? 'border:none;background:transparent;padding:0;' : ''}">
+                    <div class="vote-col"><button class="vote-btn up ${v===1?'active':''}" onclick="vote('${p.id}',true,1,event)">⇧</button><span id="score-${p.id}" class="score ${v===1?'up':v===-1?'down':''}">${s}</span><button class="vote-btn down ${v===-1?'active':''}" onclick="vote('${p.id}',true,-1,event)">⇩</button></div>
+                    <div class="post-body">
+                        <div class="post-meta"><img src="${p.pfp}" onclick="loadProfile('${p.author}', event)"> <b>r/${p.subreddit}</b> • <a class="author-link" onclick="loadProfile('${p.author}', event)">u/${p.author}</a> ${modBadge} ${uFlairHTML} • ${p.timestamp}</div>
+                        <h3 class="post-title">${pinBadge} ${lockBadge} ${flairHTML} ${escapeHTML(p.title)}</h3>
+                        <div class="${contentCls}" ${contentAction}>
+                            ${filterLabel}
+                            <div>
+                                ${p.content ? `<div class="post-text">${parseMD(p.content)}</div>` : ''}
+                                ${pollHTML}
+                                ${mediaHTML}
+                            </div>
+                        </div>
+                        <div class="post-footer"><div>💬 ${p.commentCount||0} Comments</div> <div onclick="toggleSave('${p.id}', event)" style="color:${isSaved?'var(--accent)':'var(--muted)'}">${isSaved?'★ Saved':'☆ Save'}</div> ${shareBtn} ${awardBtn} ${pinBtn} ${lockBtn} ${delBtn} ${banBtn} ${blockBtn}</div>
+                    </div>
+                </div>`;
+        }
+
+        function renderFeed(posts, sub) { document.getElementById('feed').innerHTML = posts.length ? posts.map(p=>generatePostHTML(p)).join('') : '<div style="padding:40px;color:var(--muted);text-align:center;">No posts here.</div>'; }
+
+        function openPostModal() { document.getElementById('post-modal').style.display='flex'; if(currentSub!=='all'&&subreddits[currentSub]) document.getElementById('post-sub').value=currentSub; }
+        function addPollOpt() { const c = document.getElementById('poll-creator'); const inp = document.createElement('input'); inp.type='text'; inp.className='poll-opt-input'; inp.placeholder=`Option ${c.children.length}`; c.insertBefore(inp, c.lastElementChild); }
+
+        function submitPost() {
+            const t = document.getElementById('post-title').value.trim(); if(!t||!ws) return;
+            let pollObj = null;
+            if(document.getElementById('post-is-poll').checked) {
+                const opts = Array.from(document.querySelectorAll('.poll-opt-input')).map(i=>i.value.trim()).filter(v=>v!=='');
+                if(opts.length >= 2) pollObj = { options: opts.map(o=>({text:o, votes:0})), voters: {} };
+            }
+            ws.send(JSON.stringify({ type: 'CREATE_POST', subreddit: document.getElementById('post-sub').value, title: t, content: document.getElementById('post-text').value, mediaUrl: b64PostMedia || document.getElementById('post-media-url').value, flair: document.getElementById('post-flair').value, isSpoiler: document.getElementById('post-spoiler').checked, isNSFW: document.getElementById('post-nsfw').checked, poll: pollObj }));
+            document.getElementById('post-modal').style.display='none'; document.getElementById('post-title').value=''; document.getElementById('post-text').value=''; document.getElementById('post-media-url').value=''; document.getElementById('post-flair').value=''; document.getElementById('post-spoiler').checked=false; document.getElementById('post-nsfw').checked=false; b64PostMedia=null; document.getElementById('post-media-preview').style.display='none';
+            document.getElementById('post-is-poll').checked=false; document.getElementById('poll-creator').style.display='none';
+        }
+
+        function openThread(id) { currentThread = id; document.querySelectorAll('.view-container').forEach(v=>v.style.display='none'); document.getElementById('thread-view').style.display='flex'; ws.send(JSON.stringify({ type: 'GET_POST_THREAD', postId: id })); }
+
+        function buildCommentTree(comments, parentId = null, depth = 0) {
+            const children = comments.filter(c => c.parentId === parentId);
+            if (!children.length) return '';
+            let html = `<div style="margin-left:${depth>0?16:0}px; border-left:${depth>0?'2px solid var(--border)':'none'}; padding-left:${depth>0?12:0}px;">`;
+            children.forEach(c => {
+                const v = votedComments[c.id] || 0;
+                const isMod = currentThread && ((subreddits[dbPostsCache?.subreddit] && subreddits[dbPostsCache.subreddit].creator === myUser) || myUser === 'Gulo');
+                const isAuthorMod = (currentThread && subreddits[dbPostsCache?.subreddit] && subreddits[dbPostsCache.subreddit].creator === c.author) || c.author === 'Gulo';
+
+                const delBtn = (c.author === myUser || isMod) ? `<span onclick="deleteItem('${c.id}', false, event)" style="color:var(--down);">Delete</span>` : '';
+                const uFlairHTML = c.userFlair ? `<span class="user-flair">${escapeHTML(c.userFlair)}</span>` : '';
+                const modBadge = isAuthorMod ? `<span class="mod-badge" title="Moderator">MOD</span>` : '';
+                const awardBtn = `<span onclick="awardItem('${c.id}', false, event)" style="color:var(--gold);">⭐ Award ${c.awards > 0 ? `(${c.awards})` : ''}</span>`;
+                const replyBtn = (dbPostsCache && dbPostsCache.isLocked) ? `<span style="color:var(--muted);">🔒 Locked</span>` : `<span onclick="document.getElementById('reply-${c.id}').style.display='block'">Reply</span>`;
+
+                html += `
+                    <div class="comment-node">
+                        <div class="comment-header" onclick="loadProfile('${c.author}', event)"><img src="${c.pfp}"> <b>${c.displayName} (u/${c.author})</b> ${modBadge} ${uFlairHTML} • ${c.timestamp}</div>
+                        <div class="post-text">${parseMD(c.text)}</div>
+                        <div class="comment-actions">
+                            <span class="${v===1?'active':''}" onclick="vote('${c.id}',false,1,event)" style="color:${v===1?'var(--up)':'inherit'}">⇧</span> <span id="score-${c.id}">${c.upvotes-c.downvotes}</span> <span class="${v===-1?'active':''}" onclick="vote('${c.id}',false,-1,event)" style="color:${v===-1?'var(--down)':'inherit'}">⇩</span>
+                            ${replyBtn} ${awardBtn} ${delBtn}
+                        </div>
+                        <div id="reply-${c.id}" style="display:none; margin-top:8px;">
+                            <textarea id="input-${c.id}" rows="2" style="width:100%; background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:4px; padding:8px;"></textarea>
+                            <div style="text-align:right; margin-top:4px;"><button class="btn" style="padding:4px 10px; font-size:12px;" onclick="submitReply('${c.id}')">Send</button></div>
+                        </div>
+                        ${buildCommentTree(comments, c.id, depth + 1)}
+                    </div>`;
+            });
+            html += `</div>`; return html;
+        }
+
+        let dbPostsCache = null;
+        function renderThread(post, comments) { 
+            dbPostsCache = post; 
+            document.getElementById('thread-post').innerHTML = generatePostHTML(post, true); 
+            document.getElementById('thread-comments').innerHTML = buildCommentTree(comments, null, 0); 
+            document.getElementById('comment-zone').style.display = post.isLocked ? 'none' : 'block';
+        }
+        function submitComment() { const t = document.getElementById('root-comment').value.trim(); if(t) { ws.send(JSON.stringify({ type: 'CREATE_COMMENT', postId: currentThread, parentId: null, text: t })); document.getElementById('root-comment').value = ''; } }
+        function submitReply(parentId) { const t = document.getElementById('input-'+parentId).value.trim(); if(t) { ws.send(JSON.stringify({ type: 'CREATE_COMMENT', postId: currentThread, parentId, text: t })); } }
+        function toggleSave(id, e) { e.stopPropagation(); ws.send(JSON.stringify({ type: 'TOGGLE_SAVE', id })); }
+        function modPin(id, e) { e.stopPropagation(); ws.send(JSON.stringify({ type: 'MOD_PIN', id, currentSub })); }
+        function modLock(id, e) { e.stopPropagation(); ws.send(JSON.stringify({ type: 'MOD_LOCK', id, currentSub })); }
+        function deleteItem(id, isPost, e) { e.stopPropagation(); if(confirm("Delete this?")) ws.send(JSON.stringify({ type: 'DELETE_ITEM', id, isPost, currentSub })); }
+        function vote(id, isPost, dir, e) { e.stopPropagation(); ws.send(JSON.stringify({ type: 'VOTE', id, isPost, direction: dir })); }
+        function votePoll(id, optIdx, e) { e.stopPropagation(); ws.send(JSON.stringify({ type: 'VOTE_POLL', postId: id, optionIndex: optIdx })); }
+        function awardItem(id, isPost, e) { e.stopPropagation(); ws.send(JSON.stringify({ type: 'AWARD_ITEM', id, isPost })); }
+        function banUser(user, sub, e) { e.stopPropagation(); if(confirm(`Ban u/${user} from r/${sub}?`)) ws.send(JSON.stringify({ type: 'BAN_USER', target: user, sub })); }
+        function blockUser(user, e) { e.stopPropagation(); if(confirm(`Block u/${user}? You won't see their posts.`)) { myBlocked.push(user); ws.send(JSON.stringify({ type: 'BLOCK_USER', target: user })); goHome(); } }
+
+        // Profiles
+        function loadProfile(un, e) { if(e) e.stopPropagation(); activeProfileUser = un; loadProfileTab('posts'); }
+        function loadProfileTab(tab) {
+            currentProfileTab = tab; activeProfileUser = activeProfileUser || myUser;
+            document.getElementById('ptab-posts').classList.toggle('active', tab === 'posts'); document.getElementById('ptab-saved').classList.toggle('active', tab === 'saved');
+            document.getElementById('ptab-saved').style.display = (activeProfileUser === myUser) ? 'block' : 'none';
+            ws.send(JSON.stringify({ type: 'GET_USER_PROFILE', username: activeProfileUser, tab }));
+        }
+
+        function openProfileSettings() { 
+            document.getElementById('edit-username').value = '';
+            document.getElementById('edit-password').value = '';
+            document.getElementById('edit-displayname').value = myDisplayName || ''; 
+            document.getElementById('edit-flair').value = myFlair || ''; 
+            document.getElementById('settings-pfp-preview').src = myPfp; 
+            document.getElementById('settings-pfp-preview').style.display = 'block'; 
+            b64Pfp = null;
+            document.getElementById('profile-modal').style.display = 'flex'; 
+        }
+
+        function saveProfile() { 
+            ws.send(JSON.stringify({ 
+                type: 'UPDATE_PROFILE', 
+                newUsername: document.getElementById('edit-username').value.trim(),
+                newPassword: document.getElementById('edit-password').value.trim(),
+                displayName: document.getElementById('edit-displayname').value.trim(), 
+                flair: document.getElementById('edit-flair').value.trim(), 
+                pfp: b64Pfp 
+            })); 
+            document.getElementById('profile-modal').style.display = 'none'; 
+        }
+
+        function renderUserProfile(prof, posts, tab) {
+            document.querySelectorAll('.view-container').forEach(v=>v.style.display='none'); document.getElementById('profile-view').style.display='flex';
+            document.getElementById('pv-pfp').src = prof.pfp; document.getElementById('pv-display-name').innerText = prof.displayName; document.getElementById('pv-username').innerText = `u/${prof.username}`; document.getElementById('pv-karma').innerText = `⚡ ${prof.karma} Karma`;
+            document.getElementById('pv-joindate').innerText = prof.createdAt ? `• Joined: ${new Date(prof.createdAt).toLocaleDateString()}` : '';
+
+            const actionBtn = document.getElementById('pv-action-btn');
+            if (prof.username === myUser) { 
+                actionBtn.innerHTML = `<button class="btn btn-outline" onclick="openProfileSettings()">⚙️ Edit Profile</button>`; 
+            } else if (myFriends.includes(prof.username)) { 
+                actionBtn.innerHTML = `<button class="btn btn-outline" disabled>✔️ Friends</button>`; 
+            } else { 
+                actionBtn.innerHTML = `<button class="btn" onclick="sendFriendReq('${prof.username}')">➕ Add Friend</button>`; 
+            }
+
+            document.getElementById('profile-feed').innerHTML = posts.length ? posts.map(p=>generatePostHTML(p)).join('') : '<div style="color:var(--muted); padding:20px;">No posts here.</div>';
+        }
+
+        // Notifications & DMs
+        function toggleNotifPanel() { 
+            const p = document.getElementById('notif-panel'); p.style.display = p.style.display === 'flex' ? 'none' : 'flex'; 
+            document.getElementById('notif-dot').style.display = 'none'; document.getElementById('dm-panel').style.display = 'none';
+            if(p.style.display === 'flex') { renderNotifs(); ws.send(JSON.stringify({ type: 'READ_NOTIF' })); myNotifs.forEach(n=>n.read=true); }
+        }
+        function renderNotifs() {
+            const list = document.getElementById('notif-list'); list.innerHTML = '';
+            if(myNotifs.length === 0) return list.innerHTML = `<div style="text-align:center; color:var(--muted); margin-top:20px;">All caught up!</div>`;
+            myNotifs.forEach(n => { list.innerHTML += `<div class="notif-card ${n.read?'':'unread'}" onclick="openThread('${n.linkData}')"><b>${n.text}</b><div style="font-size:11px; color:var(--muted); margin-top:4px;">${n.time}</div></div>`; });
+        }
+
+        function toggleDMPanel() { const p = document.getElementById('dm-panel'); p.style.display = p.style.display === 'flex' ? 'none' : 'flex'; document.getElementById('dm-notif').style.display = 'none'; document.getElementById('notif-panel').style.display = 'none'; if (p.style.display === 'flex') renderSocial(); }
+        function switchSocialTab(tab) { currentSocialTab = tab; document.getElementById('tab-btn-chat').classList.toggle('active', tab === 'chat'); document.getElementById('tab-btn-friends').classList.toggle('active', tab === 'friends'); document.getElementById('chat-view-panel').style.display = tab === 'chat' ? 'flex' : 'none'; document.getElementById('friends-view-panel').style.display = tab === 'friends' ? 'flex' : 'none'; renderSocial(); }
+        function renderSocial() {
+            if (currentSocialTab === 'chat') {
+                const list = document.getElementById('dm-list'); const target = document.getElementById('dm-target-user').value.trim().toLowerCase(); list.innerHTML = '';
+                const filteredDMs = target ? dms.filter(d => (d.from.toLowerCase() === target || d.to.toLowerCase() === target)) : dms;
+                if (filteredDMs.length === 0) return list.innerHTML = `<div style="text-align:center; color:var(--muted); margin-top:20px;">No messages.</div>`;
+                filteredDMs.forEach(dm => { const isSent = dm.from === myUser; list.innerHTML += `<div class="dm-msg ${isSent ? 'sent' : 'received'}"><div class="dm-meta">${isSent ? 'You' : dm.from} • ${dm.timestamp}</div><div>${escapeHTML(dm.text)}</div></div>`; });
+                list.scrollTop = list.scrollHeight;
+            } else {
+                const flist = document.getElementById('friend-list'); flist.innerHTML = '';
+                if (myFriendRequests.length > 0) { flist.innerHTML += `<div style="font-size:11px; color:var(--muted); font-weight:bold; margin-bottom:8px;">Pending Requests</div>`; myFriendRequests.forEach(req => { flist.innerHTML += `<div class="friend-req-card"><b>u/${req}</b> <div style="display:flex; gap:4px;"><button class="btn" style="padding:4px 8px; font-size:11px;" onclick="acceptFriendReq('${req}')">Accept</button><button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="declineFriendReq('${req}')">Decline</button></div></div>`; }); }
+                flist.innerHTML += `<div style="font-size:11px; color:var(--muted); font-weight:bold; margin:16px 0 8px;">My Friends</div>`;
+                if(myFriends.length === 0) flist.innerHTML += `<div style="color:var(--muted); font-size:12px; text-align:center;">No friends yet.</div>`;
+                myFriends.forEach(f => { flist.innerHTML += `<div class="friend-req-card" style="cursor:pointer;" onclick="loadProfile('${f}', event)"><b>u/${f}</b></div>`; });
+            }
+        }
+        function sendDM() { const textEl = document.getElementById('dm-text'); const target = document.getElementById('dm-target-user').value.trim(); const text = textEl.value.trim(); if (!text || !target || !ws || myBlocked.includes(target)) return; ws.send(JSON.stringify({ type: 'SEND_DM', to: target, text })); textEl.value = ''; }
+        function sendFriendReq(target) { if(ws) ws.send(JSON.stringify({ type: 'FRIEND_ACTION', targetUser: target, action: 'send' })); }
+        function acceptFriendReq(target) { if(ws) ws.send(JSON.stringify({ type: 'FRIEND_ACTION', targetUser: target, action: 'accept' })); }
+        function declineFriendReq(target) { if(ws) ws.send(JSON.stringify({ type: 'FRIEND_ACTION', targetUser: target, action: 'decline' })); }
+
+        window.addEventListener('DOMContentLoaded', () => { const u = localStorage.getItem('reddit_user'); const p = localStorage.getItem('reddit_pass'); if (u && p) { document.getElementById('username').value = u; document.getElementById('password').value = p; if (localStorage.getItem('reddit_wss')) executeAuth(); } });
+    </script>
+</body>
+</html>
