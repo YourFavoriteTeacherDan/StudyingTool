@@ -1,0 +1,46 @@
+name: Mirror Repo to Google Drive
+
+on:
+  push:
+    branches:
+      - main  # Change to master if your default branch is master
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Rclone
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rclone
+
+      - name: Configure Rclone
+        env:
+          GDRIVE_SA_KEY: ${{ secrets.GDRIVE_SA_KEY }}
+          GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
+        run: |
+          mkdir -p ~/.config/rclone
+          echo "$GDRIVE_SA_KEY" > ~/.config/rclone/service_account.json
+          cat <<EOF > ~/.config/rclone/rclone.conf
+          [gdrive]
+          type = drive
+          scope = drive
+          service_account_file = $HOME/.config/rclone/service_account.json
+          root_folder_id = $GDRIVE_FOLDER_ID
+          EOF
+
+      - name: Sync Files to Google Drive
+        run: |
+          rclone sync ./ gdrive: \
+            --exclude ".git/**" \
+            --exclude ".github/**" \
+            --drive-use-trash=false \
+            --transfers 4 \
+            --checkers 8 \
+            -v
