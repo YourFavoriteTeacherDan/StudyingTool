@@ -22,16 +22,15 @@ jobs:
 
       - name: Configure Rclone
         env:
-          GDRIVE_SA_KEY: ${{ secrets.GDRIVE_SA_KEY }}
+          GDRIVE_TOKEN: ${{ secrets.GDRIVE_TOKEN }}
           GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
         run: |
           mkdir -p ~/.config/rclone
-          echo "$GDRIVE_SA_KEY" > ~/.config/rclone/service_account.json
           cat <<EOF > ~/.config/rclone/rclone.conf
           [gdrive]
           type = drive
           scope = drive
-          service_account_file = $HOME/.config/rclone/service_account.json
+          token = $GDRIVE_TOKEN
           root_folder_id = $GDRIVE_FOLDER_ID
           EOF
 
