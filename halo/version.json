@@ -1,0 +1,31 @@
+{
+ "version": "329fa0f6b39fbd7b",
+ "build": 337,
+ "flavor": "release",
+ "commit": "899219cc0a14b03bc12f0517a1e9ee4c37158af8",
+ "network_version": 41,
+ "files": [
+  "app.js",
+  "fonts/OpenCE-Regular.ttf",
+  "fonts/Overpass-750.ttf",
+  "fonts/Overpass-900.ttf",
+  "halo.js",
+  "halo.wasm",
+  "icons/icon-180.png",
+  "icons/icon-192.png",
+  "icons/icon-32.png",
+  "icons/icon-512.png",
+  "index.html",
+  "licenses.txt",
+  "manifest.webmanifest",
+  "masters.json",
+  "mods-worker.js",
+  "net.js",
+  "p2p.js",
+  "servers.js",
+  "style.css",
+  "sw.js",
+  "touch.js",
+  "xiso-worker.js"
+ ]
+}
